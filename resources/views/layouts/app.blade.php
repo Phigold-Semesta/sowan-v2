@@ -93,7 +93,7 @@
             </div>
 
             <nav class="flex-1 px-4 mt-6 overflow-y-auto custom-scrollbar space-y-2">
-                <div class="menu-header px-4 py-3 text-[10px] font-black text-emerald-200/50 uppercase tracking-[0.2em]">Navigasi</div>
+                <div class="menu-header px-4 py-3 text-[10px] font-black text-emerald-200/50 uppercase tracking-[0.2em]">Navigasi Utama</div>
                 
                 <a href="{{ route('dashboard') }}" class="nav-item flex items-center py-4 px-5 rounded-2xl transition-all {{ Route::is('dashboard') ? 'sidebar-active' : 'hover:bg-white/10' }}">
                     <i class="fas fa-chart-line w-6 text-center text-sm"></i>
@@ -103,8 +103,8 @@
                     </span>
                 </a>
 
-                @if(in_array(auth()->user()->role, ['administrator', 'petugas']))
-                <a href="{{ route('tamu.status') }}" class="nav-item flex items-center py-4 px-5 rounded-2xl transition-all {{ Route::is('tamu.status') ? 'sidebar-active' : 'hover:bg-white/10' }}">
+                @if(auth()->user()->role === 'petugas')
+                <a href="{{ route('petugas.manajemen_tamu.index') }}" class="nav-item flex items-center py-4 px-5 rounded-2xl transition-all {{ Route::is('petugas.manajemen_tamu.*') ? 'sidebar-active' : 'hover:bg-white/10' }}">
                     <i class="fas fa-user-check w-6 text-center text-sm"></i>
                     <span class="nav-text ml-3 text-sm font-bold tracking-wide text-nowrap">Data Tamu</span>
                 </a>
@@ -120,7 +120,7 @@
 
                 <a href="#" class="nav-item flex items-center py-4 px-5 rounded-2xl transition-all hover:bg-white/10">
                     <i class="fas fa-database w-6 text-center text-sm"></i>
-                    <span class="nav-text ml-3 text-sm font-bold tracking-wide text-nowrap">Master Data & Dokumen</span>
+                    <span class="nav-text ml-3 text-sm font-bold tracking-wide text-nowrap">Master Data</span>
                 </a>
 
                 <a href="{{ route('admin.logs') }}" class="nav-item flex items-center py-4 px-5 rounded-2xl transition-all {{ Route::is('admin.logs') ? 'sidebar-active' : 'hover:bg-white/10' }}">
@@ -146,15 +146,15 @@
             </nav>
 
             <div class="p-4 mb-4">
-    <form id="logout-form" action="{{ route('logout') }}" method="POST" class="hidden">
-        @csrf
-    </form>
-    <button onclick="event.preventDefault(); document.getElementById('logout-form').submit();" 
-        class="btn-logout nav-item w-full flex items-center justify-center py-4 px-6 rounded-2xl bg-white/5 hover:bg-red-500 hover:shadow-[0_8px_20px_rgba(239,68,68,0.4)] text-red-100 transition-all border border-white/5 group">
-        <i class="fas fa-power-off w-6 text-center group-hover:scale-110 transition-transform"></i>
-        <span class="nav-text ml-3 text-sm font-bold tracking-widest uppercase text-nowrap">Logout</span>
-    </button>
-</div>
+                <form id="logout-form" action="{{ route('logout') }}" method="POST" class="hidden">
+                    @csrf
+                </form>
+                <button onclick="event.preventDefault(); document.getElementById('logout-form').submit();" 
+                    class="btn-logout nav-item w-full flex items-center justify-center py-4 px-6 rounded-2xl bg-white/5 hover:bg-red-500 hover:shadow-[0_8px_20px_rgba(239,68,68,0.4)] text-red-100 transition-all border border-white/5 group">
+                    <i class="fas fa-power-off w-6 text-center group-hover:scale-110 transition-transform"></i>
+                    <span class="nav-text ml-3 text-sm font-bold tracking-widest uppercase text-nowrap">Logout</span>
+                </button>
+            </div>
         </aside>
 
         <main class="flex-1 flex flex-col min-w-0 h-screen overflow-hidden">
@@ -184,7 +184,7 @@
             <div class="flex-1 overflow-y-auto p-8 custom-scrollbar">
                 <div class="max-w-7xl mx-auto">
                     @if(session('success'))
-                        <div class="mb-6 p-4 bg-emerald-100 border-l-4 border-emerald-500 text-emerald-700 rounded-r-xl shadow-sm animate-bounce">
+                        <div class="mb-6 p-4 bg-emerald-100 border-l-4 border-emerald-500 text-emerald-700 rounded-r-xl shadow-sm">
                             <i class="fas fa-circle-check mr-2"></i> {{ session('success') }}
                         </div>
                     @endif
