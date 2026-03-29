@@ -9,9 +9,28 @@
 
 ---
 
-# 🏛️ SOWAN V2 - Digital Guest Book UKPBJ Karawang
 
-**SOWAN V2** (Sistem Otomasi Warta Administrasi Normatif) adalah aplikasi buku tamu digital modern yang dirancang khusus untuk **LPSE Kabupaten Karawang**. Proyek ini bertujuan untuk mendigitalisasi pencatatan kunjungan, manajemen antrean petugas, serta pelaporan statistik kehadiran secara real-time di lingkungan UKPBJ dengan sentuhan desain yang **Bold & Luxurious**.
+# 🏛️ SOWAN v2 - Digital Guest Book UKPBJ Karawang
+
+**SOWAN v2** (**Sistem Otomasi Warta Administrasi Normatif**) adalah platform buku tamu digital mutakhir yang dirancang khusus untuk entitas pemerintah, khususnya **LPSE/UKPBJ Kabupaten Karawang**. Proyek ini hadir sebagai solusi digital untuk mentransformasi pencatatan kunjungan konvensional menjadi ekosistem data yang terintegrasi, real-time, dan akuntabel di lingkungan UKPBJ dengan sentuhan desain yang **Bold & Luxurious**.
+
+---
+
+## 🌿🧠💡 Filosofi Penamaan & Kearifan Lokal
+
+Nama **SOWAN** dipilih bukan sekadar sebagai akronim teknis, melainkan membawa muatan filosofis dan budaya yang mendalam:
+
+1.  **Etimologi Budaya (Kearifan Lokal)**
+    Dalam budaya masyarakat Indonesia, istilah *"Sowan"* memiliki arti berkunjung atau menghadap kepada pihak yang dihormati dengan penuh tata krama. Penggunaan nama ini merepresentasikan bahwa setiap tamu yang datang ke kantor pemerintahan adalah subjek yang harus dilayani dengan rasa hormat dan integritas tinggi.
+
+2.  **Makna Akronim Teknis**
+    * **Sistem Otomasi:** Melambangkan transformasi dari proses manual yang repetitif menuju digitalisasi yang efisien dan cerdas melalui teknologi Laravel 12.
+    * **Warta:** Berasal dari bahasa Sanskerta yang berarti berita atau informasi. Setiap tamu membawa "Warta" (maksud dan tujuan) yang harus dikelola secara akurat.
+    * **Administrasi:** Menitikberatkan pada ketertiban tata kelola data untuk memastikan setiap jejak kunjungan terdokumentasi dengan rapi sebagai arsip negara.
+    * **Normatif:** Menegaskan bahwa aplikasi ini dibangun di atas koridor aturan, standar operasional prosedur (SOP), dan transparansi yang berlaku di lingkungan birokrasi.
+
+---
+
 
 ## ✨ Fitur Utama
 * **Self-Registration (QR Code):** Tamu dapat mendaftar mandiri dengan memindai QR Code melalui smartphone masing-masing di lokasi.
