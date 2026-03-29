@@ -7,6 +7,50 @@
 <a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
 </p>
 
+---
+
+# 🏛️ SOWAN v2 - Digital Guest Book UKPBJ Karawang
+
+**SOWAN v2** (Sistem Otomasi Warta Administrasi Normatif) adalah aplikasi buku tamu digital modern yang dirancang khusus untuk **LPSE Kabupaten Karawang**. Proyek ini bertujuan untuk mendigitalisasi pencatatan kunjungan, manajemen antrean petugas, serta pelaporan statistik kehadiran secara real-time di lingkungan UKPBJ dengan sentuhan desain yang **Bold & Luxurious**.
+
+## ✨ Fitur Utama
+* **Self-Registration (QR Code):** Tamu dapat mendaftar mandiri dengan memindai QR Code melalui smartphone masing-masing di lokasi.
+* **Smart Recognition:** Sistem mengenali tamu lama hanya dengan input nomor WhatsApp atau Gmail untuk mempercepat proses log kunjungan tanpa isi form ulang.
+* **Petugas Dashboard:** Manajemen status pelayanan tamu (Belum, Sedang, Sudah Dilayani) secara interaktif langsung dari halaman data tamu.
+* **Role-Based Access Control:** Pemisahan hak akses antara Tamu, Petugas, Administrator, dan Pimpinan.
+* **Real-time Analytics:** Monitoring antrean dan visualisasi data kunjungan harian untuk kebutuhan audit dan laporan pimpinan.
+
+## 🛠️ Tech Stack
+* **Framework:** Laravel 12 (PHP 8.x)
+* **Database:** MySQL (Managed via phpMyAdmin)
+* **Styling:** Tailwind CSS (Modern & Luxurious Design - Emerald Emerald-900 & Gold/Slate)
+* **Monitoring:** Laravel Pulse & Pest Stress Testing
+* **Authentication:** Custom Manual Login & Logout System (Tanpa Laravel Breeze/Fortify)
+
+## 🚀 Cara Instalasi (Development)
+
+1.  **Clone Repositori**
+    ```bash
+    git clone [https://github.com/Phigold-Semesta/sowan-v2.git](https://github.com/Phigold-Semesta/sowan-v2.git)
+    ```
+2.  **Instal Dependensi**
+    ```bash
+    composer install
+    npm install && npm run dev
+    ```
+3.  **Konfigurasi Environment**
+    Salin file `.env.example` menjadi `.env`, atur koneksi database, lalu jalankan:
+    ```bash
+    php artisan key:generate
+    php artisan migrate --seed
+    ```
+4.  **Jalankan Server**
+    ```bash
+    php artisan serve
+    ```
+
+---
+
 ## About Laravel
 
 Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
@@ -19,48 +63,11 @@ Laravel is a web application framework with expressive, elegant syntax. We belie
 - [Robust background job processing](https://laravel.com/docs/queues).
 - [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+## 👨‍💻 Author
+**Farid Abdul Kholiq (Phigold Semesta)**
+*Project ini dikembangkan sebagai Tugas Akhir D3 Di Universitas Bina Sarana Informatika Kabupaten Karawang dan portofolio persiapan S2 Artificial Intelligence di Universitas Gadjah Mada (UGM).*
 
-## Learning Laravel
-
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
-
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
-
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
-
-## Laravel Sponsors
-
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
-
-### Premium Partners
-
-- **[Vehikl](https://vehikl.com/)**
-- **[Tighten Co.](https://tighten.co)**
-- **[WebReinvent](https://webreinvent.com/)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel/)**
-- **[Cyber-Duck](https://cyber-duck.co.uk)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Jump24](https://jump24.co.uk)**
-- **[Redberry](https://redberry.international/laravel/)**
-- **[Active Logic](https://activelogic.com)**
-- **[byte5](https://byte5.de)**
-- **[OP.GG](https://op.gg)**
-
-## Contributing
-
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
-
-## Code of Conduct
-
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
-
-## Security Vulnerabilities
-
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+---
 
 ## License
-
 The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
