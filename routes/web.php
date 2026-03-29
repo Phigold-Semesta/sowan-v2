@@ -1,6 +1,8 @@
 <?php
 
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\TamuController;
+use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -9,33 +11,47 @@ use Illuminate\Support\Facades\Route;
 |--------------------------------------------------------------------------
 */
 
-// 1. Halaman Utama / Welcome
+// 1. Jalur Utama & Autentikasi 🚪
+// Mengarahkan '/' langsung ke login jika belum masuk
 Route::get('/', function () {
-    return view('auth.login'); // Redirect ke halaman login sebagai halaman utama
+    return redirect()->route('login');
 });
 
-// 2. Route Khusus Guest (Belum Login)
-// Menggunakan middleware 'guest' agar user yang sudah login tidak bisa kembali ke form login
+// Jalur khusus tamu (Link ini yang dimasukkan ke QR Code) 📱
+Route::get('/hadir', [TamuController::class, 'create'])->name('tamu.form');
+Route::post('/tamu/simpan', [TamuController::class, 'store'])->name('tamu.store');
+
+// Login & Auth (Hanya untuk tamu/guest yang BELUM login)
 Route::middleware('guest')->group(function () {
-    
-    // Menampilkan Form Login (Username & Password)
     Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
-    
-    // Proses Autentikasi User
-    Route::post('/login', [AuthController::class, 'authenticate']);
-    
+    Route::post('/login', [AuthController::class, 'authenticate'])->name('login.proses');
 });
 
-// 3. Route Khusus User yang Sudah Login (Terproteksi)
-// Menggunakan middleware 'auth' untuk melindungi halaman internal
+// 2. Route Terproteksi (Wajib Login) 🔐
 Route::middleware('auth')->group(function () {
-    
-    // Halaman Dashboard Utama
+
+    // Dashboard Utama
     Route::get('/dashboard', function () {
-        return view('dashboard'); // Pastikan file resources/views/dashboard.blade.php ada
+        return view('admin.dashboard');
     })->name('dashboard');
 
-    // Proses Logout
+    // --- Grup Akses: Petugas & Administrator ---
+    Route::middleware('role:petugas,administrator')->group(function () {
+        Route::get('/status-tamu', [TamuController::class, 'indexStatus'])->name('tamu.status');
+        Route::patch('/status-tamu/{id}', [TamuController::class, 'updateStatus'])->name('tamu.updateStatus');
+    });
+
+    // --- Grup Akses: Khusus Administrator ---
+    Route::middleware('role:administrator')->group(function () {
+        Route::resource('admin/users', UserController::class)->names('admin.users');
+        Route::get('/audit-log', [UserController::class, 'logs'])->name('admin.logs');
+    });
+
+    // --- Grup Akses: Pimpinan & Administrator ---
+    Route::middleware('role:pimpinan,administrator')->group(function () {
+        Route::get('/laporan', [TamuController::class, 'report'])->name('laporan.index');
+        Route::get('/statistik', [TamuController::class, 'stats'])->name('statistik.index');
+    });
+
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
-    
 });
