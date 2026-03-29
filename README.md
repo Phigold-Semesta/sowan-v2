@@ -9,9 +9,9 @@
 
 ---
 
-# 🏛️ SOWAN v2 - Digital Guest Book UKPBJ Karawang
+# 🏛️ SOWAN V2 - Digital Guest Book UKPBJ Karawang
 
-**SOWAN v2** (Sistem Otomasi Warta Administrasi Normatif) adalah aplikasi buku tamu digital modern yang dirancang khusus untuk **LPSE Kabupaten Karawang**. Proyek ini bertujuan untuk mendigitalisasi pencatatan kunjungan, manajemen antrean petugas, serta pelaporan statistik kehadiran secara real-time di lingkungan UKPBJ dengan sentuhan desain yang **Bold & Luxurious**.
+**SOWAN V2** (Sistem Otomasi Warta Administrasi Normatif) adalah aplikasi buku tamu digital modern yang dirancang khusus untuk **LPSE Kabupaten Karawang**. Proyek ini bertujuan untuk mendigitalisasi pencatatan kunjungan, manajemen antrean petugas, serta pelaporan statistik kehadiran secara real-time di lingkungan UKPBJ dengan sentuhan desain yang **Bold & Luxurious**.
 
 ## ✨ Fitur Utama
 * **Self-Registration (QR Code):** Tamu dapat mendaftar mandiri dengan memindai QR Code melalui smartphone masing-masing di lokasi.
