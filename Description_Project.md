@@ -1,0 +1,26 @@
+# 🏛️ SOWAN v2 - Digital Guest Book UKPBJ Karawang
+
+**SOWAN v2** (Sistem Otomasi Warta Administrasi Normatif) adalah aplikasi buku tamu digital modern yang dirancang khusus untuk **LPSE Kabupaten Karawang**. Proyek ini bertujuan untuk mendigitalisasi pencatatan kunjungan, manajemen antrean petugas, serta pelaporan statistik kehadiran secara real-time di lingkungan UKPBJ.
+
+---
+
+## ✨ Fitur Utama
+* **Self-Registration (QR Code):** Tamu dapat mendaftar mandiri dengan memindai QR Code melalui smartphone masing-masing.
+* **Smart Recognition:** Sistem mengenali tamu lama hanya dengan input nomor WhatsApp/NIK untuk mempercepat proses log kunjungan tanpa isi form ulang.
+* **Petugas Dashboard:** Manajemen status pelayanan tamu (Belum, Sedang, Sudah Dilayani) secara interaktif langsung dari halaman data tamu.
+* **Role-Based Access Control:** Pemisahan akses ketat antara Tamu, Petugas, Administrator, dan Pimpinan.
+* **Real-time Analytics:** Monitoring antrean dan visualisasi data kunjungan harian untuk laporan pimpinan.
+
+## 🛠️ Tech Stack
+* **Framework:** Laravel 12 (PHP 8.x)
+* **Database:** MySQL (Managed via phpMyAdmin)
+* **Styling:** Tailwind CSS (Modern, Bold, & Luxurious Design - Emerald Emerald-900 & Gold/Slate)
+* **Monitoring:** Laravel Pulse & Pest Stress Testing
+* **Authentication:** Custom Manual Login & Logout System (Tanpa Laravel Breeze/Fortify)
+
+## 🚀 Cara Instalasi (Development)
+
+1. **Clone Repositori**
+   ```bash
+   git clone [https://github.com/Phigold-Semesta/sowan-v2.git](https://github.com/Phigold-Semesta/sowan-v2.git)
+   
