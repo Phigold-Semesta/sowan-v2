@@ -9,6 +9,9 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    {{-- SweetAlert2 CDN --}}
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <style>
         body { 
@@ -66,6 +69,21 @@
             #main-sidebar .nav-text, #main-sidebar .logo-full { display: flex; opacity: 1; }
             #main-sidebar .icon-buku-collapsed { display: none; }
             .btn-logout { justify-content: center !important; }
+        }
+
+        /* Kustomisasi SweetAlert agar senada dengan tema Emerald SOWAN */
+        .swal2-popup {
+            border-radius: 2rem !important;
+            padding: 2rem !important;
+        }
+        .swal2-styled.swal2-confirm {
+            background-color: #008f5d !important;
+            border-radius: 1rem !important;
+            padding: 0.75rem 2rem !important;
+            font-weight: 800 !important;
+            text-transform: uppercase !important;
+            letter-spacing: 0.1em !important;
+            font-size: 0.75rem !important;
         }
     </style>
 </head>
@@ -149,7 +167,7 @@
                 <form id="logout-form" action="{{ route('logout') }}" method="POST" class="hidden">
                     @csrf
                 </form>
-                <button onclick="event.preventDefault(); document.getElementById('logout-form').submit();" 
+                <button onclick="confirmLogout(event)" 
                     class="btn-logout nav-item w-full flex items-center justify-center py-4 px-6 rounded-2xl bg-white/5 hover:bg-red-500 hover:shadow-[0_8px_20px_rgba(239,68,68,0.4)] text-red-100 transition-all border border-white/5 group">
                     <i class="fas fa-power-off w-6 text-center group-hover:scale-110 transition-transform"></i>
                     <span class="nav-text ml-3 text-sm font-bold tracking-widest uppercase text-nowrap">Logout</span>
@@ -183,18 +201,6 @@
 
             <div class="flex-1 overflow-y-auto p-8 custom-scrollbar">
                 <div class="max-w-7xl mx-auto">
-                    @if(session('success'))
-                        <div class="mb-6 p-4 bg-emerald-100 border-l-4 border-emerald-500 text-emerald-700 rounded-r-xl shadow-sm">
-                            <i class="fas fa-circle-check mr-2"></i> {{ session('success') }}
-                        </div>
-                    @endif
-
-                    @if(session('error'))
-                        <div class="mb-6 p-4 bg-red-100 border-l-4 border-red-500 text-red-700 rounded-r-xl shadow-sm">
-                            <i class="fas fa-circle-xmark mr-2"></i> {{ session('error') }}
-                        </div>
-                    @endif
-
                     @yield('content')
                 </div>
             </div>
@@ -202,12 +208,67 @@
     </div>
 
     <script>
+        // Toggle Sidebar Mobile
         function toggleMobileSidebar() {
             const sidebar = document.getElementById('main-sidebar');
             const overlay = document.getElementById('sidebar-overlay');
             sidebar.classList.toggle('show-sidebar');
             overlay.classList.toggle('hidden');
         }
+
+        // Konfirmasi Logout dengan SweetAlert
+        function confirmLogout(event) {
+            event.preventDefault();
+            Swal.fire({
+                title: 'Yakin ingin keluar?',
+                text: "Sesi Anda akan segera diakhiri.",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#008f5d',
+                cancelButtonColor: '#f1f5f9',
+                confirmButtonText: 'YA, LOGOUT',
+                cancelButtonText: 'BATAL',
+                reverseButtons: true,
+                customClass: {
+                    cancelButton: 'text-slate-600 font-bold'
+                }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    document.getElementById('logout-form').submit();
+                }
+            });
+        }
+
+        // Penanganan Otomatis Notifikasi CRUD Laravel Session
+        document.addEventListener('DOMContentLoaded', function() {
+            const Toast = Swal.mixin({
+                toast: true,
+                position: 'top-end',
+                showConfirmButton: false,
+                timer: 3000,
+                timerProgressBar: true,
+                didOpen: (toast) => {
+                    toast.addEventListener('mouseenter', Swal.stopTimer)
+                    toast.addEventListener('mouseleave', Swal.resumeTimer)
+                }
+            });
+
+            @if(session('success'))
+                Toast.fire({
+                    icon: 'success',
+                    title: "{{ session('success') }}"
+                });
+            @endif
+
+            @if(session('error'))
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Waduh...',
+                    text: "{{ session('error') }}",
+                    confirmButtonColor: '#008f5d'
+                });
+            @endif
+        });
     </script>
 </body>
 </html>

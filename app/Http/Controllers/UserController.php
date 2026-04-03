@@ -4,19 +4,41 @@ namespace App\Http\Controllers;
 
 use App\Models\User;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth; // Tambahkan ini agar Auth dikenali editor
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 
 class UserController extends Controller
 {
     /**
-     * TAMPILAN: Daftar Pengguna (Hanya Admin)
+     * TAMPILAN: Daftar Pengguna dengan Pencarian & Filter
      */
-    public function index()
+    public function index(Request $request)
     {
-        $users = User::latest()->paginate(10);
+        $users = User::query()
+            ->when($request->search, function ($query, $search) {
+                $query->where(function ($q) use ($search) {
+                    $q->where('nama_lengkap', 'LIKE', "%{$search}%")
+                      ->orWhere('username', 'LIKE', "%{$search}%");
+                });
+            })
+            ->when($request->role, function ($query, $role) {
+                $query->where('role', $role);
+            })
+            ->latest('id_user')
+            ->paginate($request->per_page === 'all' ? User::count() : ($request->per_page ?? 10))
+            ->withQueryString();
+
         return view('admin.users.index', compact('users'));
+    }
+
+    /**
+     * TAMPILAN: Form Tambah Pengguna
+     */
+    public function create()
+    {
+        return view('admin.users.create');
     }
 
     /**
@@ -32,15 +54,26 @@ class UserController extends Controller
             'jabatan'      => 'required|string|max:100',
         ]);
 
-        User::create([
-            'nama_lengkap' => $validated['nama_lengkap'],
-            'username'     => $validated['username'],
-            'password'     => Hash::make($validated['password']),
-            'role'         => $validated['role'],
-            'jabatan'      => $validated['jabatan'],
-        ]);
+        DB::transaction(function () use ($validated) {
+            User::create([
+                'nama_lengkap' => $validated['nama_lengkap'],
+                'username'     => $validated['username'],
+                'password'     => Hash::make($validated['password']),
+                'role'         => $validated['role'],
+                'jabatan'      => $validated['jabatan'],
+            ]);
+        });
 
         return redirect()->route('admin.users.index')->with('success', 'Akun pengguna berhasil dibuat! 🟢');
+    }
+
+    /**
+     * TAMPILAN: Detail Profil Pengguna (Sempurnakan di sini) 🔍
+     */
+    public function show(User $user)
+    {
+        // Menggunakan Route Model Binding (User $user) otomatis mencari berdasarkan ID
+        return view('admin.users.show', compact('user'));
     }
 
     /**
@@ -58,19 +91,18 @@ class UserController extends Controller
     {
         $validated = $request->validate([
             'nama_lengkap' => 'required|string|max:100',
-            // ignore() menggunakan id_user karena itu primary key kustom kita
             'username'     => ['required', 'string', 'max:50', Rule::unique('user')->ignore($user->id_user, 'id_user')],
             'password'     => 'nullable|string|min:8|confirmed',
             'role'         => 'required|in:administrator,petugas,pimpinan',
             'jabatan'      => 'required|string|max:100',
         ]);
 
-        $data = [
-            'nama_lengkap' => $validated['nama_lengkap'],
-            'username'     => $validated['username'],
-            'role'         => $validated['role'],
-            'jabatan'      => $validated['jabatan'],
-        ];
+        // Proteksi: Mencegah admin mengubah role-nya sendiri
+        if (Auth::id() == $user->id_user && $validated['role'] !== 'administrator' && $user->role === 'administrator') {
+            return redirect()->back()->with('error', 'Anda tidak diperbolehkan mengubah Role admin Anda sendiri! ❌');
+        }
+
+        $data = $request->except(['password', 'password_confirmation']);
 
         if ($request->filled('password')) {
             $data['password'] = Hash::make($validated['password']);
@@ -86,17 +118,11 @@ class UserController extends Controller
      */
     public function destroy(User $user)
     {
-        /**
-         * SOLUSI GARIS MERAH:
-         * Menggunakan Facade Auth::id() lebih "aman" dari deteksi error editor 
-         * dibanding helper auth()->id().
-         */
         if (Auth::id() == $user->id_user) {
             return redirect()->back()->with('error', 'Anda tidak bisa menghapus akun sendiri! ❌');
         }
 
         $user->delete();
-
-        return redirect()->route('admin.users.index')->with('success', 'Pengguna telah dihapus dari sistem.');
+        return redirect()->route('admin.users.index')->with('success', 'Pengguna telah berhasil dihapus.');
     }
 }
