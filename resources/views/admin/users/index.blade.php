@@ -7,34 +7,34 @@
     {{-- Header Section --}}
     <div class="flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div>
-            <h1 class="text-3xl font-black text-slate-800 tracking-tighter uppercase italic">
-                Daftar <span class="text-[#008f5d]">Pengguna</span>
+            <h1 class="text-3xl font-black text-slate-800 dark:text-white tracking-tighter uppercase italic">
+                Daftar <span class="text-[#008f5d] dark:text-emerald-400">Pengguna</span>
             </h1>
             <div class="flex items-center gap-2 mt-1">
-                <span class="h-1 w-8 bg-[#008f5d] rounded-full"></span>
-                <p class="text-xs font-bold text-slate-400 uppercase tracking-[0.2em]">
+                <span class="h-1 w-8 bg-[#008f5d] dark:bg-emerald-500 rounded-full"></span>
+                <p class="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em]">
                     Kelola hak akses administrator, petugas, dan pimpinan
                 </p>
             </div>
         </div>
         <a href="{{ route('admin.users.create') }}" 
-           class="inline-flex items-center px-6 py-3 bg-[#008f5d] text-white text-xs font-black uppercase tracking-widest rounded-2xl hover:bg-emerald-700 hover:shadow-[0_10px_25px_rgba(0,143,93,0.3)] transition-all duration-300 group shrink-0">
+           class="inline-flex items-center px-6 py-3 bg-[#008f5d] dark:bg-emerald-600 text-white text-xs font-black uppercase tracking-widest rounded-2xl hover:bg-emerald-700 dark:hover:bg-emerald-500 hover:shadow-[0_10px_25px_rgba(0,143,93,0.3)] transition-all duration-300 group shrink-0">
             <i class="fas fa-plus-circle mr-2 group-hover:rotate-90 transition-transform duration-500"></i>
             Tambah User Baru
         </a>
     </div>
 
     {{-- Filter & Search Section --}}
-    <div class="bg-white p-5 rounded-[2.5rem] border border-emerald-50 shadow-sm">
+    <div class="bg-white dark:bg-slate-800 p-5 rounded-[2.5rem] border border-emerald-50 dark:border-slate-700 shadow-sm transition-colors duration-300">
         <form action="{{ route('admin.users.index') }}" method="GET" class="flex flex-col lg:flex-row gap-4">
             {{-- Search Input --}}
             <div class="flex-1 relative group">
-                <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 group-focus-within:text-[#008f5d] transition-colors">
+                <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 group-focus-within:text-[#008f5d] dark:group-focus-within:text-emerald-400 transition-colors">
                     <i class="fas fa-search text-sm"></i>
                 </div>
                 <input type="text" name="search" value="{{ request('search') }}"
                        placeholder="Cari nama atau username..." 
-                       class="w-full pl-11 pr-4 py-3.5 bg-slate-50 border-0 rounded-2xl text-xs font-bold focus:ring-2 focus:ring-[#008f5d]/20 transition-all placeholder:text-slate-400">
+                       class="w-full pl-11 pr-4 py-3.5 bg-slate-50 dark:bg-slate-900/50 border-0 rounded-2xl text-xs font-bold focus:ring-2 focus:ring-[#008f5d]/20 dark:focus:ring-emerald-500/20 dark:text-slate-200 transition-all placeholder:text-slate-400 dark:placeholder:text-slate-600">
             </div>
 
             <div class="flex flex-wrap md:flex-nowrap gap-3">
@@ -44,7 +44,7 @@
                         <i class="fas fa-user-tag text-xs"></i>
                     </div>
                     <select name="role" onchange="this.form.submit()"
-                            class="w-full pl-10 pr-10 py-3.5 bg-slate-50 border-0 rounded-2xl text-[10px] font-black uppercase tracking-widest focus:ring-2 focus:ring-[#008f5d]/20 appearance-none cursor-pointer">
+                            class="w-full pl-10 pr-10 py-3.5 bg-slate-50 dark:bg-slate-900/50 border-0 rounded-2xl text-[10px] font-black uppercase tracking-widest focus:ring-2 focus:ring-[#008f5d]/20 dark:text-slate-200 appearance-none cursor-pointer">
                         <option value="">Semua Role</option>
                         <option value="administrator" {{ request('role') == 'administrator' ? 'selected' : '' }}>Administrator</option>
                         <option value="petugas" {{ request('role') == 'petugas' ? 'selected' : '' }}>Petugas</option>
@@ -61,7 +61,7 @@
                         <i class="fas fa-eye text-xs"></i>
                     </div>
                     <select name="per_page" onchange="this.form.submit()"
-                            class="w-full pl-10 pr-10 py-3.5 bg-slate-50 border-0 rounded-2xl text-[10px] font-black uppercase tracking-widest focus:ring-2 focus:ring-[#008f5d]/20 appearance-none cursor-pointer">
+                            class="w-full pl-10 pr-10 py-3.5 bg-slate-50 dark:bg-slate-900/50 border-0 rounded-2xl text-[10px] font-black uppercase tracking-widest focus:ring-2 focus:ring-[#008f5d]/20 dark:text-slate-200 appearance-none cursor-pointer">
                         <option value="5" {{ request('per_page') == '5' ? 'selected' : '' }}>5 Baris</option>
                         <option value="10" {{ request('per_page') == '10' || !request('per_page') ? 'selected' : '' }}>10 Baris</option>
                         <option value="25" {{ request('per_page') == '25' ? 'selected' : '' }}>25 Baris</option>
@@ -72,7 +72,7 @@
                     </div>
                 </div>
 
-                <button type="submit" class="px-6 py-3.5 bg-emerald-100 text-[#008f5d] text-[10px] font-black uppercase tracking-widest rounded-2xl hover:bg-[#008f5d] hover:text-white transition-all duration-300 shadow-sm active:scale-95">
+                <button type="submit" class="px-6 py-3.5 bg-emerald-100 dark:bg-emerald-900/30 text-[#008f5d] dark:text-emerald-400 text-[10px] font-black uppercase tracking-widest rounded-2xl hover:bg-[#008f5d] hover:text-white dark:hover:bg-emerald-600 transition-all duration-300 shadow-sm active:scale-95">
                     Filter
                 </button>
             </div>
@@ -80,48 +80,48 @@
     </div>
 
     {{-- Table Section --}}
-    <div class="bg-white rounded-[2.5rem] border border-emerald-50 shadow-xl overflow-hidden">
+    <div class="bg-white dark:bg-slate-800 rounded-[2.5rem] border border-emerald-50 dark:border-slate-700 shadow-xl overflow-hidden transition-colors duration-300">
         <div class="overflow-x-auto custom-scrollbar">
             <table class="w-full text-left border-collapse">
                 <thead>
-                    <tr class="bg-slate-50/80 border-b border-emerald-50 text-nowrap">
-                        <th class="px-8 py-6 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Profil Pengguna</th>
-                        <th class="px-6 py-6 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Identitas Akun</th>
-                        <th class="px-6 py-6 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Hak Akses</th>
-                        <th class="px-6 py-6 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Jabatan</th>
-                        <th class="px-8 py-6 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] text-center">Aksi</th>
+                    <tr class="bg-slate-50/80 dark:bg-slate-900/50 border-b border-emerald-50 dark:border-slate-700 text-nowrap">
+                        <th class="px-8 py-6 text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em]">Profil Pengguna</th>
+                        <th class="px-6 py-6 text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em]">Identitas Akun</th>
+                        <th class="px-6 py-6 text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em]">Hak Akses</th>
+                        <th class="px-6 py-6 text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em]">Jabatan</th>
+                        <th class="px-8 py-6 text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em] text-center">Aksi</th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-emerald-50/50">
+                <tbody class="divide-y divide-emerald-50/50 dark:divide-slate-700/50">
                     @forelse($users as $user)
-                    <tr class="hover:bg-emerald-50/40 transition-all duration-200 group">
+                    <tr class="hover:bg-emerald-50/40 dark:hover:bg-slate-900/40 transition-all duration-200 group">
                         <td class="px-8 py-5">
                             <div class="flex items-center gap-4">
                                 <div class="relative shrink-0">
-                                    <div class="p-0.5 rounded-[1.2rem] bg-gradient-to-tr from-emerald-100 to-white shadow-sm group-hover:from-emerald-400 group-hover:to-emerald-200 transition-all duration-500">
+                                    <div class="p-0.5 rounded-[1.2rem] bg-gradient-to-tr from-emerald-100 to-white dark:from-emerald-900 dark:to-slate-800 shadow-sm group-hover:from-emerald-400 group-hover:to-emerald-200 transition-all duration-500">
                                         <img src="https://ui-avatars.com/api/?name={{ urlencode($user->nama_lengkap) }}&background=008f5d&color=fff&bold=true" 
-                                             class="w-12 h-12 rounded-[1.1rem] border-2 border-white object-cover group-hover:scale-105 transition-transform">
+                                             class="w-12 h-12 rounded-[1.1rem] border-2 border-white dark:border-slate-700 object-cover group-hover:scale-105 transition-transform">
                                     </div>
                                     @if(Auth::id() == $user->id_user)
                                         <span class="absolute -top-1 -right-1 flex h-4 w-4">
                                             <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                                            <span class="relative inline-flex rounded-full h-4 w-4 bg-emerald-500 border-2 border-white"></span>
+                                            <span class="relative inline-flex rounded-full h-4 w-4 bg-emerald-500 border-2 border-white dark:border-slate-800"></span>
                                         </span>
                                     @endif
                                 </div>
                                 <div class="min-w-0">
-                                    <p class="text-sm font-black text-slate-800 uppercase tracking-tight truncate group-hover:text-[#008f5d] transition-colors">
+                                    <p class="text-sm font-black text-slate-800 dark:text-slate-200 uppercase tracking-tight truncate group-hover:text-[#008f5d] dark:group-hover:text-emerald-400 transition-colors">
                                         {{ $user->nama_lengkap }}
                                     </p>
-                                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                                        ID: <span class="text-slate-500">#{{ str_pad($user->id_user, 3, '0', STR_PAD_LEFT) }}</span>
+                                    <p class="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
+                                        ID: <span class="text-slate-500 dark:text-slate-400">#{{ str_pad($user->id_user, 3, '0', STR_PAD_LEFT) }}</span>
                                     </p>
                                 </div>
                             </div>
                         </td>
                         <td class="px-6 py-5">
                             <div class="flex flex-col">
-                                <span class="text-[11px] font-black text-[#008f5d] bg-emerald-50 px-3 py-1.5 rounded-xl border border-emerald-100 w-fit">
+                                <span class="text-[11px] font-black text-[#008f5d] dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/20 px-3 py-1.5 rounded-xl border border-emerald-100 dark:border-emerald-800/30 w-fit">
                                     @ {{ $user->username }}
                                 </span>
                             </div>
@@ -129,37 +129,34 @@
                         <td class="px-6 py-5">
                             @php
                                 $roleClasses = [
-                                    'administrator' => 'bg-red-50 text-red-600 border-red-100',
-                                    'petugas' => 'bg-emerald-50 text-emerald-600 border-emerald-100',
-                                    'pimpinan' => 'bg-amber-50 text-amber-600 border-amber-100',
+                                    'administrator' => 'bg-red-50 text-red-600 border-red-100 dark:bg-red-900/20 dark:text-red-400 dark:border-red-800/30',
+                                    'petugas' => 'bg-emerald-50 text-emerald-600 border-emerald-100 dark:bg-emerald-900/20 dark:text-emerald-400 dark:border-emerald-800/30',
+                                    'pimpinan' => 'bg-amber-50 text-amber-600 border-amber-100 dark:bg-amber-900/20 dark:text-amber-400 dark:border-amber-800/30',
                                 ];
-                                $class = $roleClasses[$user->role] ?? 'bg-slate-50 text-slate-600 border-slate-100';
+                                $class = $roleClasses[$user->role] ?? 'bg-slate-50 text-slate-600 border-slate-100 dark:bg-slate-900/20 dark:text-slate-400 dark:border-slate-800/30';
                             @endphp
                             <span class="inline-flex items-center text-[9px] font-black uppercase tracking-[0.15em] px-3 py-1.5 rounded-xl border {{ $class }}">
                                 <i class="fas fa-shield-halved mr-1.5 opacity-70"></i>
                                 {{ $user->role }}
                             </span>
                         </td>
-                        <td class="px-6 py-5 text-xs font-bold text-slate-600 italic">
+                        <td class="px-6 py-5 text-xs font-bold text-slate-600 dark:text-slate-400 italic">
                             {{ $user->jabatan }}
                         </td>
                         <td class="px-8 py-5 text-nowrap">
                             <div class="flex justify-center items-center gap-2">
-                                {{-- Tombol Show/Detail --}}
                                 <a href="{{ route('admin.users.show', $user->id_user) }}" 
                                    title="Lihat Detail"
-                                   class="w-10 h-10 flex items-center justify-center rounded-2xl bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white hover:shadow-[0_5px_15px_rgba(37,99,235,0.3)] transition-all active:scale-90">
+                                   class="w-10 h-10 flex items-center justify-center rounded-2xl bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 hover:bg-blue-600 hover:text-white dark:hover:bg-blue-500 hover:shadow-[0_5px_15px_rgba(37,99,235,0.3)] transition-all active:scale-90">
                                     <i class="fas fa-eye text-xs"></i>
                                 </a>
 
-                                {{-- Tombol Edit --}}
                                 <a href="{{ route('admin.users.edit', $user->id_user) }}" 
                                    title="Edit Data"
-                                   class="w-10 h-10 flex items-center justify-center rounded-2xl bg-amber-50 text-amber-600 hover:bg-amber-500 hover:text-white hover:shadow-[0_5px_15px_rgba(245,158,11,0.3)] transition-all active:scale-90">
+                                   class="w-10 h-10 flex items-center justify-center rounded-2xl bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400 hover:bg-amber-500 hover:text-white dark:hover:bg-amber-500 hover:shadow-[0_5px_15px_rgba(245,158,11,0.3)] transition-all active:scale-90">
                                     <i class="fas fa-pen-nib text-xs"></i>
                                 </a>
 
-                                {{-- Tombol Delete --}}
                                 @if(Auth::id() != $user->id_user)
                                 <form action="{{ route('admin.users.destroy', $user->id_user) }}" 
                                       id="delete-form-{{ $user->id_user }}" 
@@ -170,12 +167,12 @@
                                     <button type="button" 
                                             title="Hapus User"
                                             onclick="confirmDelete('{{ $user->id_user }}', '{{ $user->nama_lengkap }}')"
-                                            class="w-10 h-10 flex items-center justify-center rounded-2xl bg-red-50 text-red-600 hover:bg-red-500 hover:text-white hover:shadow-[0_5px_15px_rgba(239,68,68,0.3)] transition-all active:scale-90">
+                                            class="w-10 h-10 flex items-center justify-center rounded-2xl bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 hover:bg-red-500 hover:text-white dark:hover:bg-red-500 hover:shadow-[0_5px_15px_rgba(239,68,68,0.3)] transition-all active:scale-90">
                                         <i class="fas fa-trash-can text-xs"></i>
                                     </button>
                                 </form>
                                 @else
-                                <span class="w-10 h-10 flex items-center justify-center rounded-2xl bg-slate-100 text-slate-400 cursor-not-allowed border border-slate-200" 
+                                <span class="w-10 h-10 flex items-center justify-center rounded-2xl bg-slate-100 dark:bg-slate-700/50 text-slate-400 dark:text-slate-600 cursor-not-allowed border border-slate-200 dark:border-slate-700" 
                                       title="Akun Sedang Digunakan">
                                     <i class="fas fa-user-lock text-xs"></i>
                                 </span>
@@ -187,11 +184,11 @@
                     <tr>
                         <td colspan="5" class="px-8 py-24 text-center">
                             <div class="flex flex-col items-center">
-                                <div class="w-24 h-24 bg-slate-50 rounded-[2.5rem] flex items-center justify-center text-slate-200 mb-6 border border-slate-100">
+                                <div class="w-24 h-24 bg-slate-50 dark:bg-slate-900/50 rounded-[2.5rem] flex items-center justify-center text-slate-200 dark:text-slate-700 mb-6 border border-slate-100 dark:border-slate-800">
                                     <i class="fas fa-users-slash text-4xl"></i>
                                 </div>
-                                <p class="text-sm font-black text-slate-400 uppercase tracking-widest">Data pengguna tidak ditemukan</p>
-                                <p class="text-xs text-slate-300 mt-2 italic font-bold">Coba ubah kata kunci atau filter pencarian Anda</p>
+                                <p class="text-sm font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">Data pengguna tidak ditemukan</p>
+                                <p class="text-xs text-slate-300 dark:text-slate-600 mt-2 italic font-bold">Coba ubah kata kunci atau filter pencarian Anda</p>
                             </div>
                         </td>
                     </tr>
@@ -202,11 +199,11 @@
 
         {{-- Pagination --}}
         @if($users->hasPages() || request('per_page') == 'all')
-        <div class="px-10 py-8 bg-slate-50/50 border-t border-emerald-50">
+        <div class="px-10 py-8 bg-slate-50/50 dark:bg-slate-900/30 border-t border-emerald-50 dark:border-slate-700">
             <div class="flex flex-col md:flex-row justify-between items-center gap-6">
                 <div class="flex items-center gap-3">
-                    <div class="w-2 h-2 rounded-full bg-[#008f5d]"></div>
-                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none">
+                    <div class="w-2 h-2 rounded-full bg-[#008f5d] dark:bg-emerald-500"></div>
+                    <p class="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest leading-none">
                         @if(request('per_page') == 'all')
                             Menampilkan semua {{ $users->count() }} User Aktif
                         @else
@@ -226,9 +223,13 @@
 <style>
     /* Global Styling for SOWAN v2 */
     .custom-scrollbar::-webkit-scrollbar { height: 6px; width: 6px; }
-    .custom-scrollbar::-webkit-scrollbar-track { background: #f8fafc; }
-    .custom-scrollbar::-webkit-scrollbar-thumb { background: #008f5d33; border-radius: 10px; }
+    .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+    .custom-scrollbar::-webkit-scrollbar-thumb { background: #008f5d33; border-radius: 10px; transition: all 0.3s; }
     .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #008f5d; }
+
+    /* Dark Mode Scrollbar */
+    .dark .custom-scrollbar::-webkit-scrollbar-track { background: rgba(15, 23, 42, 0.5); }
+    .dark .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(16, 185, 129, 0.2); }
 
     /* Pagination Styling */
     .custom-pagination nav > div:first-child { display: none; }
@@ -254,30 +255,46 @@
         box-shadow: 0 2px 4px rgba(0,0,0,0.03);
         transition: all 0.3s ease;
     }
+
+    /* Dark Mode Pagination */
+    .dark .custom-pagination nav a, .dark .custom-pagination nav span:not([aria-current="page"] > span) {
+        background-color: #0f172a;
+        color: #94a3b8;
+    }
+
     .custom-pagination nav a:hover {
         background-color: #ecfdf5;
         color: #008f5d;
         transform: translateY(-2px);
+    }
+    .dark .custom-pagination nav a:hover {
+        background-color: #064e3b;
+        color: #34d399;
     }
 </style>
 
 <script>
     /**
      * Konfirmasi Penghapusan User dengan SweetAlert2
+     * Disesuaikan dengan tema dark/light
      */
     function confirmDelete(id, name) {
+        const isDark = document.documentElement.classList.contains('dark');
+        
         Swal.fire({
             title: 'HAPUS PENGGUNA?',
             html: `Anda akan menghapus user <b>${name}</b>.<br><p class="mt-2 text-xs text-red-500 font-bold uppercase tracking-tight italic">Tindakan ini permanen & tidak dapat dibatalkan!</p>`,
             icon: 'warning',
+            background: isDark ? '#1e293b' : '#ffffff',
+            color: isDark ? '#f1f5f9' : '#1e293b',
             showCancelButton: true,
             confirmButtonColor: '#ef4444',
-            cancelButtonColor: '#f1f5f9',
+            cancelButtonColor: isDark ? '#334155' : '#f1f5f9',
             confirmButtonText: 'YA, HAPUS SEKARANG',
             cancelButtonText: 'BATALKAN',
             reverseButtons: true,
             customClass: {
-                popup: 'rounded-[2.5rem] border-4 border-red-50',
+                popup: `rounded-[2.5rem] border-4 ${isDark ? 'border-slate-700' : 'border-red-50'}`,
                 confirmButton: 'rounded-2xl font-black text-[10px] tracking-widest px-6 py-3',
                 cancelButton: 'rounded-2xl font-black text-[10px] tracking-widest text-slate-500 px-6 py-3'
             }
@@ -285,9 +302,10 @@
             if (result.isConfirmed) {
                 Swal.fire({
                     title: 'Memproses...',
+                    background: isDark ? '#1e293b' : '#ffffff',
+                    color: isDark ? '#f1f5f9' : '#1e293b',
                     didOpen: () => { Swal.showLoading() },
                     allowOutsideClick: false,
-                    allowEscapeKey: false,
                     showConfirmButton: false,
                     customClass: { popup: 'rounded-[2rem]' }
                 });

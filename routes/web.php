@@ -6,11 +6,11 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\PetugasController;
 use App\Http\Controllers\AdminController;
 use Illuminate\Support\Facades\Route;
-use Illuminate\Support\Facades\Auth; // Tambahkan ini untuk menghindari error Intelephense
+use Illuminate\Support\Facades\Auth;
 
 /*
 |--------------------------------------------------------------------------
-| Web Routes - SOWAN v2 (Digital Guest Book)
+| Web Routes - SOWAN v2 (Digital Guest Book LPSE Karawang)
 |--------------------------------------------------------------------------
 */
 
@@ -38,15 +38,16 @@ Route::middleware('auth')->group(function () {
 
     /**
      * Dashboard Redirector
-     * Menggunakan Facade Auth::user() untuk kompatibilitas editor yang lebih baik
      */
     Route::get('/dashboard', function () {
-        $user = Auth::user(); // Lebih aman dan dikenali editor
+        $user = Auth::user(); 
         
-        if ($user->role === 'administrator') return redirect()->route('admin.dashboard');
-        if ($user->role === 'petugas') return redirect()->route('petugas.dashboard');
-        
-        return redirect()->route('pimpinan.dashboard');
+        return match ($user->role) {
+            'administrator' => redirect()->route('admin.dashboard'),
+            'petugas'       => redirect()->route('petugas.dashboard'),
+            'pimpinan'      => redirect()->route('pimpinan.dashboard'),
+            default         => abort(403, 'Role tidak terdefinisi.'),
+        };
     })->name('dashboard');
 
     // --- GRUP AKSES: PETUGAS 📋 ---
@@ -55,24 +56,51 @@ Route::middleware('auth')->group(function () {
             return view('petugas.dashboard');
         })->name('dashboard');
 
+        // CRUD Tamu untuk Petugas
         Route::resource('manajemen_tamu', PetugasController::class)
-             ->parameters(['manajemen_tamu' => 'tamu'])
-             ->where(['tamu' => '[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}']);
+             ->parameters(['manajemen_tamu' => 'tamu']);
         
         Route::patch('manajemen_tamu/{tamu}/status', [PetugasController::class, 'updateStatus'])
-             ->name('manajemen_tamu.updateStatus')
-             ->where('tamu', '[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}');
+             ->name('manajemen_tamu.updateStatus');
     });
 
     // --- GRUP AKSES: ADMINISTRATOR 🛡️ ---
     Route::middleware('role:administrator')->prefix('admin')->name('admin.')->group(function () {
+        // Dashboard Utama
         Route::get('/dashboard', [AdminController::class, 'dashboard'])->name('dashboard');
 
+        // Manajemen User (CRUD)
         Route::resource('users', UserController::class)
              ->parameters(['users' => 'user']);
 
-        Route::get('/audit-log', [UserController::class, 'logs'])->name('logs');
-        Route::get('/master', [AdminController::class, 'masterIndex'])->name('master.index');
+        // --- MASTER DATA (Pusat Kendali Data SOWAN v2) ---
+        Route::prefix('master')->name('master.')->group(function() {
+            // Menu Utama Master (Halaman 2 Card Mewah)
+            Route::get('/', [AdminController::class, 'master_index'])->name('index');
+
+            // CRUD Kategori Layanan (Mapping ke fungsi di AdminController)
+            Route::prefix('layanan')->name('layanan.')->group(function() {
+                Route::get('/', [AdminController::class, 'layanan_index'])->name('index');
+                Route::get('/create', [AdminController::class, 'layanan_create'])->name('create');
+                Route::post('/', [AdminController::class, 'layanan_store'])->name('store');
+                Route::get('/{id}/edit', [AdminController::class, 'layanan_edit'])->name('edit');
+                Route::put('/{id}', [AdminController::class, 'layanan_update'])->name('update');
+                Route::delete('/{id}', [AdminController::class, 'layanan_destroy'])->name('destroy');
+            });
+
+            // CRUD Tujuan Kunjungan (Mapping ke fungsi di AdminController)
+            Route::prefix('tujuan')->name('tujuan.')->group(function() {
+                Route::get('/', [AdminController::class, 'tujuan_index'])->name('index');
+                Route::get('/create', [AdminController::class, 'tujuan_create'])->name('create');
+                Route::post('/', [AdminController::class, 'tujuan_store'])->name('store');
+                Route::get('/{id}/edit', [AdminController::class, 'tujuan_edit'])->name('edit');
+                Route::put('/{id}', [AdminController::class, 'tujuan_update'])->name('update');
+                Route::delete('/{id}', [AdminController::class, 'tujuan_destroy'])->name('destroy');
+            });
+        });
+
+        // Audit Log
+        Route::get('/audit-log', [AdminController::class, 'aktivitas_global'])->name('logs');
     });
 
     // --- GRUP AKSES: PIMPINAN 📊 ---

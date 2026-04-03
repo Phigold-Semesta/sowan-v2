@@ -1,22 +1,52 @@
 <!DOCTYPE html>
-<html lang="id">
+<html lang="id" x-data="{ 
+    darkMode: localStorage.getItem('theme') === 'dark',
+    toggleTheme() {
+        this.darkMode = !this.darkMode;
+        localStorage.setItem('theme', this.darkMode ? 'dark' : 'light');
+    }
+}" :class="{ 'dark': darkMode }">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', 'Dashboard') | SOWAN v2</title>
     
+    <script>
+        if (localStorage.getItem('theme') === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.documentElement.classList.add('dark');
+        } else {
+            document.documentElement.classList.remove('dark');
+        }
+    </script>
+
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     
+    {{-- AlpineJS untuk Logic Dark Mode --}}
+    <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
     {{-- SweetAlert2 CDN --}}
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        'sowan-emerald': '#008f5d',
+                    }
+                }
+            }
+        }
+    </script>
+
     <style>
+        [x-cloak] { display: none !important; }
         body { 
             font-family: 'Plus Jakarta Sans', sans-serif; 
-            background-color: #f0f9f4; 
+            transition: background-color 0.3s ease;
         }
         
         .sidebar-active {
@@ -71,7 +101,6 @@
             .btn-logout { justify-content: center !important; }
         }
 
-        /* Kustomisasi SweetAlert agar senada dengan tema Emerald SOWAN */
         .swal2-popup {
             border-radius: 2rem !important;
             padding: 2rem !important;
@@ -87,20 +116,20 @@
         }
     </style>
 </head>
-<body class="antialiased text-slate-800">
+<body class="antialiased text-slate-800 bg-[#f0f9f4] dark:bg-emerald-950 dark:text-emerald-50 transition-colors duration-300">
 
     <div id="sidebar-overlay" onclick="toggleMobileSidebar()" class="fixed inset-0 bg-slate-900/40 z-30 hidden backdrop-blur-sm"></div>
 
     <div class="flex min-h-screen relative overflow-hidden">
         
-        <aside id="main-sidebar" class="bg-[#008f5d] h-screen text-white flex flex-col z-40 shadow-2xl shrink-0 overflow-hidden group">
+        <aside id="main-sidebar" class="bg-[#008f5d] dark:bg-emerald-900 h-screen text-white flex flex-col z-40 shadow-2xl shrink-0 overflow-hidden group">
             
             <div class="p-6 h-24 flex items-center border-b border-white/10 shrink-0">
                 <div class="logo-full items-center gap-3">
                     <div class="bg-white p-2 rounded-xl shadow-lg shrink-0">
                         <i class="fas fa-book-open text-[#008f5d] text-lg"></i>
                     </div>
-                    <span class="font-extrabold tracking-tighter text-lg uppercase leading-none">LPSE<br><span class="text-emerald-300 text-xs text-nowrap">Karawang SOWAN</span></span>
+                    <span class="font-extrabold tracking-tighter text-lg uppercase leading-none">LPSE<br><span class="text-emerald-300 text-xs text-nowrap text-white">Karawang SOWAN</span></span>
                 </div>
 
                 <div class="icon-buku-collapsed w-full justify-center">
@@ -136,7 +165,8 @@
                     <span class="nav-text ml-3 text-sm font-bold tracking-wide text-nowrap">Manajemen User</span>
                 </a>
 
-                <a href="#" class="nav-item flex items-center py-4 px-5 rounded-2xl transition-all hover:bg-white/10">
+                {{-- MENU MASTER DATA AKTIF --}}
+                <a href="{{ route('admin.master.index') }}" class="nav-item flex items-center py-4 px-5 rounded-2xl transition-all {{ Route::is('admin.master.*') ? 'sidebar-active' : 'hover:bg-white/10' }}">
                     <i class="fas fa-database w-6 text-center text-sm"></i>
                     <span class="nav-text ml-3 text-sm font-bold tracking-wide text-nowrap">Master Data</span>
                 </a>
@@ -176,26 +206,33 @@
         </aside>
 
         <main class="flex-1 flex flex-col min-w-0 h-screen overflow-hidden">
-            <header class="h-20 bg-white border-b border-emerald-50 shadow-sm flex justify-between items-center px-8 z-20 shrink-0">
+            <header class="h-20 bg-white dark:bg-emerald-900 border-b border-emerald-50 dark:border-emerald-800 shadow-sm flex justify-between items-center px-8 z-20 shrink-0 transition-colors duration-300">
                 <div class="flex items-center gap-4">
-                    <button onclick="toggleMobileSidebar()" class="lg:hidden w-10 h-10 flex items-center justify-center rounded-xl bg-emerald-50 text-[#008f5d]">
+                    <button onclick="toggleMobileSidebar()" class="lg:hidden w-10 h-10 flex items-center justify-center rounded-xl bg-emerald-50 dark:bg-emerald-800 text-[#008f5d] dark:text-emerald-400">
                         <i class="fas fa-bars"></i>
                     </button>
                     <div class="flex flex-col leading-none">
-                        <h2 class="text-slate-800 font-black text-xl tracking-tighter uppercase italic">@yield('title', 'Dashboard')</h2>
-                        <p class="text-[9px] font-bold text-slate-400 uppercase tracking-[0.25em] mt-1.5 hidden sm:block">SOWAN v2 • LPSE Karawang</p>
+                        <h2 class="text-slate-800 dark:text-white font-black text-xl tracking-tighter uppercase italic">@yield('title', 'Dashboard')</h2>
+                        <p class="text-[9px] font-bold text-slate-400 dark:text-emerald-400/60 uppercase tracking-[0.25em] mt-1.5 hidden sm:block">SOWAN v2 • LPSE Karawang</p>
                     </div>
                 </div>
 
-                <div class="flex items-center gap-4 bg-slate-50 py-1.5 pl-4 pr-1.5 rounded-2xl border border-slate-100">
-                    <div class="text-right leading-tight hidden md:block">
-                        <p class="text-xs font-black text-slate-800 uppercase tracking-tighter">{{ auth()->user()->nama_lengkap }}</p>
-                        <div class="flex items-center justify-end gap-1.5 mt-0.5">
-                            <span class="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.8)]"></span>
-                            <p class="text-[9px] font-bold text-emerald-600 uppercase tracking-widest italic leading-none">{{ strtoupper(auth()->user()->role) }}</p>
+                <div class="flex items-center gap-4">
+                    <button @click="toggleTheme()" class="w-10 h-10 flex items-center justify-center rounded-xl bg-slate-50 dark:bg-emerald-800 text-slate-500 dark:text-yellow-400 border border-slate-100 dark:border-emerald-700 transition-all hover:scale-110">
+                        <i x-show="darkMode" class="fa-solid fa-sun text-lg" x-cloak></i>
+                        <i x-show="!darkMode" class="fa-solid fa-moon text-lg" x-cloak></i>
+                    </button>
+
+                    <div class="flex items-center gap-4 bg-slate-50 dark:bg-emerald-800/50 py-1.5 pl-4 pr-1.5 rounded-2xl border border-slate-100 dark:border-emerald-700">
+                        <div class="text-right leading-tight hidden md:block">
+                            <p class="text-xs font-black text-slate-800 dark:text-emerald-50 uppercase tracking-tighter">{{ auth()->user()->nama_lengkap }}</p>
+                            <div class="flex items-center justify-end gap-1.5 mt-0.5">
+                                <span class="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.8)]"></span>
+                                <p class="text-[9px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-widest italic leading-none">{{ strtoupper(auth()->user()->role) }}</p>
+                            </div>
                         </div>
+                        <img src="https://ui-avatars.com/api/?name={{ urlencode(auth()->user()->nama_lengkap) }}&background=008f5d&color=fff&bold=true" class="w-10 h-10 rounded-xl border-2 border-white dark:border-emerald-700 shadow-sm">
                     </div>
-                    <img src="https://ui-avatars.com/api/?name={{ urlencode(auth()->user()->nama_lengkap) }}&background=008f5d&color=fff&bold=true" class="w-10 h-10 rounded-xl border-2 border-white shadow-sm">
                 </div>
             </header>
 
@@ -208,7 +245,6 @@
     </div>
 
     <script>
-        // Toggle Sidebar Mobile
         function toggleMobileSidebar() {
             const sidebar = document.getElementById('main-sidebar');
             const overlay = document.getElementById('sidebar-overlay');
@@ -216,7 +252,6 @@
             overlay.classList.toggle('hidden');
         }
 
-        // Konfirmasi Logout dengan SweetAlert
         function confirmLogout(event) {
             event.preventDefault();
             Swal.fire({
@@ -229,6 +264,8 @@
                 confirmButtonText: 'YA, LOGOUT',
                 cancelButtonText: 'BATAL',
                 reverseButtons: true,
+                background: document.documentElement.classList.contains('dark') ? '#064e3b' : '#fff',
+                color: document.documentElement.classList.contains('dark') ? '#ecfdf5' : '#1e293b',
                 customClass: {
                     cancelButton: 'text-slate-600 font-bold'
                 }
@@ -239,7 +276,6 @@
             });
         }
 
-        // Penanganan Otomatis Notifikasi CRUD Laravel Session
         document.addEventListener('DOMContentLoaded', function() {
             const Toast = Swal.mixin({
                 toast: true,
@@ -247,17 +283,12 @@
                 showConfirmButton: false,
                 timer: 3000,
                 timerProgressBar: true,
-                didOpen: (toast) => {
-                    toast.addEventListener('mouseenter', Swal.stopTimer)
-                    toast.addEventListener('mouseleave', Swal.resumeTimer)
-                }
+                background: document.documentElement.classList.contains('dark') ? '#064e3b' : '#fff',
+                color: document.documentElement.classList.contains('dark') ? '#ecfdf5' : '#1e293b',
             });
 
             @if(session('success'))
-                Toast.fire({
-                    icon: 'success',
-                    title: "{{ session('success') }}"
-                });
+                Toast.fire({ icon: 'success', title: "{{ session('success') }}" });
             @endif
 
             @if(session('error'))
@@ -265,7 +296,9 @@
                     icon: 'error',
                     title: 'Waduh...',
                     text: "{{ session('error') }}",
-                    confirmButtonColor: '#008f5d'
+                    confirmButtonColor: '#008f5d',
+                    background: document.documentElement.classList.contains('dark') ? '#064e3b' : '#fff',
+                    color: document.documentElement.classList.contains('dark') ? '#ecfdf5' : '#1e293b',
                 });
             @endif
         });
