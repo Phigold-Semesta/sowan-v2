@@ -6,8 +6,13 @@ use Illuminate\Database\Eloquent\Model;
 
 class Layanan extends Model
 {
-    protected $table = 'layanan'; // Nama tunggal
+    protected $table = 'layanan';
     protected $primaryKey = 'id_layanan';
-    public $incrementing = false;
-    protected $fillable = ['id_layanan', 'nama_layanan'];
+
+    // WAJIB TRUE jika di database sudah A_I
+    public $incrementing = true; 
+
+    protected $fillable = [
+        'nama_layanan',
+    ];
 }

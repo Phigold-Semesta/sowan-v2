@@ -5,85 +5,206 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\User;
 use App\Models\Tamu;
+use App\Models\Kunjungan;
+use App\Models\Layanan;
+use App\Models\PetugasTujuan; // Model untuk Tujuan Kunjungan
+use App\Models\RatingLayanan;
 use App\Models\AuditLog;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Schema; // Tambahkan ini untuk pengecekan kolom
+use Illuminate\Support\Facades\Auth;
 
 class AdminController extends Controller
 {
     /**
-     * Menampilkan Dashboard Utama Admin SOWAN v2
-     * Sudah dilengkapi proteksi kolom rating agar tidak menyebabkan SQL Error.
+     * Dashboard Utama Admin
      */
     public function dashboard()
     {
-        // 1. Statistik Dasar (Pengguna & Total Tamu)
         $totalUsers = User::count();
         $totalTamu  = Tamu::count();
+        $tamuHariIni = Kunjungan::whereDate('waktu_masuk', Carbon::today())->count();
+        
+        $avgValue = RatingLayanan::avg('skor') ?? 0;
+        $avgRating = number_format($avgValue, 1);
 
-        // 2. Statistik Real-time (Tamu Hari Ini)
-        $tamuHariIni = Tamu::whereDate('created_at', Carbon::today())->count();
-
-        // 3. Menghitung Rata-rata Rating dengan Proteksi Database
-        // Cek apakah tabel 'tamu' punya kolom 'rating' untuk menghindari SQL Error 1054
-        if (Schema::hasColumn('tamu', 'rating')) {
-            $avgValue = Tamu::avg('rating') ?? 0;
-            $avgRating = number_format($avgValue, 1);
-        } else {
-            // Jika kolom belum ada di DB, tampilkan 0.0 secara default (Safe Mode)
-            $avgRating = "0.0";
-        }
-
-        // 4. Mengambil Log Aktivitas (Audit Log)
-        // Menggunakan Eager Loading 'user' untuk performa maksimal
-        $latestLogs = [];
-        if (class_exists('App\Models\AuditLog')) {
-            $latestLogs = AuditLog::with('user')
-                ->latest()
-                ->take(5)
-                ->get();
-        }
-
-        // 5. List Tamu Terbaru (Untuk ditampilkan di tabel dashboard)
-        $latestTamu = Tamu::latest()->take(5)->get();
+        $latestLogs = AuditLog::with('user')->latest()->take(5)->get();
+        $latestKunjungan = Kunjungan::with(['tamu', 'layanan'])
+                            ->latest('waktu_masuk')
+                            ->take(5)
+                            ->get();
 
         return view('admin.dashboard', compact(
-            'totalUsers', 
-            'totalTamu',
-            'tamuHariIni',
-            'avgRating',
-            'latestLogs',
-            'latestTamu'
+            'totalUsers', 'totalTamu', 'tamuHariIni', 'avgRating', 'latestLogs', 'latestKunjungan'
         ));
     }
 
     /**
-     * Master Data Index
-     * Pintu utama pengelolaan database sistem SOWAN v2
+     * Halaman Pintu Masuk Master Data
      */
     public function master_index()
     {
-        // Kita kirimkan statistik kecil untuk halaman master index nanti
-        $stats = [
-            'total_tamu' => Tamu::count(),
-            'total_user' => User::count(),
-        ];
-
-        return view('admin.master.index', compact('stats'));
+        return view('admin.master.index'); 
     }
 
-    /**
-     * Aktivitas Global
-     * Menampilkan seluruh jejak audit sistem dengan pagination
-     */
-    public function aktivitas_global()
+    // =========================================================================
+    // --- MASTER DATA: LAYANAN ---
+    // =========================================================================
+
+    public function layanan_index(Request $request)
     {
-        // Proteksi jika model AuditLog belum siap
-        if (!class_exists('App\Models\AuditLog')) {
-            return back()->with('error', 'Fitur Audit Log belum dikonfigurasi.');
+        $query = Layanan::query();
+        
+        if ($request->filled('search')) {
+            $query->where('nama_layanan', 'like', '%' . $request->input('search') . '%');
         }
 
+        $perPage = $request->input('per_page', 10);
+        $layanan = ($perPage === 'all') 
+            ? $query->latest('id_layanan')->get() 
+            : $query->latest('id_layanan')->paginate((int)$perPage)->withQueryString();
+
+        return view('admin.master.layanan.index', compact('layanan'));
+    }
+
+    public function layanan_create() 
+    { 
+        return view('admin.master.layanan.create'); 
+    }
+
+    public function layanan_store(Request $request)
+    {
+        $request->validate([
+            'nama_layanan' => 'required|string|max:255|unique:layanan,nama_layanan'
+        ]);
+
+        try {
+            Layanan::create(['nama_layanan' => $request->nama_layanan]);
+            return redirect()->route('admin.master.layanan.index')->with('success', 'Layanan berhasil ditambah!');
+        } catch (\Exception $e) {
+            return back()->withInput()->with('error', 'Gagal menyimpan data layanan.');
+        }
+    }
+
+    public function layanan_edit($id)
+    {
+        $layanan = Layanan::where('id_layanan', $id)->firstOrFail();
+        return view('admin.master.layanan.edit', compact('layanan'));
+    }
+
+    public function layanan_update(Request $request, $id)
+    {
+        $request->validate([
+            'nama_layanan' => 'required|string|max:255|unique:layanan,nama_layanan,'.$id.',id_layanan'
+        ]);
+
+        Layanan::where('id_layanan', $id)->update(['nama_layanan' => $request->nama_layanan]);
+        return redirect()->route('admin.master.layanan.index')->with('success', 'Layanan diperbarui!');
+    }
+
+    public function layanan_destroy($id)
+    {
+        try {
+            Layanan::where('id_layanan', $id)->delete();
+            return redirect()->route('admin.master.layanan.index')->with('success', 'Layanan berhasil dihapus!');
+        } catch (\Exception $e) {
+            return back()->with('error', 'Gagal! Data layanan ini masih digunakan oleh data kunjungan.');
+        }
+    }
+
+    // =========================================================================
+    // --- MASTER DATA: TUJUAN KUNJUNGAN ---
+    // =========================================================================
+
+    public function tujuan_index(Request $request)
+    {
+        $query = PetugasTujuan::query();
+        
+        if ($request->filled('search')) {
+            $search = $request->input('search');
+            $query->where('nama_petugas', 'like', "%$search%")
+                  ->orWhere('jabatan', 'like', "%$search%");
+        }
+
+        $perPage = $request->input('per_page', 10);
+        $tujuan = ($perPage === 'all') 
+            ? $query->latest('id_petugas')->get() 
+            : $query->latest('id_petugas')->paginate((int)$perPage)->withQueryString();
+
+        return view('admin.master.tujuan.index', compact('tujuan'));
+    }
+
+    public function tujuan_create() 
+    { 
+        // Pastikan path view sesuai folder: resources/views/admin/master/tujuan/create.blade.php
+        return view('admin.master.tujuan.create'); 
+    }
+
+    public function tujuan_store(Request $request)
+    {
+        $request->validate([
+            'nama_petugas' => 'required|string|max:255',
+            'jabatan'      => 'required|string|max:255'
+        ]);
+
+        try {
+            PetugasTujuan::create([
+                'nama_petugas' => $request->nama_petugas,
+                'jabatan'      => $request->jabatan
+            ]);
+            
+            return redirect()->route('admin.master.tujuan.index')->with('success', 'Tujuan kunjungan berhasil ditambahkan!');
+        } catch (\Exception $e) {
+            return back()->withInput()->with('error', 'Terjadi kesalahan sistem saat menyimpan data.');
+        }
+    }
+
+    public function tujuan_show($id)
+    {
+        $tujuan = PetugasTujuan::where('id_petugas', $id)->firstOrFail();
+        return view('admin.master.tujuan.show', compact('tujuan'));
+    }
+
+    public function tujuan_edit($id)
+    {
+        $tujuan = PetugasTujuan::where('id_petugas', $id)->firstOrFail();
+        return view('admin.master.tujuan.edit', compact('tujuan'));
+    }
+
+    public function tujuan_update(Request $request, $id)
+    {
+        $request->validate([
+            'nama_petugas' => 'required|string|max:255',
+            'jabatan'      => 'required|string|max:255'
+        ]);
+
+        try {
+            PetugasTujuan::where('id_petugas', $id)->update([
+                'nama_petugas' => $request->nama_petugas,
+                'jabatan'      => $request->jabatan
+            ]);
+            return redirect()->route('admin.master.tujuan.index')->with('success', 'Data tujuan kunjungan diperbarui!');
+        } catch (\Exception $e) {
+            return back()->with('error', 'Gagal memperbarui data.');
+        }
+    }
+
+    public function tujuan_destroy($id)
+    {
+        try {
+            PetugasTujuan::where('id_petugas', $id)->delete();
+            return redirect()->route('admin.master.tujuan.index')->with('success', 'Data berhasil dihapus!');
+        } catch (\Exception $e) {
+            return back()->with('error', 'Gagal! Data ini masih terkait dengan laporan kunjungan.');
+        }
+    }
+
+    // =========================================================================
+    // --- LOG AKTIVITAS ---
+    // =========================================================================
+
+    public function aktivitas_global()
+    {
         $logs = AuditLog::with('user')->latest()->paginate(20);
         return view('admin.aktivitas.index', compact('logs'));
     }

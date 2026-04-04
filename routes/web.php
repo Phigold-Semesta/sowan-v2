@@ -66,6 +66,7 @@ Route::middleware('auth')->group(function () {
 
     // --- GRUP AKSES: ADMINISTRATOR 🛡️ ---
     Route::middleware('role:administrator')->prefix('admin')->name('admin.')->group(function () {
+        
         // Dashboard Utama
         Route::get('/dashboard', [AdminController::class, 'dashboard'])->name('dashboard');
 
@@ -75,24 +76,30 @@ Route::middleware('auth')->group(function () {
 
         // --- MASTER DATA (Pusat Kendali Data SOWAN v2) ---
         Route::prefix('master')->name('master.')->group(function() {
-            // Menu Utama Master (Halaman 2 Card Mewah)
+            
+            // Halaman Utama Master
             Route::get('/', [AdminController::class, 'master_index'])->name('index');
 
-            // CRUD Kategori Layanan (Mapping ke fungsi di AdminController)
+            // CRUD Kategori Layanan
             Route::prefix('layanan')->name('layanan.')->group(function() {
                 Route::get('/', [AdminController::class, 'layanan_index'])->name('index');
                 Route::get('/create', [AdminController::class, 'layanan_create'])->name('create');
                 Route::post('/', [AdminController::class, 'layanan_store'])->name('store');
+                Route::get('/{id}', [AdminController::class, 'layanan_show'])->name('show');
                 Route::get('/{id}/edit', [AdminController::class, 'layanan_edit'])->name('edit');
                 Route::put('/{id}', [AdminController::class, 'layanan_update'])->name('update');
                 Route::delete('/{id}', [AdminController::class, 'layanan_destroy'])->name('destroy');
             });
 
-            // CRUD Tujuan Kunjungan (Mapping ke fungsi di AdminController)
+            // CRUD Tujuan Kunjungan (Sinkronisasi dengan Controller & Blade)
             Route::prefix('tujuan')->name('tujuan.')->group(function() {
                 Route::get('/', [AdminController::class, 'tujuan_index'])->name('index');
                 Route::get('/create', [AdminController::class, 'tujuan_create'])->name('create');
-                Route::post('/', [AdminController::class, 'tujuan_store'])->name('store');
+                
+                // PERBAIKAN: Nama route disamakan dengan pemanggilan di Blade 'tujuan_store'
+                Route::post('/store', [AdminController::class, 'tujuan_store'])->name('tujuan_store'); 
+                
+                Route::get('/{id}', [AdminController::class, 'tujuan_show'])->name('show');
                 Route::get('/{id}/edit', [AdminController::class, 'tujuan_edit'])->name('edit');
                 Route::put('/{id}', [AdminController::class, 'tujuan_update'])->name('update');
                 Route::delete('/{id}', [AdminController::class, 'tujuan_destroy'])->name('destroy');
