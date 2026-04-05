@@ -7,7 +7,7 @@ use App\Models\User;
 use App\Models\Tamu;
 use App\Models\Kunjungan;
 use App\Models\Layanan;
-use App\Models\PetugasTujuan; // Model untuk Tujuan Kunjungan
+use App\Models\PetugasTujuan;
 use App\Models\RatingLayanan;
 use App\Models\AuditLog;
 use Carbon\Carbon;
@@ -29,6 +29,7 @@ class AdminController extends Controller
         $avgRating = number_format($avgValue, 1);
 
         $latestLogs = AuditLog::with('user')->latest()->take(5)->get();
+        
         $latestKunjungan = Kunjungan::with(['tamu', 'layanan'])
                             ->latest('waktu_masuk')
                             ->take(5)
@@ -136,7 +137,6 @@ class AdminController extends Controller
 
     public function tujuan_create() 
     { 
-        // Pastikan path view sesuai folder: resources/views/admin/master/tujuan/create.blade.php
         return view('admin.master.tujuan.create'); 
     }
 
@@ -191,21 +191,54 @@ class AdminController extends Controller
 
     public function tujuan_destroy($id)
     {
+        DB::beginTransaction();
         try {
+            Kunjungan::where('id_petugas', $id)->delete();
             PetugasTujuan::where('id_petugas', $id)->delete();
-            return redirect()->route('admin.master.tujuan.index')->with('success', 'Data berhasil dihapus!');
+
+            DB::commit();
+            return redirect()->route('admin.master.tujuan.index')->with('success', 'Data petugas dan riwayat kunjungan berhasil dibersihkan!');
         } catch (\Exception $e) {
-            return back()->with('error', 'Gagal! Data ini masih terkait dengan laporan kunjungan.');
+            DB::rollBack();
+            return back()->with('error', 'Terjadi kesalahan saat menghapus data.');
         }
     }
 
     // =========================================================================
-    // --- LOG AKTIVITAS ---
+    // --- LOG AKTIVITAS (AKTIVITAS GLOBAL) ---
     // =========================================================================
 
-    public function aktivitas_global()
+    public function aktivitas_global(Request $request)
     {
-        $logs = AuditLog::with('user')->latest()->paginate(20);
-        return view('admin.aktivitas.index', compact('logs'));
+        $query = AuditLog::with('user');
+
+        // Filter Pencarian: Nama User atau Deskripsi Aktivitas
+        if ($request->filled('search')) {
+            $search = $request->input('search');
+            $query->where(function($q) use ($search) {
+                $q->where('deskripsi', 'like', "%$search%")
+                  ->orWhereHas('user', function($qu) use ($search) {
+                      $qu->where('nama_lengkap', 'like', "%$search%");
+                  });
+            });
+        }
+
+        // Filter Berdasarkan Tanggal
+        if ($request->filled('date')) {
+            $query->whereDate('created_at', $request->input('date'));
+        }
+
+        // PENYEMPURNAAN: Logika Per Page yang fleksibel
+        $perPage = $request->input('per_page', 10); // Default 10 baris
+        
+        if ($perPage === 'all') {
+            $activities = $query->latest()->get();
+        } else {
+            $activities = $query->latest()
+                                ->paginate((int)$perPage)
+                                ->withQueryString();
+        }
+
+        return view('admin.aktivitas.index', compact('activities'));
     }
 }

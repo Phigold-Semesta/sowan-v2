@@ -91,14 +91,11 @@ Route::middleware('auth')->group(function () {
                 Route::delete('/{id}', [AdminController::class, 'layanan_destroy'])->name('destroy');
             });
 
-            // CRUD Tujuan Kunjungan (Sinkronisasi dengan Controller & Blade)
+            // CRUD Tujuan Kunjungan
             Route::prefix('tujuan')->name('tujuan.')->group(function() {
                 Route::get('/', [AdminController::class, 'tujuan_index'])->name('index');
                 Route::get('/create', [AdminController::class, 'tujuan_create'])->name('create');
-                
-                // PERBAIKAN: Nama route disamakan dengan pemanggilan di Blade 'tujuan_store'
                 Route::post('/store', [AdminController::class, 'tujuan_store'])->name('tujuan_store'); 
-                
                 Route::get('/{id}', [AdminController::class, 'tujuan_show'])->name('show');
                 Route::get('/{id}/edit', [AdminController::class, 'tujuan_edit'])->name('edit');
                 Route::put('/{id}', [AdminController::class, 'tujuan_update'])->name('update');
@@ -106,8 +103,13 @@ Route::middleware('auth')->group(function () {
             });
         });
 
-        // Audit Log
-        Route::get('/audit-log', [AdminController::class, 'aktivitas_global'])->name('logs');
+        // --- AKTIVITAS GLOBAL (Audit Log) 🕵️‍♂️ ---
+        // Kita buat grup agar strukturnya rapi dan konsisten
+        Route::prefix('aktivitas')->name('aktivitas.')->group(function() {
+            Route::get('/', [AdminController::class, 'aktivitas_global'])->name('index');
+            // Ke depannya kamu bisa tambah route detail di sini:
+            // Route::get('/{id}', [AdminController::class, 'aktivitas_show'])->name('show');
+        });
     });
 
     // --- GRUP AKSES: PIMPINAN 📊 ---

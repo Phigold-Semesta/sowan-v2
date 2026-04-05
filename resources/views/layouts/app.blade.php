@@ -171,7 +171,7 @@
                     <span class="nav-text ml-3 text-sm font-bold tracking-wide text-nowrap">Master Data</span>
                 </a>
 
-                <a href="{{ route('admin.logs') }}" class="nav-item flex items-center py-4 px-5 rounded-2xl transition-all {{ Route::is('admin.logs') ? 'sidebar-active' : 'hover:bg-white/10' }}">
+                <a href="{{ route('admin.aktivitas.index') }}" class="nav-item flex items-center py-4 px-5 rounded-2xl transition-all {{ Route::is('admin.aktivitas.*') ? 'sidebar-active' : 'hover:bg-white/10' }}">
                     <i class="fas fa-fingerprint w-6 text-center text-sm"></i>
                     <span class="nav-text ml-3 text-sm font-bold tracking-wide text-nowrap">Aktivitas Global</span>
                 </a>
