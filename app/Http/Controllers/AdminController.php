@@ -18,6 +18,7 @@ class AdminController extends Controller
 {
     /**
      * Dashboard Utama Admin
+     * Menampilkan statistik ringkas dan aktivitas terbaru.
      */
     public function dashboard()
     {
@@ -30,7 +31,8 @@ class AdminController extends Controller
 
         $latestLogs = AuditLog::with('user')->latest()->take(5)->get();
         
-        $latestKunjungan = Kunjungan::with(['tamu', 'layanan'])
+        // DISESUAIKAN: Menggunakan relasi 'petugas' sesuai Model Kunjungan
+        $latestKunjungan = Kunjungan::with(['tamu', 'layanan', 'petugas'])
                             ->latest('waktu_masuk')
                             ->take(5)
                             ->get();
@@ -81,6 +83,10 @@ class AdminController extends Controller
 
         try {
             Layanan::create(['nama_layanan' => $request->nama_layanan]);
+            
+            // Catat Log
+            $this->logActivity("Menambahkan layanan baru: " . $request->nama_layanan);
+
             return redirect()->route('admin.master.layanan.index')->with('success', 'Layanan berhasil ditambah!');
         } catch (\Exception $e) {
             return back()->withInput()->with('error', 'Gagal menyimpan data layanan.');
@@ -100,13 +106,19 @@ class AdminController extends Controller
         ]);
 
         Layanan::where('id_layanan', $id)->update(['nama_layanan' => $request->nama_layanan]);
+        $this->logActivity("Memperbarui data layanan ID: $id");
+
         return redirect()->route('admin.master.layanan.index')->with('success', 'Layanan diperbarui!');
     }
 
     public function layanan_destroy($id)
     {
         try {
-            Layanan::where('id_layanan', $id)->delete();
+            $layanan = Layanan::where('id_layanan', $id)->firstOrFail();
+            $nama = $layanan->nama_layanan;
+            $layanan->delete();
+
+            $this->logActivity("Menghapus layanan: $nama");
             return redirect()->route('admin.master.layanan.index')->with('success', 'Layanan berhasil dihapus!');
         } catch (\Exception $e) {
             return back()->with('error', 'Gagal! Data layanan ini masih digunakan oleh data kunjungan.');
@@ -153,6 +165,7 @@ class AdminController extends Controller
                 'jabatan'      => $request->jabatan
             ]);
             
+            $this->logActivity("Menambahkan petugas tujuan: " . $request->nama_petugas);
             return redirect()->route('admin.master.tujuan.index')->with('success', 'Tujuan kunjungan berhasil ditambahkan!');
         } catch (\Exception $e) {
             return back()->withInput()->with('error', 'Terjadi kesalahan sistem saat menyimpan data.');
@@ -183,6 +196,8 @@ class AdminController extends Controller
                 'nama_petugas' => $request->nama_petugas,
                 'jabatan'      => $request->jabatan
             ]);
+
+            $this->logActivity("Memperbarui data petugas ID: $id");
             return redirect()->route('admin.master.tujuan.index')->with('success', 'Data tujuan kunjungan diperbarui!');
         } catch (\Exception $e) {
             return back()->with('error', 'Gagal memperbarui data.');
@@ -193,10 +208,12 @@ class AdminController extends Controller
     {
         DB::beginTransaction();
         try {
+            // Hapus kunjungan terkait terlebih dahulu agar tidak error foreign key
             Kunjungan::where('id_petugas', $id)->delete();
             PetugasTujuan::where('id_petugas', $id)->delete();
 
             DB::commit();
+            $this->logActivity("Menghapus petugas tujuan ID: $id dan riwayat terkait.");
             return redirect()->route('admin.master.tujuan.index')->with('success', 'Data petugas dan riwayat kunjungan berhasil dibersihkan!');
         } catch (\Exception $e) {
             DB::rollBack();
@@ -212,7 +229,6 @@ class AdminController extends Controller
     {
         $query = AuditLog::with('user');
 
-        // Filter Pencarian: Nama User atau Deskripsi Aktivitas
         if ($request->filled('search')) {
             $search = $request->input('search');
             $query->where(function($q) use ($search) {
@@ -223,22 +239,118 @@ class AdminController extends Controller
             });
         }
 
-        // Filter Berdasarkan Tanggal
         if ($request->filled('date')) {
             $query->whereDate('created_at', $request->input('date'));
         }
 
-        // PENYEMPURNAAN: Logika Per Page yang fleksibel
-        $perPage = $request->input('per_page', 10); // Default 10 baris
-        
-        if ($perPage === 'all') {
-            $activities = $query->latest()->get();
-        } else {
-            $activities = $query->latest()
-                                ->paginate((int)$perPage)
-                                ->withQueryString();
-        }
+        $perPage = $request->input('per_page', 10);
+        $activities = ($perPage === 'all') 
+            ? $query->latest()->get() 
+            : $query->latest()->paginate((int)$perPage)->withQueryString();
 
         return view('admin.aktivitas.index', compact('activities'));
+    }
+
+    // =========================================================================
+    // --- LAPORAN KUNJUNGAN (FITUR BARU SOWAN V2) ---
+    // =========================================================================
+
+    public function laporan_index(Request $request)
+    {
+        // PERBAIKAN: Menggunakan relasi 'petugas' agar sinkron dengan Model Kunjungan
+        $query = Kunjungan::with(['tamu', 'layanan', 'petugas']);
+
+        // Filter Rentang Tanggal
+        if ($request->filled('start_date') && $request->filled('end_date')) {
+            $query->whereBetween('waktu_masuk', [
+                $request->start_date . ' 00:00:00', 
+                $request->end_date . ' 23:59:59'
+            ]);
+        }
+
+        // Filter Layanan
+        if ($request->filled('id_layanan')) {
+            $query->where('id_layanan', $request->id_layanan);
+        }
+
+        $perPage = $request->input('per_page', 10);
+        $kunjungan = ($perPage === 'all') 
+            ? $query->latest('waktu_masuk')->get() 
+            : $query->latest('waktu_masuk')->paginate((int)$perPage)->withQueryString();
+
+        $listLayanan = Layanan::all();
+
+        return view('admin.laporan.index', compact('kunjungan', 'listLayanan'));
+    }
+
+    /**
+     * Ekspor Laporan ke CSV (Native Laravel Response)
+     */
+    public function laporan_export(Request $request)
+    {
+        // PERBAIKAN: Menggunakan relasi 'petugas' agar sinkron dengan Model Kunjungan
+        $query = Kunjungan::with(['tamu', 'layanan', 'petugas']);
+
+        // Pastikan filter juga terbawa saat export
+        if ($request->filled('start_date') && $request->filled('end_date')) {
+            $query->whereBetween('waktu_masuk', [$request->start_date . ' 00:00:00', $request->end_date . ' 23:59:59']);
+        }
+        
+        if ($request->filled('id_layanan')) {
+            $query->where('id_layanan', $request->id_layanan);
+        }
+
+        $data = $query->latest('waktu_masuk')->get();
+        $fileName = 'Laporan_SOWAN_LPSE_' . now()->format('Ymd_His') . '.csv';
+
+        $headers = [
+            "Content-type"        => "text/csv",
+            "Content-Disposition" => "attachment; filename=$fileName",
+            "Pragma"              => "no-cache",
+            "Cache-Control"       => "must-revalidate, post-check=0, pre-check=0",
+            "Expires"             => "0"
+        ];
+
+        // DISESUAIKAN: Header kolom yang lebih rapi
+        $columns = ['No', 'Waktu Masuk', 'Nama Tamu', 'Instansi', 'Layanan', 'Tujuan Petugas', 'Status'];
+
+        $callback = function() use($data, $columns) {
+            $file = fopen('php://output', 'w');
+            
+            // Tambahkan BOM agar file CSV terbaca dengan benar di Excel (support karakter spesial)
+            fprintf($file, chr(0xEF).chr(0xBB).chr(0xBF));
+            
+            fputcsv($file, $columns);
+
+            foreach ($data as $index => $row) {
+                fputcsv($file, [
+                    $index + 1,
+                    $row->waktu_masuk,
+                    // PERBAIKAN: Sesuai Model Tamu menggunakan 'nama_tamu' dan 'nama_instansi'
+                    $row->tamu->nama_tamu ?? '-', 
+                    $row->tamu->nama_instansi ?? '-',
+                    $row->layanan->nama_layanan ?? '-',
+                    $row->petugas->nama_petugas ?? '-', // DISESUAIKAN: Menggunakan relasi 'petugas'
+                    $row->status 
+                ]);
+            }
+            fclose($file);
+        };
+
+        $this->logActivity("Mengekspor laporan kunjungan ke CSV.");
+        return response()->stream($callback, 200, $headers);
+    }
+
+    /**
+     * Helper Fungsi untuk mencatat Audit Log secara internal
+     */
+    private function logActivity($deskripsi)
+    {
+        AuditLog::create([
+            'id_user'   => Auth::id(),
+            'deskripsi' => $deskripsi,
+            'ip_address' => request()->ip(),
+            'user_agent' => request()->userAgent(),
+        ]);
     }
 }

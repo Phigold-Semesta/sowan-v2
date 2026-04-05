@@ -37,7 +37,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
     /**
-     * Dashboard Redirector
+     * Dashboard Redirector (Otomatis sesuai Role)
      */
     Route::get('/dashboard', function () {
         $user = Auth::user(); 
@@ -103,23 +103,32 @@ Route::middleware('auth')->group(function () {
             });
         });
 
+        // --- MENU LAPORAN KUNJUNGAN (DISEMPURNAKAN & DISINKRONKAN) 📑 ---
+        Route::prefix('laporan')->name('laporan.')->group(function() {
+            Route::get('/', [AdminController::class, 'laporan_index'])->name('index');
+            
+            // PERBAIKAN UTAMA: Nama rute diubah dari 'export.csv' menjadi 'export'
+            // Hal ini agar sinkron dengan panggil di Blade: {{ route('admin.laporan.export') }}
+            Route::get('/export', [AdminController::class, 'laporan_export'])->name('export');
+        });
+
         // --- AKTIVITAS GLOBAL (Audit Log) 🕵️‍♂️ ---
-        // Kita buat grup agar strukturnya rapi dan konsisten
         Route::prefix('aktivitas')->name('aktivitas.')->group(function() {
             Route::get('/', [AdminController::class, 'aktivitas_global'])->name('index');
-            // Ke depannya kamu bisa tambah route detail di sini:
-            // Route::get('/{id}', [AdminController::class, 'aktivitas_show'])->name('show');
         });
     });
 
     // --- GRUP AKSES: PIMPINAN 📊 ---
     Route::middleware('role:pimpinan')->prefix('pimpinan')->name('pimpinan.')->group(function () {
         Route::get('/dashboard', [TamuController::class, 'pimpinanDashboard'])->name('dashboard');
+        
+        // Pimpinan menggunakan rute laporan yang sama secara fungsional
+        Route::get('/laporan', [AdminController::class, 'laporan_index'])->name('laporan.index');
+        Route::get('/laporan/export', [AdminController::class, 'laporan_export'])->name('laporan.export');
     });
 
-    // --- FITUR LAPORAN & STATISTIK (SHARED) 📑 ---
+    // --- FITUR STATISTIK (SHARED) 📈 ---
     Route::middleware('role:pimpinan,administrator')->group(function () {
-        Route::get('/laporan', [TamuController::class, 'report'])->name('laporan.index');
         Route::get('/statistik', [TamuController::class, 'stats'])->name('statistik.index');
     });
 });

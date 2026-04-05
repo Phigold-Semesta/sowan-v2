@@ -24,9 +24,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     
-    {{-- AlpineJS untuk Logic Dark Mode --}}
     <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
-    {{-- SweetAlert2 CDN --}}
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <script>
@@ -129,7 +127,7 @@
                     <div class="bg-white p-2 rounded-xl shadow-lg shrink-0">
                         <i class="fas fa-book-open text-[#008f5d] text-lg"></i>
                     </div>
-                    <span class="font-extrabold tracking-tighter text-lg uppercase leading-none">LPSE<br><span class="text-emerald-300 text-xs text-nowrap text-white">Karawang SOWAN</span></span>
+                    <span class="font-extrabold tracking-tighter text-lg uppercase leading-none">LPSE<br><span class="text-emerald-300 text-xs text-nowrap">Karawang SOWAN</span></span>
                 </div>
 
                 <div class="icon-buku-collapsed w-full justify-center">
@@ -145,8 +143,7 @@
                 <a href="{{ route('dashboard') }}" class="nav-item flex items-center py-4 px-5 rounded-2xl transition-all {{ Route::is('dashboard') ? 'sidebar-active' : 'hover:bg-white/10' }}">
                     <i class="fas fa-chart-line w-6 text-center text-sm"></i>
                     <span class="nav-text ml-3 text-sm font-bold tracking-wide text-nowrap">
-                        @if(auth()->user()->role === 'pimpinan') Dashboard Eksekutif 
-                        @else Dashboard @endif
+                        {{ auth()->user()->role === 'pimpinan' ? 'Dashboard Eksekutif' : 'Dashboard' }}
                     </span>
                 </a>
 
@@ -165,7 +162,6 @@
                     <span class="nav-text ml-3 text-sm font-bold tracking-wide text-nowrap">Manajemen User</span>
                 </a>
 
-                {{-- MENU MASTER DATA AKTIF --}}
                 <a href="{{ route('admin.master.index') }}" class="nav-item flex items-center py-4 px-5 rounded-2xl transition-all {{ Route::is('admin.master.*') ? 'sidebar-active' : 'hover:bg-white/10' }}">
                     <i class="fas fa-database w-6 text-center text-sm"></i>
                     <span class="nav-text ml-3 text-sm font-bold tracking-wide text-nowrap">Master Data</span>
@@ -179,18 +175,25 @@
 
                 <div class="menu-header px-4 py-3 text-[10px] font-black text-emerald-200/50 uppercase tracking-[0.2em] mt-4">Monitoring</div>
 
+                {{-- Link Rating (Bisa diisi nanti) --}}
                 <a href="#" class="nav-item flex items-center py-4 px-5 rounded-2xl transition-all hover:bg-white/10">
                     <i class="fas fa-star-half-stroke w-6 text-center text-sm"></i>
                     <span class="nav-text ml-3 text-sm font-bold tracking-wide text-nowrap">Rating Layanan</span>
                 </a>
 
-                <a href="{{ route('laporan.index') }}" class="nav-item flex items-center py-4 px-5 rounded-2xl transition-all {{ Route::is('laporan.index') ? 'sidebar-active' : 'hover:bg-white/10' }}">
+                {{-- PENYEMPURNAAN ROUTE LAPORAN DI SINI --}}
+                @php
+                    $laporanRoute = auth()->user()->role === 'administrator' ? 'admin.laporan.index' : (auth()->user()->role === 'pimpinan' ? 'pimpinan.laporan.index' : null);
+                @endphp
+
+                @if($laporanRoute)
+                <a href="{{ route($laporanRoute) }}" class="nav-item flex items-center py-4 px-5 rounded-2xl transition-all {{ Route::is($laporanRoute) ? 'sidebar-active' : 'hover:bg-white/10' }}">
                     <i class="fas fa-file-export w-6 text-center text-sm"></i>
                     <span class="nav-text ml-3 text-sm font-bold tracking-wide text-nowrap">
-                        @if(auth()->user()->role === 'pimpinan') Rekapitulasi Laporan 
-                        @else Laporan Kunjungan @endif
+                        {{ auth()->user()->role === 'pimpinan' ? 'Rekapitulasi Laporan' : 'Laporan Kunjungan' }}
                     </span>
                 </a>
+                @endif
             </nav>
 
             <div class="p-4 mb-4">
