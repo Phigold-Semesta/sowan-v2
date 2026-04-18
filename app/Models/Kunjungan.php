@@ -5,20 +5,25 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\HasMany; // Import HasMany untuk relasi ke Rating
+use Illuminate\Database\Eloquent\Relations\HasOne; // Perbaikan: Gunakan HasOne untuk sesi tunggal
 
 class Kunjungan extends Model
 {
     use HasFactory;
 
-    // 1. Tentukan nama tabel
+    /**
+     * Tentukan nama tabel (SOWAN V2 tidak menggunakan plural)
+     */
     protected $table = 'kunjungan';
 
-    // 2. Tentukan Primary Key
+    /**
+     * Tentukan Primary Key
+     */
     protected $primaryKey = 'id_kunjungan';
 
-    // 3. Daftar kolom yang dapat diisi (Mass Assignment)
-    // Disesuaikan dengan atribut di ERD: waktu_masuk, waktu_keluar, status
+    /**
+     * Daftar kolom yang dapat diisi (Mass Assignment)
+     */
     protected $fillable = [
         'gmail', 
         'id_layanan', 
@@ -29,15 +34,18 @@ class Kunjungan extends Model
     ];
 
     /**
-     * Relasi ke Rating_Layanan (Satu kunjungan "Menghasilkan" rating)
+     * Relasi ke Rating_Layanan
+     * Penjelasan: Satu sesi kunjungan spesifik menghasilkan SATU rating.
+     * Ini mencegah error "Property [skor] does not exist on this collection instance".
      */
-    public function rating(): HasMany
+    public function rating(): HasOne
     {
-        return $this->hasMany(RatingLayanan::class, 'id_kunjungan', 'id_kunjungan');
+        return $this->hasOne(RatingLayanan::class, 'id_kunjungan', 'id_kunjungan');
     }
 
     /**
-     * Relasi balik ke Tamu (Banyak kunjungan "Melakukan" oleh satu tamu)
+     * Relasi balik ke Tamu
+     * Penjelasan: Banyak kunjungan dilakukan oleh satu tamu (Many-to-One).
      */
     public function tamu(): BelongsTo
     {
@@ -45,7 +53,8 @@ class Kunjungan extends Model
     }
 
     /**
-     * Relasi ke Layanan (Banyak kunjungan "Dipilih" dari satu layanan)
+     * Relasi ke Layanan
+     * Penjelasan: Kunjungan ini memilih satu kategori layanan.
      */
     public function layanan(): BelongsTo
     {
@@ -53,7 +62,8 @@ class Kunjungan extends Model
     }
 
     /**
-     * Relasi ke Petugas_Tujuan (Banyak kunjungan "Menemui" satu petugas)
+     * Relasi ke Petugas_Tujuan
+     * Penjelasan: Kunjungan ini menemui satu petugas spesifik.
      */
     public function petugas(): BelongsTo
     {

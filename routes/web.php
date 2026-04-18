@@ -12,6 +12,9 @@ use Illuminate\Support\Facades\Auth;
 |--------------------------------------------------------------------------
 | Web Routes - SOWAN v2 (Digital Guest Book LPSE Karawang)
 |--------------------------------------------------------------------------
+| Desain Sistem: Emerald Green Luxury
+| Build with: Laravel 12
+|--------------------------------------------------------------------------
 */
 
 // --- 1. JALUR PUBLIK & AUTENTIKASI 🚪 ---
@@ -19,13 +22,13 @@ Route::get('/', function () {
     return redirect()->route('login');
 });
 
-// Jalur khusus tamu (Input Form QR Code)
+// Jalur khusus tamu (Input Form QR Code - Tanpa Login)
 Route::controller(TamuController::class)->group(function () {
     Route::get('/hadir', 'create')->name('tamu.form');
     Route::post('/tamu/simpan', 'store')->name('tamu.store');
 });
 
-// Logic Login & Logout Dasar
+// Logic Login & Logout Dasar (Mencegah user yang sudah login masuk ke halaman login kembali)
 Route::middleware('guest')->group(function () {
     Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
     Route::post('/login', [AuthController::class, 'authenticate'])->name('login.proses');
@@ -38,6 +41,7 @@ Route::middleware('auth')->group(function () {
 
     /**
      * Dashboard Redirector (Otomatis sesuai Role)
+     * Mengarahkan user ke dashboard spesifik role mereka setelah login sukses.
      */
     Route::get('/dashboard', function () {
         $user = Auth::user(); 
@@ -51,30 +55,33 @@ Route::middleware('auth')->group(function () {
     })->name('dashboard');
 
     // --- GRUP AKSES: PETUGAS 📋 ---
+    // Fokus pada manajemen harian tamu di lapangan
     Route::middleware('role:petugas')->prefix('petugas')->name('petugas.')->group(function () {
         Route::get('/dashboard', function () {
             return view('petugas.dashboard');
         })->name('dashboard');
 
-        // CRUD Tamu untuk Petugas
+        // CRUD Tamu untuk Petugas (Gunakan resource agar rapi)
         Route::resource('manajemen_tamu', PetugasController::class)
              ->parameters(['manajemen_tamu' => 'tamu']);
         
+        // Update Status Tamu (Belum, Sedang, Sudah Dilayani)
         Route::patch('manajemen_tamu/{tamu}/status', [PetugasController::class, 'updateStatus'])
              ->name('manajemen_tamu.updateStatus');
     });
 
     // --- GRUP AKSES: ADMINISTRATOR 🛡️ ---
+    // Pusat kendali seluruh sistem
     Route::middleware('role:administrator')->prefix('admin')->name('admin.')->group(function () {
         
-        // Dashboard Utama
+        // Dashboard Utama Admin
         Route::get('/dashboard', [AdminController::class, 'dashboard'])->name('dashboard');
 
-        // Manajemen User (CRUD)
+        // Manajemen User (CRUD Petugas/Pimpinan oleh Admin)
         Route::resource('users', UserController::class)
              ->parameters(['users' => 'user']);
 
-        // --- MASTER DATA (Pusat Kendali Data SOWAN v2) ---
+        // --- MASTER DATA (Pusat Kendali Konfigurasi SOWAN v2) ---
         Route::prefix('master')->name('master.')->group(function() {
             
             // Halaman Utama Master
@@ -106,10 +113,17 @@ Route::middleware('auth')->group(function () {
         // --- MENU LAPORAN KUNJUNGAN (DISEMPURNAKAN & DISINKRONKAN) 📑 ---
         Route::prefix('laporan')->name('laporan.')->group(function() {
             Route::get('/', [AdminController::class, 'laporan_index'])->name('index');
-            
-            // PERBAIKAN UTAMA: Nama rute diubah dari 'export.csv' menjadi 'export'
-            // Hal ini agar sinkron dengan panggil di Blade: {{ route('admin.laporan.export') }}
             Route::get('/export', [AdminController::class, 'laporan_export'])->name('export');
+            
+            // Tambahan Rute untuk Detail dan Edit Laporan
+            Route::get('/{id}', [AdminController::class, 'laporan_show'])->name('show');
+            Route::get('/{id}/edit', [AdminController::class, 'laporan_edit'])->name('edit');
+
+            /** * PERBAIKAN: Menambahkan rute UPDATE dan DESTROY
+             * Agar form edit dapat mengirimkan data (PUT) dan admin bisa menghapus laporan (DELETE)
+             */
+            Route::put('/{id}', [AdminController::class, 'laporan_update'])->name('update');
+            Route::delete('/{id}', [AdminController::class, 'laporan_destroy'])->name('destroy');
         });
 
         // --- AKTIVITAS GLOBAL (Audit Log) 🕵️‍♂️ ---
@@ -119,15 +133,17 @@ Route::middleware('auth')->group(function () {
     });
 
     // --- GRUP AKSES: PIMPINAN 📊 ---
+    // Fokus pada monitoring dan laporan
     Route::middleware('role:pimpinan')->prefix('pimpinan')->name('pimpinan.')->group(function () {
         Route::get('/dashboard', [TamuController::class, 'pimpinanDashboard'])->name('dashboard');
         
-        // Pimpinan menggunakan rute laporan yang sama secara fungsional
+        // Pimpinan menggunakan fungsi laporan yang sama dengan Admin secara internal
         Route::get('/laporan', [AdminController::class, 'laporan_index'])->name('laporan.index');
         Route::get('/laporan/export', [AdminController::class, 'laporan_export'])->name('laporan.export');
     });
 
     // --- FITUR STATISTIK (SHARED) 📈 ---
+    // Bisa diakses oleh Pimpinan dan Admin
     Route::middleware('role:pimpinan,administrator')->group(function () {
         Route::get('/statistik', [TamuController::class, 'stats'])->name('statistik.index');
     });

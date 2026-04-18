@@ -3,8 +3,8 @@
 @section('title', 'Laporan Kunjungan - SOWAN V2')
 
 @section('content')
-<div class="space-y-8 animate__animated animate__fadeIn">
-    {{-- Header Section: Mengikuti gaya Daftar Pengguna --}}
+<div class="space-y-8 animate__animated animate__fadeIn" x-data="{ openExport: false }">
+    {{-- Header Section --}}
     <div class="flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div>
             <h1 class="text-3xl font-black text-slate-800 dark:text-white tracking-tighter uppercase italic">
@@ -17,19 +17,57 @@
                 </p>
             </div>
         </div>
-        <form action="{{ route('admin.laporan.export') }}" method="GET">
-            <input type="hidden" name="start_date" value="{{ request('start_date') }}">
-            <input type="hidden" name="end_date" value="{{ request('end_date') }}">
-            <input type="hidden" name="id_layanan" value="{{ request('id_layanan') }}">
-            <button type="submit" 
+        
+        {{-- Dropdown Export Berbasis Alpine.js --}}
+        <div class="relative inline-block text-left">
+            <button @click="openExport = !openExport" @click.away="openExport = false" type="button"
                     class="inline-flex items-center px-6 py-3 bg-[#008f5d] dark:bg-emerald-600 text-white text-xs font-black uppercase tracking-widest rounded-2xl hover:bg-emerald-700 dark:hover:bg-emerald-500 hover:shadow-[0_10px_25px_rgba(0,143,93,0.3)] transition-all duration-300 group shrink-0">
                 <i class="fas fa-file-export mr-2 group-hover:translate-y-[-2px] transition-transform duration-300"></i>
                 Export Data Baru
+                <i class="fas fa-chevron-down ml-2 text-[10px] transition-transform duration-300" :class="openExport ? 'rotate-180' : ''"></i>
             </button>
-        </form>
+
+            {{-- Dropdown Menu --}}
+            <div x-show="openExport" 
+                 x-transition:enter="transition ease-out duration-200"
+                 x-transition:enter-start="opacity-0 scale-95 translate-y-[-10px]"
+                 x-transition:enter-end="opacity-100 scale-100 translate-y-0"
+                 x-transition:leave="transition ease-in duration-75"
+                 x-transition:leave-start="opacity-100 scale-100 translate-y-0"
+                 x-transition:leave-end="opacity-0 scale-95 translate-y-[-10px]"
+                 class="absolute right-0 mt-3 w-56 origin-top-right bg-white dark:bg-slate-800 rounded-[1.5rem] shadow-2xl border border-emerald-50 dark:border-slate-700 z-50 overflow-hidden" 
+                 style="display: none;">
+                <div class="py-2">
+                    @php 
+                        $currentFilters = request()->only(['start_date', 'end_date', 'id_layanan']);
+                    @endphp
+                    
+                    {{-- Export CSV - Sekarang Warna Biru --}}
+                    <a href="{{ route('admin.laporan.export', array_merge($currentFilters, ['format' => 'csv'])) }}" 
+                       class="flex items-center px-5 py-3 text-[10px] font-black uppercase tracking-widest text-slate-600 dark:text-slate-300 hover:bg-blue-50 dark:hover:bg-blue-900/10 hover:text-blue-600 transition-colors">
+                        <i class="fas fa-file-csv mr-3 text-lg text-blue-500"></i>
+                        Format CSV 
+                    </a>
+
+                    {{-- Export PDF --}}
+                    <a href="{{ route('admin.laporan.export', array_merge($currentFilters, ['format' => 'pdf'])) }}" 
+                       class="flex items-center px-5 py-3 text-[10px] font-black uppercase tracking-widest text-slate-600 dark:text-slate-300 hover:bg-red-50 dark:hover:bg-red-900/10 hover:text-red-600 transition-colors">
+                        <i class="fas fa-file-pdf mr-3 text-lg text-red-500"></i>
+                        Format PDF 
+                    </a>
+
+                    {{-- Export Excel (XLSX) - Sekarang Warna Hijau --}}
+                    <a href="{{ route('admin.laporan.export', array_merge($currentFilters, ['format' => 'excel'])) }}" 
+                       class="flex items-center px-5 py-3 text-[10px] font-black uppercase tracking-widest text-slate-600 dark:text-slate-300 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 hover:text-[#008f5d] transition-colors">
+                        <i class="fas fa-file-excel mr-3 text-lg text-emerald-500"></i>
+                        Format Excel
+                    </a>
+                </div>
+            </div>
+        </div>
     </div>
 
-    {{-- Filter Section: Gaya Rounded-Pill Mewah --}}
+    {{-- Filter Section --}}
     <div class="bg-white dark:bg-slate-800 p-5 rounded-[2.5rem] border border-emerald-50 dark:border-slate-700 shadow-sm transition-colors duration-300">
         <form action="{{ route('admin.laporan.index') }}" method="GET" class="flex flex-col lg:flex-row gap-4">
             {{-- Start Date --}}
@@ -77,7 +115,7 @@
         </form>
     </div>
 
-    {{-- Table Section: Gaya Glassmorphism & Luxurious --}}
+    {{-- Table Section --}}
     <div class="bg-white dark:bg-slate-800 rounded-[2.5rem] border border-emerald-50 dark:border-slate-700 shadow-xl overflow-hidden transition-colors duration-300">
         <div class="overflow-x-auto custom-scrollbar">
             <table class="w-full text-left border-collapse">
@@ -140,6 +178,7 @@
                                 $class = $statusClasses[$item->status] ?? 'bg-slate-50 text-slate-600 border-slate-100';
                             @endphp
                             <span class="inline-flex items-center text-[9px] font-black uppercase tracking-[0.15em] px-3 py-1.5 rounded-xl border {{ $class }}">
+                                <span class="w-1 h-1 rounded-full bg-current mr-2 animate-pulse"></span>
                                 {{ $item->status }}
                             </span>
                         </td>
@@ -147,11 +186,15 @@
                         {{-- Aksi --}}
                         <td class="px-8 py-5 text-nowrap">
                             <div class="flex justify-center items-center gap-2">
-                                <a href="#" class="w-10 h-10 flex items-center justify-center rounded-2xl bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 hover:bg-blue-600 hover:text-white transition-all active:scale-90 shadow-sm">
-                                    <i class="fas fa-eye text-xs"></i>
+                                <a href="{{ route('admin.laporan.show', $item->id_kunjungan) }}" 
+                                   title="Lihat Detail"
+                                   class="w-10 h-10 flex items-center justify-center rounded-2xl bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 hover:bg-blue-600 hover:text-white transition-all active:scale-90 shadow-sm group/btn">
+                                    <i class="fas fa-eye text-xs group-hover/btn:rotate-12 transition-transform"></i>
                                 </a>
-                                <a href="#" class="w-10 h-10 flex items-center justify-center rounded-2xl bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400 hover:bg-amber-500 hover:text-white transition-all active:scale-90 shadow-sm">
-                                    <i class="fas fa-pen-nib text-xs"></i>
+                                <a href="{{ route('admin.laporan.edit', $item->id_kunjungan) }}" 
+                                   title="Edit Data"
+                                   class="w-10 h-10 flex items-center justify-center rounded-2xl bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400 hover:bg-amber-500 hover:text-white transition-all active:scale-90 shadow-sm group/btn">
+                                    <i class="fas fa-pen-nib text-xs group-hover/btn:-rotate-12 transition-transform"></i>
                                 </a>
                             </div>
                         </td>
@@ -177,7 +220,7 @@
         <div class="px-10 py-8 bg-slate-50/50 dark:bg-slate-900/30 border-t border-emerald-50 dark:border-slate-700">
             <div class="flex flex-col md:flex-row justify-between items-center gap-6">
                 <div class="flex items-center gap-3">
-                    <div class="w-2 h-2 rounded-full bg-[#008f5d]"></div>
+                    <div class="w-2 h-2 rounded-full bg-[#008f5d] animate-pulse"></div>
                     <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none">
                         Tampil {{ $kunjungan->firstItem() }} - {{ $kunjungan->lastItem() }} dari {{ $kunjungan->total() }} Kunjungan
                     </p>
@@ -202,26 +245,34 @@
     .custom-pagination nav > div:first-child { display: none; }
     .custom-pagination nav span[aria-current="page"] > span {
         background: #008f5d !important;
-        border-radius: 14px;
-        font-weight: 800;
-        font-size: 10px;
+        border-radius: 14px !important;
+        font-weight: 800 !important;
+        font-size: 10px !important;
         color: white !important;
-        box-shadow: 0 4px 12px rgba(0,143,93,0.2);
-    }
-    .custom-pagination nav a, .custom-pagination nav span {
-        border-radius: 14px;
-        margin: 0 3px;
+        box-shadow: 0 4px 12px rgba(0,143,93,0.2) !important;
         padding: 8px 14px !important;
-        font-weight: 800;
-        font-size: 10px;
-        text-transform: uppercase;
         border: none !important;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.03);
-        transition: all 0.3s ease;
+    }
+    .custom-pagination nav a, .custom-pagination nav span:not([aria-current="page"]) > span {
+        background: white !important;
+        border-radius: 14px !important;
+        margin: 0 3px !important;
+        padding: 8px 14px !important;
+        font-weight: 800 !important;
+        font-size: 10px !important;
+        text-transform: uppercase !important;
+        border: none !important;
+        color: #64748b !important;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.03) !important;
+        transition: all 0.3s ease !important;
+    }
+    .dark .custom-pagination nav a, .dark .custom-pagination nav span:not([aria-current="page"]) > span {
+        background: #1e293b !important;
+        color: #94a3b8 !important;
     }
     .custom-pagination nav a:hover {
-        background-color: #ecfdf5;
-        color: #008f5d;
+        background-color: #ecfdf5 !important;
+        color: #008f5d !important;
         transform: translateY(-2px);
     }
 </style>
