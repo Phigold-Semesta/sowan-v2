@@ -59,11 +59,29 @@ Route::middleware('auth')->group(function () {
             return view('petugas.dashboard');
         })->name('dashboard');
 
+        // Manajemen Tamu (Resource)
         Route::resource('manajemen_tamu', PetugasController::class)
              ->parameters(['manajemen_tamu' => 'tamu']);
         
         Route::patch('manajemen_tamu/{tamu}/status', [PetugasController::class, 'updateStatus'])
              ->name('manajemen_tamu.updateStatus');
+
+        /**
+         * PENYEMPURNAAN AKTOR PETUGAS:
+         * Menyesuaikan rute dengan struktur folder view 'petugas.laporan.index' 
+         * dan 'petugas.rating.index'.
+         */
+        
+        // Jalur Laporan Khusus Petugas
+        Route::prefix('laporan')->name('laporan.')->group(function() {
+            Route::get('/', [PetugasController::class, 'laporan_index'])->name('index');
+        });
+
+        // Jalur Rating & Tanggapan Khusus Petugas (Sesuai Use Case: Menanggapi Kritik & Saran)
+        Route::prefix('rating')->name('rating.')->group(function() {
+            Route::get('/', [PetugasController::class, 'rating_index'])->name('index');
+            Route::post('/{id}/tanggapan', [PetugasController::class, 'rating_tanggapan'])->name('tanggapan');
+        });
     });
 
     // --- GRUP AKSES: ADMINISTRATOR 🛡️ ---
@@ -89,13 +107,8 @@ Route::middleware('auth')->group(function () {
                 Route::put('/{id}', [AdminController::class, 'layanan_update'])->name('update');
                 Route::delete('/{id}', [AdminController::class, 'layanan_destroy'])->name('destroy');
 
-                /** * PENYEMPURNAAN: Fitur Dokumen Panduan Layanan 📄
-                 * Mendukung multiple upload dan penghapusan file spesifik.
-                 */
                 Route::get('/{id}/panduan', [AdminController::class, 'layanan_panduan'])->name('panduan');
                 Route::post('/{id}/panduan', [AdminController::class, 'layanan_panduan_store'])->name('panduan.store');
-                
-                // BARIS BARU: Route untuk menghapus file panduan spesifik
                 Route::delete('/panduan/{id_dokumen}', [AdminController::class, 'layanan_panduan_destroy'])->name('panduan.destroy');
             });
 
@@ -111,7 +124,7 @@ Route::middleware('auth')->group(function () {
             });
         });
 
-        // --- MENU LAPORAN KUNJUNGAN 📑 ---
+        // --- MENU LAPORAN KUNJUNGAN (ADMIN) 📑 ---
         Route::prefix('laporan')->name('laporan.')->group(function() {
             Route::get('/', [AdminController::class, 'laporan_index'])->name('index');
             Route::get('/export', [AdminController::class, 'laporan_export'])->name('export');
@@ -121,16 +134,12 @@ Route::middleware('auth')->group(function () {
             Route::delete('/{id}', [AdminController::class, 'laporan_destroy'])->name('destroy');
         });
 
-        // --- MANAJEMEN RATING LAYANAN ⭐ ---
+        // --- MANAJEMEN RATING LAYANAN (ADMIN) ⭐ ---
         Route::prefix('rating')->name('rating.')->group(function() {
             Route::get('/', [AdminController::class, 'rating_index'])->name('index');
             Route::get('/{id}', [AdminController::class, 'rating_show'])->name('show');
-            
-            // Simpan/Update Tanggapan
             Route::put('/{id}', [AdminController::class, 'rating_tanggapan'])->name('update');
             Route::post('/{id}/tanggapan', [AdminController::class, 'rating_tanggapan'])->name('tanggapan');
-
-            // PENYEMPURNAAN: Route Hapus Rating
             Route::delete('/{id}', [AdminController::class, 'rating_destroy'])->name('destroy');
         });
 

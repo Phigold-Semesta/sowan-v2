@@ -173,14 +173,16 @@
                 </a>
                 @endif
 
-                <div class="menu-header px-4 py-3 text-[10px] font-black text-emerald-200/50 uppercase tracking-[0.2em] mt-4">Monitoring</div>
+                <div class="menu-header px-4 py-3 text-[10px] font-black text-emerald-200/50 uppercase tracking-[0.2em] mt-4">Monitoring & Output</div>
 
-                {{-- PERBAIKAN: Link Rating Layanan untuk Administrator --}}
-                @if(auth()->user()->role === 'administrator')
-                <a href="{{ route('admin.rating.index') }}" class="nav-item flex items-center py-4 px-5 rounded-2xl transition-all {{ Route::is('admin.rating.*') ? 'sidebar-active' : 'hover:bg-white/10' }}">
+                {{-- MENU RATING: TERSEDIA UNTUK ADMIN DAN PETUGAS --}}
+                @if(auth()->user()->role === 'administrator' || auth()->user()->role === 'petugas')
+                @php
+                    $ratingRoute = (auth()->user()->role === 'administrator') ? 'admin.rating.index' : 'petugas.rating.index';
+                @endphp
+                <a href="{{ route($ratingRoute) }}" class="nav-item flex items-center py-4 px-5 rounded-2xl transition-all {{ Route::is($ratingRoute) ? 'sidebar-active' : 'hover:bg-white/10' }}">
                     <div class="relative">
                         <i class="fas fa-star-half-stroke w-6 text-center text-sm"></i>
-                        {{-- Badge Notifikasi otomatis --}}
                         @php
                             $pendingRatingCount = \App\Models\RatingLayanan::whereNull('tanggapan')->count();
                         @endphp
@@ -193,24 +195,31 @@
                     </div>
                     <span class="nav-text ml-3 text-sm font-bold tracking-wide text-nowrap">Rating Layanan</span>
                 </a>
-                @else
-                {{-- Tampilan untuk role selain admin (misal pimpinan) --}}
-                <a href="#" class="nav-item flex items-center py-4 px-5 rounded-2xl transition-all hover:bg-white/10">
-                    <i class="fas fa-star-half-stroke w-6 text-center text-sm"></i>
-                    <span class="nav-text ml-3 text-sm font-bold tracking-wide text-nowrap">Rating Layanan</span>
-                </a>
                 @endif
 
-                {{-- PENYEMPURNAAN ROUTE LAPORAN --}}
+                {{-- LOGIKA MENU LAPORAN YANG DISEMPURNAKAN --}}
                 @php
-                    $laporanRoute = auth()->user()->role === 'administrator' ? 'admin.laporan.index' : (auth()->user()->role === 'pimpinan' ? 'pimpinan.laporan.index' : null);
+                    $laporanRoute = null;
+                    if(auth()->user()->role === 'administrator') {
+                        $laporanRoute = 'admin.laporan.index';
+                    } elseif(auth()->user()->role === 'pimpinan') {
+                        $laporanRoute = 'pimpinan.laporan.index';
+                    } elseif(auth()->user()->role === 'petugas') {
+                        $laporanRoute = 'petugas.laporan.index';
+                    }
                 @endphp
 
                 @if($laporanRoute)
                 <a href="{{ route($laporanRoute) }}" class="nav-item flex items-center py-4 px-5 rounded-2xl transition-all {{ Route::is($laporanRoute) ? 'sidebar-active' : 'hover:bg-white/10' }}">
                     <i class="fas fa-file-export w-6 text-center text-sm"></i>
                     <span class="nav-text ml-3 text-sm font-bold tracking-wide text-nowrap">
-                        {{ auth()->user()->role === 'pimpinan' ? 'Rekapitulasi Laporan' : 'Laporan Kunjungan' }}
+                        @if(auth()->user()->role === 'pimpinan')
+                            Rekapitulasi Laporan
+                        @elseif(auth()->user()->role === 'petugas')
+                            Laporan Kunjungan
+                        @else
+                            Laporan Global
+                        @endif
                     </span>
                 </a>
                 @endif
