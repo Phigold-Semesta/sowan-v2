@@ -10,15 +10,16 @@ use App\Models\Layanan;
 use App\Models\PetugasTujuan;
 use App\Models\RatingLayanan;
 use App\Models\AuditLog;
+use App\Models\Dokumen; 
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
 
 // Import Facade untuk Export
 use Barryvdh\DomPDF\Facade\Pdf;
 use Maatwebsite\Excel\Facades\Excel;
-use App\Exports\KunjunganExport; // Taruh di paling atas
-
+use App\Exports\KunjunganExport;
 
 class AdminController extends Controller
 {
@@ -34,7 +35,8 @@ class AdminController extends Controller
         $avgValue = RatingLayanan::avg('skor') ?? 0;
         $avgRating = number_format($avgValue, 1);
 
-        $latestLogs = AuditLog::with('user')->latest()->take(5)->get();
+        // Disempurnakan: Eager loading user untuk efisiensi
+        $latestLogs = AuditLog::with('user')->latest('waktu')->take(5)->get();
         
         $latestKunjungan = Kunjungan::with(['tamu', 'layanan', 'petugas'])
                             ->latest('waktu_masuk')
@@ -46,21 +48,18 @@ class AdminController extends Controller
         ));
     }
 
-    /**
-     * Halaman Master Index
-     */
     public function master_index()
     {
         return view('admin.master.index'); 
     }
 
     // =========================================================================
-    // --- MASTER DATA: LAYANAN ---
+    // --- MASTER DATA: LAYANAN & DOKUMEN PANDUAN ---
     // =========================================================================
 
     public function layanan_index(Request $request)
     {
-        $query = Layanan::query();
+        $query = Layanan::with('dokumen');
         
         if ($request->filled('search')) {
             $query->where('nama_layanan', 'like', '%' . $request->input('search') . '%');
@@ -95,9 +94,75 @@ class AdminController extends Controller
         }
     }
 
-    public function layanan_show($id)
+    public function layanan_panduan($id)
     {
         $layanan = Layanan::where('id_layanan', $id)->firstOrFail();
+        
+        $dokumen_list = Dokumen::where('id_layanan', $id)
+                               ->where('kategori', 'panduan')
+                               ->with('user')
+                               ->latest()
+                               ->get();
+
+        return view('admin.master.layanan.layanan_panduan', compact('layanan', 'dokumen_list'));
+    }
+
+    public function layanan_panduan_store(Request $request, $id)
+    {
+        $request->validate([
+            'file_panduan.*' => 'required|mimes:pdf|max:5120', 
+        ]);
+
+        DB::beginTransaction();
+        try {
+            $layanan = Layanan::where('id_layanan', $id)->firstOrFail();
+
+            if ($request->hasFile('file_panduan')) {
+                foreach ($request->file('file_panduan') as $file) {
+                    $fileName = 'panduan_' . $id . '_' . uniqid() . '.pdf';
+                    $path = $file->storeAs('panduan', $fileName, 'public');
+
+                    Dokumen::create([
+                        'nama_dokumen' => $file->getClientOriginalName(),
+                        'file_path'    => $path,
+                        'kategori'     => 'panduan',
+                        'id_layanan'   => $id,
+                        'id_user'      => Auth::id()
+                    ]);
+                }
+
+                $this->logActivity("Mengunggah panduan baru untuk layanan: " . $layanan->nama_layanan);
+                DB::commit();
+                return redirect()->back()->with('success', 'File panduan berhasil ditambahkan!');
+            }
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return back()->with('error', 'Gagal mengunggah file: ' . $e->getMessage());
+        }
+    }
+
+    public function layanan_panduan_destroy($id_dokumen)
+    {
+        try {
+            $dokumen = Dokumen::where('id_dokumen', $id_dokumen)->firstOrFail();
+            $nama_file = $dokumen->nama_dokumen;
+            
+            if (Storage::disk('public')->exists($dokumen->file_path)) {
+                Storage::disk('public')->delete($dokumen->file_path);
+            }
+
+            $dokumen->delete();
+            $this->logActivity("Menghapus file panduan: $nama_file");
+
+            return back()->with('success', 'Dokumen "' . $nama_file . '" telah berhasil dihapus!');
+        } catch (\Exception $e) {
+            return back()->with('error', 'Gagal menghapus dokumen: ' . $e->getMessage());
+        }
+    }
+
+    public function layanan_show($id)
+    {
+        $layanan = Layanan::with('dokumen')->where('id_layanan', $id)->firstOrFail();
         return view('admin.master.layanan.show', compact('layanan'));
     }
 
@@ -122,11 +187,19 @@ class AdminController extends Controller
     public function layanan_destroy($id)
     {
         try {
-            $layanan = Layanan::where('id_layanan', $id)->firstOrFail();
+            $layanan = Layanan::with('dokumen')->where('id_layanan', $id)->firstOrFail();
             $nama = $layanan->nama_layanan;
+
+            foreach ($layanan->dokumen as $doc) {
+                if (Storage::disk('public')->exists($doc->file_path)) {
+                    Storage::disk('public')->delete($doc->file_path);
+                }
+                $doc->delete();
+            }
+
             $layanan->delete();
 
-            $this->logActivity("Menghapus layanan: $nama");
+            $this->logActivity("Menghapus layanan: $nama dan dokumen terkait.");
             return redirect()->route('admin.master.layanan.index')->with('success', 'Layanan berhasil dihapus!');
         } catch (\Exception $e) {
             return back()->with('error', 'Gagal! Data layanan ini masih digunakan oleh data kunjungan.');
@@ -229,13 +302,15 @@ class AdminController extends Controller
     }
 
     // =========================================================================
-    // --- LOG AKTIVITAS (AKTIVITAS GLOBAL) ---
+    // --- PERBAIKAN: LOG AKTIVITAS (AKTIVITAS GLOBAL) ---
     // =========================================================================
 
     public function aktivitas_global(Request $request)
     {
+        // Eager loading user agar efisien
         $query = AuditLog::with('user');
 
+        // Filter Pencarian (Aktivitas atau Nama Lengkap User)
         if ($request->filled('search')) {
             $search = $request->input('search');
             $query->where(function($q) use ($search) {
@@ -246,14 +321,17 @@ class AdminController extends Controller
             });
         }
 
+        // Filter Tanggal (Menggunakan kolom 'waktu')
         if ($request->filled('date')) {
-            $query->whereDate('created_at', $request->input('date'));
+            $query->whereDate('waktu', $request->input('date'));
         }
 
         $perPage = $request->input('per_page', 10);
+        
+        // Eksekusi Query dengan urutan waktu terbaru
         $activities = ($perPage === 'all') 
-            ? $query->latest()->get() 
-            : $query->latest()->paginate((int)$perPage)->withQueryString();
+            ? $query->latest('waktu')->get() 
+            : $query->latest('waktu')->paginate((int)$perPage)->withQueryString();
 
         return view('admin.aktivitas.index', compact('activities'));
     }
@@ -395,29 +473,102 @@ class AdminController extends Controller
     {
         $this->logActivity("Mengekspor laporan kunjungan ke PDF.");
         
-        // Memuat view untuk PDF. Pastikan bos sudah buat file resources/views/admin/laporan/pdf.blade.php
         $pdf = Pdf::loadView('admin.laporan.pdf', compact('data'))
                   ->setPaper('a4', 'landscape');
 
         return $pdf->download('Laporan_SOWAN_LPSE_'.now()->format('Ymd_His').'.pdf');
     }
 
-   private function exportToExcel($data)
-{
-    $this->logActivity("Mengekspor laporan kunjungan ke Excel.");
-    
-    $fileName = 'Laporan_SOWAN_LPSE_' . now()->format('Ymd_His') . '.xlsx';
-    return Excel::download(new KunjunganExport($data), $fileName);
-}
-    /**
-     * Helper Log Activity (SUDAH DIPERBAIKI: Menambahkan field 'waktu')
-     */
+    private function exportToExcel($data)
+    {
+        $this->logActivity("Mengekspor laporan kunjungan ke Excel.");
+        
+        $fileName = 'Laporan_SOWAN_LPSE_' . now()->format('Ymd_His') . '.xlsx';
+        return Excel::download(new KunjunganExport($data), $fileName);
+    }
+
+    // =========================================================================
+    // --- MANAJEMEN RATING LAYANAN ---
+    // =========================================================================
+
+    public function rating_index(Request $request)
+    {
+        $query = RatingLayanan::with(['kunjungan.tamu', 'kunjungan.layanan', 'user']);
+
+        if ($request->filled('search')) {
+            $search = $request->input('search');
+            $query->where(function($q) use ($search) {
+                $q->where('komentar', 'like', "%$search%")
+                  ->orWhereHas('kunjungan.tamu', function($qt) use ($search) {
+                      $qt->where('nama_tamu', 'like', "%$search%");
+                  });
+            });
+        }
+
+        if ($request->filled('skor')) {
+            $query->where('skor', $request->skor);
+        }
+
+        $perPage = $request->input('per_page', 10);
+        $ratings = ($perPage === 'all') 
+            ? $query->latest()->get() 
+            : $query->latest()->paginate((int)$perPage)->withQueryString();
+
+        return view('admin.rating.index', compact('ratings'));
+    }
+
+    public function rating_show($id)
+    {
+        $rating = RatingLayanan::with(['kunjungan.tamu', 'kunjungan.layanan', 'user'])
+                               ->where('id_rating', $id)
+                               ->firstOrFail();
+
+        return view('admin.rating.show', compact('rating'));
+    }
+
+    public function rating_tanggapan(Request $request, $id)
+    {
+        $request->validate([
+            'tanggapan' => 'required|string|min:5',
+        ]);
+
+        try {
+            $rating = RatingLayanan::where('id_rating', $id)->firstOrFail();
+            
+            $rating->update([
+                'tanggapan' => $request->tanggapan,
+                'id_user'   => Auth::id(), // ID Admin yang menanggapi
+            ]);
+
+            $this->logActivity("Memberikan tanggapan pada rating ID: #$id");
+
+            return redirect()->route('admin.rating.index')->with('success', 'Tanggapan berhasil dikirim, bos!');
+        } catch (\Exception $e) {
+            return back()->with('error', 'Gagal mengirim tanggapan: ' . $e->getMessage());
+        }
+    }
+
+    public function rating_destroy($id)
+    {
+        try {
+            $rating = RatingLayanan::where('id_rating', $id)->firstOrFail();
+            
+            $this->logActivity("Menghapus data rating ID: #$id");
+
+            $rating->delete();
+
+            return redirect()->route('admin.rating.index')->with('success', 'Data rating berhasil dihapus, bos!');
+        } catch (\Exception $e) {
+            return back()->with('error', 'Gagal menghapus rating: ' . $e->getMessage());
+        }
+    }
+
     private function logActivity($aktivitas)
     {
         AuditLog::create([
             'id_user'   => Auth::id(),
             'aktivitas' => $aktivitas, 
-            'waktu'     => now(), // Tambahkan ini agar tidak error General Error 1364
+            'waktu'     => now(), 
             'ip_address'=> request()->ip(),
             'user_agent'=> request()->userAgent(),
         ]);

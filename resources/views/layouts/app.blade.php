@@ -175,13 +175,33 @@
 
                 <div class="menu-header px-4 py-3 text-[10px] font-black text-emerald-200/50 uppercase tracking-[0.2em] mt-4">Monitoring</div>
 
-                {{-- Link Rating (Bisa diisi nanti) --}}
+                {{-- PERBAIKAN: Link Rating Layanan untuk Administrator --}}
+                @if(auth()->user()->role === 'administrator')
+                <a href="{{ route('admin.rating.index') }}" class="nav-item flex items-center py-4 px-5 rounded-2xl transition-all {{ Route::is('admin.rating.*') ? 'sidebar-active' : 'hover:bg-white/10' }}">
+                    <div class="relative">
+                        <i class="fas fa-star-half-stroke w-6 text-center text-sm"></i>
+                        {{-- Badge Notifikasi otomatis --}}
+                        @php
+                            $pendingRatingCount = \App\Models\RatingLayanan::whereNull('tanggapan')->count();
+                        @endphp
+                        @if($pendingRatingCount > 0)
+                            <span class="absolute -top-2 -right-2 flex h-4 w-4">
+                                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                                <span class="relative inline-flex rounded-full h-4 w-4 bg-red-600 text-[9px] items-center justify-center font-bold">{{ $pendingRatingCount }}</span>
+                            </span>
+                        @endif
+                    </div>
+                    <span class="nav-text ml-3 text-sm font-bold tracking-wide text-nowrap">Rating Layanan</span>
+                </a>
+                @else
+                {{-- Tampilan untuk role selain admin (misal pimpinan) --}}
                 <a href="#" class="nav-item flex items-center py-4 px-5 rounded-2xl transition-all hover:bg-white/10">
                     <i class="fas fa-star-half-stroke w-6 text-center text-sm"></i>
                     <span class="nav-text ml-3 text-sm font-bold tracking-wide text-nowrap">Rating Layanan</span>
                 </a>
+                @endif
 
-                {{-- PENYEMPURNAAN ROUTE LAPORAN DI SINI --}}
+                {{-- PENYEMPURNAAN ROUTE LAPORAN --}}
                 @php
                     $laporanRoute = auth()->user()->role === 'administrator' ? 'admin.laporan.index' : (auth()->user()->role === 'pimpinan' ? 'pimpinan.laporan.index' : null);
                 @endphp

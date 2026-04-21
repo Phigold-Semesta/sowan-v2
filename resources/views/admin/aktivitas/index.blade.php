@@ -22,7 +22,8 @@
             <div class="px-5 py-3 bg-white dark:bg-slate-800 border border-emerald-50 dark:border-slate-700 rounded-2xl shadow-sm">
                 <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none">Total Log</p>
                 <p class="text-lg font-black text-[#008f5d] dark:text-emerald-400 mt-1">
-                    {{ is_countable($activities) ? number_format(count($activities)) : number_format($activities->total()) }}
+                    {{-- Perbaikan logika penghitungan total --}}
+                    {{ $activities instanceof \Illuminate\Pagination\LengthAwarePaginator ? number_format($activities->total()) : number_format(count($activities)) }}
                 </p>
             </div>
         </div>
@@ -89,11 +90,12 @@
                     <tr class="hover:bg-emerald-50/40 dark:hover:bg-slate-900/40 transition-all duration-200 group text-nowrap">
                         <td class="px-8 py-5">
                             <div class="flex flex-col">
+                                {{-- Menggunakan variabel 'waktu' sesuai cast di model --}}
                                 <span class="text-xs font-black text-slate-700 dark:text-slate-200 uppercase tracking-tight italic">
-                                    {{ $log->created_at->translatedFormat('d M Y') }}
+                                    {{ $log->waktu->translatedFormat('d M Y') }}
                                 </span>
                                 <span class="text-[10px] font-bold text-slate-400 dark:text-slate-500">
-                                    {{ $log->created_at->format('H:i:s') }} WIB
+                                    {{ $log->waktu->format('H:i:s') }} WIB
                                 </span>
                             </div>
                         </td>
@@ -115,13 +117,15 @@
                             <div class="flex items-center gap-2">
                                 <span class="w-2 h-2 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.5)]"></span>
                                 <p class="text-xs font-bold text-slate-600 dark:text-slate-400 tracking-tight">
-                                    {{ $log->deskripsi }}
+                                    {{-- PERBAIKAN: Gunakan 'aktivitas', bukan 'deskripsi' --}}
+                                    {{ $log->aktivitas }}
                                 </p>
                             </div>
                         </td>
                         <td class="px-6 py-5">
                             <span class="text-[10px] font-black font-mono text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-900/50 px-2 py-1 rounded-lg border border-slate-200 dark:border-slate-700">
-                                {{ $log->ip_address }}
+                                {{-- Gunakan ip_address --}}
+                                {{ $log->ip_address ?? '127.0.0.1' }}
                             </span>
                         </td>
                         <td class="px-8 py-5 text-center">
@@ -147,7 +151,7 @@
             </table>
         </div>
 
-        {{-- Pagination (Hanya tampil jika bukan mode 'Semua') --}}
+        {{-- Pagination --}}
         @if(request('per_page') !== 'all' && $activities instanceof \Illuminate\Pagination\LengthAwarePaginator && $activities->hasPages())
         <div class="px-10 py-8 bg-slate-50/50 dark:bg-slate-900/30 border-t border-emerald-50 dark:border-slate-700">
             <div class="flex flex-col md:flex-row justify-between items-center gap-6">
@@ -158,7 +162,7 @@
                     </p>
                 </div>
                 <div class="custom-pagination">
-                    {{ $activities->appends(request()->query())->links('pagination::tailwind') }}
+                    {{ $activities->appends(request()->query())->links() }}
                 </div>
             </div>
         </div>
@@ -180,7 +184,9 @@
         background-size: 1.5em 1.5em;
     }
 
+    /* Hilangkan navigasi teks bawaan Laravel */
     .custom-pagination nav > div:first-child { display: none; }
+    
     .custom-pagination nav span[aria-current="page"] > span {
         background: #008f5d !important;
         border-color: #008f5d !important;
@@ -189,7 +195,8 @@
         font-size: 10px;
         color: white !important;
     }
-    .custom-pagination nav a, .custom-pagination nav span {
+    
+    .custom-pagination nav a, .custom-pagination nav span:not([aria-current="page"] > span) {
         border-radius: 14px;
         margin: 0 3px;
         padding: 8px 14px !important;
@@ -200,9 +207,15 @@
         color: #64748b;
         transition: all 0.3s ease;
     }
+
     .dark .custom-pagination nav a, .dark .custom-pagination nav span:not([aria-current="page"] > span) {
         background-color: #0f172a;
         color: #94a3b8;
+    }
+    
+    .custom-pagination nav a:hover {
+        background-color: #008f5d !important;
+        color: white !important;
     }
 </style>
 @endsection

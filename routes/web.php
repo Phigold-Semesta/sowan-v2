@@ -28,7 +28,7 @@ Route::controller(TamuController::class)->group(function () {
     Route::post('/tamu/simpan', 'store')->name('tamu.store');
 });
 
-// Logic Login & Logout Dasar (Mencegah user yang sudah login masuk ke halaman login kembali)
+// Logic Login & Logout Dasar
 Route::middleware('guest')->group(function () {
     Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
     Route::post('/login', [AuthController::class, 'authenticate'])->name('login.proses');
@@ -41,7 +41,6 @@ Route::middleware('auth')->group(function () {
 
     /**
      * Dashboard Redirector (Otomatis sesuai Role)
-     * Mengarahkan user ke dashboard spesifik role mereka setelah login sukses.
      */
     Route::get('/dashboard', function () {
         $user = Auth::user(); 
@@ -55,36 +54,29 @@ Route::middleware('auth')->group(function () {
     })->name('dashboard');
 
     // --- GRUP AKSES: PETUGAS 📋 ---
-    // Fokus pada manajemen harian tamu di lapangan
     Route::middleware('role:petugas')->prefix('petugas')->name('petugas.')->group(function () {
         Route::get('/dashboard', function () {
             return view('petugas.dashboard');
         })->name('dashboard');
 
-        // CRUD Tamu untuk Petugas (Gunakan resource agar rapi)
         Route::resource('manajemen_tamu', PetugasController::class)
              ->parameters(['manajemen_tamu' => 'tamu']);
         
-        // Update Status Tamu (Belum, Sedang, Sudah Dilayani)
         Route::patch('manajemen_tamu/{tamu}/status', [PetugasController::class, 'updateStatus'])
              ->name('manajemen_tamu.updateStatus');
     });
 
     // --- GRUP AKSES: ADMINISTRATOR 🛡️ ---
-    // Pusat kendali seluruh sistem
     Route::middleware('role:administrator')->prefix('admin')->name('admin.')->group(function () {
         
-        // Dashboard Utama Admin
         Route::get('/dashboard', [AdminController::class, 'dashboard'])->name('dashboard');
 
-        // Manajemen User (CRUD Petugas/Pimpinan oleh Admin)
         Route::resource('users', UserController::class)
              ->parameters(['users' => 'user']);
 
         // --- MASTER DATA (Pusat Kendali Konfigurasi SOWAN v2) ---
         Route::prefix('master')->name('master.')->group(function() {
             
-            // Halaman Utama Master
             Route::get('/', [AdminController::class, 'master_index'])->name('index');
 
             // CRUD Kategori Layanan
@@ -96,6 +88,15 @@ Route::middleware('auth')->group(function () {
                 Route::get('/{id}/edit', [AdminController::class, 'layanan_edit'])->name('edit');
                 Route::put('/{id}', [AdminController::class, 'layanan_update'])->name('update');
                 Route::delete('/{id}', [AdminController::class, 'layanan_destroy'])->name('destroy');
+
+                /** * PENYEMPURNAAN: Fitur Dokumen Panduan Layanan 📄
+                 * Mendukung multiple upload dan penghapusan file spesifik.
+                 */
+                Route::get('/{id}/panduan', [AdminController::class, 'layanan_panduan'])->name('panduan');
+                Route::post('/{id}/panduan', [AdminController::class, 'layanan_panduan_store'])->name('panduan.store');
+                
+                // BARIS BARU: Route untuk menghapus file panduan spesifik
+                Route::delete('/panduan/{id_dokumen}', [AdminController::class, 'layanan_panduan_destroy'])->name('panduan.destroy');
             });
 
             // CRUD Tujuan Kunjungan
@@ -110,20 +111,27 @@ Route::middleware('auth')->group(function () {
             });
         });
 
-        // --- MENU LAPORAN KUNJUNGAN (DISEMPURNAKAN & DISINKRONKAN) 📑 ---
+        // --- MENU LAPORAN KUNJUNGAN 📑 ---
         Route::prefix('laporan')->name('laporan.')->group(function() {
             Route::get('/', [AdminController::class, 'laporan_index'])->name('index');
             Route::get('/export', [AdminController::class, 'laporan_export'])->name('export');
-            
-            // Tambahan Rute untuk Detail dan Edit Laporan
             Route::get('/{id}', [AdminController::class, 'laporan_show'])->name('show');
             Route::get('/{id}/edit', [AdminController::class, 'laporan_edit'])->name('edit');
-
-            /** * PERBAIKAN: Menambahkan rute UPDATE dan DESTROY
-             * Agar form edit dapat mengirimkan data (PUT) dan admin bisa menghapus laporan (DELETE)
-             */
             Route::put('/{id}', [AdminController::class, 'laporan_update'])->name('update');
             Route::delete('/{id}', [AdminController::class, 'laporan_destroy'])->name('destroy');
+        });
+
+        // --- MANAJEMEN RATING LAYANAN ⭐ ---
+        Route::prefix('rating')->name('rating.')->group(function() {
+            Route::get('/', [AdminController::class, 'rating_index'])->name('index');
+            Route::get('/{id}', [AdminController::class, 'rating_show'])->name('show');
+            
+            // Simpan/Update Tanggapan
+            Route::put('/{id}', [AdminController::class, 'rating_tanggapan'])->name('update');
+            Route::post('/{id}/tanggapan', [AdminController::class, 'rating_tanggapan'])->name('tanggapan');
+
+            // PENYEMPURNAAN: Route Hapus Rating
+            Route::delete('/{id}', [AdminController::class, 'rating_destroy'])->name('destroy');
         });
 
         // --- AKTIVITAS GLOBAL (Audit Log) 🕵️‍♂️ ---
@@ -133,17 +141,13 @@ Route::middleware('auth')->group(function () {
     });
 
     // --- GRUP AKSES: PIMPINAN 📊 ---
-    // Fokus pada monitoring dan laporan
     Route::middleware('role:pimpinan')->prefix('pimpinan')->name('pimpinan.')->group(function () {
         Route::get('/dashboard', [TamuController::class, 'pimpinanDashboard'])->name('dashboard');
-        
-        // Pimpinan menggunakan fungsi laporan yang sama dengan Admin secara internal
         Route::get('/laporan', [AdminController::class, 'laporan_index'])->name('laporan.index');
         Route::get('/laporan/export', [AdminController::class, 'laporan_export'])->name('laporan.export');
     });
 
     // --- FITUR STATISTIK (SHARED) 📈 ---
-    // Bisa diakses oleh Pimpinan dan Admin
     Route::middleware('role:pimpinan,administrator')->group(function () {
         Route::get('/statistik', [TamuController::class, 'stats'])->name('statistik.index');
     });

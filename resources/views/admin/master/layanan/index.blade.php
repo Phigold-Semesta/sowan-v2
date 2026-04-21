@@ -14,14 +14,14 @@
             <div class="flex items-center gap-2 mt-1">
                 <span class="h-1 w-8 bg-[#008f5d] dark:bg-emerald-500 rounded-full"></span>
                 <p class="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em]">
-                    Kelola daftar layanan utama untuk pendaftaran tamu LPSE
+                    Kelola daftar layanan utama & dokumen panduan LPSE
                 </p>
             </div>
         </div>
         
         {{-- Tombol Aksi (Sisi Kanan) --}}
         <div class="flex items-center gap-3 shrink-0">
-            {{-- TOMBOL KEMBALI - Posisi Baru --}}
+            {{-- TOMBOL KEMBALI --}}
             <a href="{{ route('admin.master.index') }}" 
                class="flex items-center gap-3 px-5 py-4 bg-white dark:bg-slate-800 text-slate-400 hover:text-[#008f5d] dark:hover:text-emerald-400 rounded-2xl border border-emerald-50 dark:border-slate-700 shadow-sm hover:shadow-md transition-all duration-300 group active:scale-95"
                title="Kembali ke Menu Master">
@@ -52,7 +52,6 @@
             </div>
 
             <div class="flex flex-wrap md:flex-nowrap gap-3">
-                {{-- Per Page Filter --}}
                 <div class="w-full md:w-40 relative">
                     <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400">
                         <i class="fas fa-eye text-xs"></i>
@@ -118,6 +117,13 @@
                         </td>
                         <td class="px-8 py-5 text-nowrap">
                             <div class="flex justify-center items-center gap-2">
+                                {{-- TOMBOL PANDUAN (BARU) --}}
+                                <a href="{{ route('admin.master.layanan.panduan', $item->id_layanan) }}" 
+                                   title="Kelola Dokumen Panduan"
+                                   class="w-10 h-10 flex items-center justify-center rounded-2xl bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 hover:bg-[#008f5d] hover:text-white dark:hover:bg-emerald-500 hover:shadow-[0_5px_15px_rgba(0,143,93,0.3)] transition-all active:scale-90">
+                                    <i class="fas fa-file-pdf text-xs"></i>
+                                </a>
+
                                 <a href="{{ route('admin.master.layanan.edit', $item->id_layanan) }}" 
                                    title="Edit Layanan"
                                    class="w-10 h-10 flex items-center justify-center rounded-2xl bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400 hover:bg-amber-500 hover:text-white dark:hover:bg-amber-500 hover:shadow-[0_5px_15px_rgba(245,158,11,0.3)] transition-all active:scale-90">
