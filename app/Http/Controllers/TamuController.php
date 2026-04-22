@@ -6,6 +6,7 @@ use App\Models\Tamu;
 use App\Models\Kunjungan;
 use App\Models\Layanan;
 use App\Models\PetugasTujuan;
+use App\Models\RatingLayanan;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -17,10 +18,8 @@ class TamuController extends Controller
      */
     public function index()
     {
-        // Set default null agar tidak error Undefined Variable di Blade
         $gmail = null;
 
-        // Ambil data layanan + dokumen terkait (Eager Loading)
         $layanan = Layanan::with('dokumens')
             ->orderBy('nama_layanan', 'asc')
             ->get();
@@ -39,7 +38,6 @@ class TamuController extends Controller
         $request->validate(['gmail' => 'required|email|max:255']);
         $gmail = $request->gmail;
 
-        // Eager loading dokumens agar PDF bisa tampil dinamis di frontend
         $layanan = Layanan::with('dokumens')
             ->orderBy('nama_layanan', 'asc')
             ->get();
@@ -49,73 +47,91 @@ class TamuController extends Controller
         $tamu = Tamu::where('gmail', $gmail)->first();
 
         if ($tamu) {
-            // Jika tamu lama, tampilkan form tamu lama dengan data layanan + dokumen
+            // Jika tamu lama, tampilkan form tamu lama
             return view('tamu.form_tamu_lama', compact('tamu', 'layanan', 'petugas', 'gmail'));
         }
 
-        // Jika tamu baru, tampilkan form tamu baru dengan data layanan + dokumen
+        // Jika tamu baru, tampilkan form tamu baru
         return view('tamu.form_tamu_baru', compact('layanan', 'petugas', 'gmail'));
     }
 
     /**
-     * Simpan Data Kunjungan.
-     * Menggunakan DB Transaction untuk keamanan data (Single Identity System).
+     * Simpan Data Kunjungan & Rating.
+     * Disempurnakan untuk membedakan redirect sukses tamu lama dan baru.
      */
     public function store(Request $request)
     {
-        // Validasi disesuaikan dengan input dari form (termasuk rating & saran)
+        // Validasi input form
+        // Catatan: Jika tamu lama, beberapa field profil (alamat, no_wa, dll) mungkin tidak dikirim, 
+        // maka kita gunakan nullable atau ambil dari data lama.
         $validated = $request->validate([
             'gmail'         => 'required|email|max:255',
             'nama_tamu'     => 'required|string|max:255',
-            'no_wa'         => 'required|string|max:15',
-            'jenis_tamu'    => 'required|string',
-            'nama_instansi' => 'required|string|max:255',
-            'alamat_kantor' => 'required|string',
-            'hadir_sebagai' => 'required|string|max:255',
+            'no_wa'         => 'nullable|string|max:15',
+            'jenis_tamu'    => 'nullable|string',
+            'nama_instansi' => 'nullable|string|max:255',
+            'alamat_kantor' => 'nullable|string',
+            'hadir_sebagai' => 'nullable|string|max:255',
             'id_layanan'    => 'required|exists:layanan,id_layanan',
             'id_petugas'    => 'required|exists:petugas_tujuan,id_petugas',
-            'rating'        => 'nullable|integer|min:0|max:5', // Tambahan untuk rating
-            'saran'         => 'nullable|string',             // Tambahan untuk saran
+            'skor'          => 'nullable|integer|min:0|max:5', 
+            'komentar'      => 'nullable|string',
+            'tipe_tamu'     => 'required|string' // Flag pembeda alur redirect
         ]);
 
         try {
-            // Kita langsung return objek tamu dari dalam transaksi agar IDE tidak menganggap variabel ini null
-            $tamu = DB::transaction(function () use ($validated) {
-                // 1. Update/Create Profil Tamu (Single Identity)
+            $tamu = DB::transaction(function () use ($validated, $request) {
+                
+                // 1. Update/Create Profil Tamu
+                // Jika tamu lama, data yang ada di DB tidak akan tertimpa null karena updateOrCreate
                 $tamuModel = Tamu::updateOrCreate(
                     ['gmail' => $validated['gmail']],
-                    [
+                    array_filter([
                         'nama_tamu'     => $validated['nama_tamu'],
                         'no_wa'         => $validated['no_wa'],
                         'jenis_tamu'    => $validated['jenis_tamu'],
                         'nama_instansi' => $validated['nama_instansi'],
                         'alamat_kantor' => $validated['alamat_kantor'],
                         'hadir_sebagai' => $validated['hadir_sebagai'],
-                    ]
+                    ])
                 );
 
-                // 2. Catat Riwayat Kunjungan
-                Kunjungan::create([
+                // 2. Simpan riwayat di tabel 'kunjungan'
+                $kunjungan = Kunjungan::create([
                     'gmail'       => $tamuModel->gmail,
                     'id_layanan'  => $validated['id_layanan'],
                     'id_petugas'  => $validated['id_petugas'],
                     'waktu_masuk' => now(),
-                    'status'      => 'belum dilayani', // Konsistensi string sesuai instruksi
-                    'rating'      => $validated['rating'] ?? 0, 
-                    'saran'       => $validated['saran'] ?? null, 
+                    'status'      => 'Belum Dilayani', 
                 ]);
 
-                return $tamuModel; // Mengembalikan objek tamu ke variabel $tamu di luar closure
+                // 3. Simpan feedback di tabel 'rating_layanan'
+                // Menggunakan field 'skor' dan 'komentar' sesuai struktur DB Anda
+                DB::table('rating_layanan')->insert([
+                    'id_kunjungan' => $kunjungan->id_kunjungan,
+                    'skor'         => $validated['skor'] ?? 0,
+                    'komentar'     => $validated['komentar'] ?? null,
+                    'created_at'   => now(),
+                    'updated_at'   => now(),
+                ]);
+
+                return $tamuModel; 
             });
 
-            // 3. Redirect ke halaman sukses (success_tamu_baru.blade.php)
-            // Sekarang variabel $tamu dijamin sebagai objek, bukan null.
+            // --- LOGIC REDIRECT DISESUAIKAN ---
+            // Jika request datang dari form_tamu_lama
+            if ($request->tipe_tamu === 'lama') {
+                return view('tamu.success_tamu_lama', [
+                    'nama_tamu' => $tamu->nama_tamu
+                ]);
+            }
+
+            // Default untuk tamu baru
             return view('tamu.success_tamu_baru', [
                 'nama_tamu' => $tamu->nama_tamu
             ]);
 
         } catch (\Exception $e) {
-            // Jika gagal, kembali ke form dengan pesan error dan input sebelumnya
             return redirect()->back()->withInput()->with('error', 'Gagal menyimpan data: ' . $e->getMessage());
         }
     }

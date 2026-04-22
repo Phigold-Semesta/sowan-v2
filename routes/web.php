@@ -25,7 +25,7 @@ Route::get('/', function () {
 /**
  * PENYESUAIAN ALUR TAMU (SESUAI USE CASE REVISI 4):
  * Alur: Scan QR -> Validasi Gmail -> Tampil Form (Baru/Lama) -> Simpan.
- * Karena hanya ada 2 view (form_tamu_baru & form_tamu_lama).
+ * Perbaikan: Menangani method GET pada pengecekan & Memastikan View Sukses Terpisah.
  */
 Route::controller(TamuController::class)->group(function () {
     // 1. Halaman Awal scan QR (Menampilkan input Gmail pertama kali)
@@ -33,8 +33,13 @@ Route::controller(TamuController::class)->group(function () {
     
     // 2. Validasi Gmail: Menentukan apakah tamu harus ke form_baru atau form_lama
     Route::post('/tamu/cek', 'check')->name('tamu.check');
+    // Penanganan Error 405: Jika user refresh halaman hasil cek
+    Route::get('/tamu/cek', function() {
+        return redirect()->route('tamu.index');
+    });
     
     // 3. Proses simpan data kunjungan (Finalisasi pendaftaran tamu)
+    // Controller store() harus menangani logika redirect ke success_tamu_baru atau success_tamu_lama
     Route::post('/tamu/simpan', 'store')->name('tamu.store');
     
     // 4. Fitur Tamu: Unduh Dokumen Panduan (Sesuai Use Case)
