@@ -58,7 +58,7 @@
                     <p class="text-emerald-500 text-[10px] uppercase font-black tracking-[0.2em] mb-1">Sedang Dilayani</p>
                     <h3 class="text-4xl font-black text-emerald-600 dark:text-emerald-400 tracking-tighter">{{ $stats['sedang'] ?? 0 }}</h3>
                 </div>
-                <div class="bg-emerald-50 dark:bg-emerald-800/30 p-4 rounded-2xl text-2xl group-hover:scale-110 transition-all duration-500 shadow-lg shadow-emerald-100 dark:shadow-none">⚡</div>
+                <div class="bg-emerald-50 dark:bg-emerald-800/30 p-4 rounded-2xl text-2xl group-hover:scale-110 transition-all duration-500 shadow-lg shadow-emerald-100 dark:shadow-none">📑</div>
             </div>
             <p class="mt-4 text-[9px] text-emerald-500 font-bold uppercase italic tracking-wider">Proses Helpdesk</p>
         </div>

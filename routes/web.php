@@ -22,10 +22,23 @@ Route::get('/', function () {
     return redirect()->route('login');
 });
 
-// Jalur khusus tamu (Input Form QR Code - Tanpa Login)
+/**
+ * PENYESUAIAN ALUR TAMU (SESUAI USE CASE REVISI 4):
+ * Alur: Scan QR -> Validasi Gmail -> Tampil Form (Baru/Lama) -> Simpan.
+ * Karena hanya ada 2 view (form_tamu_baru & form_tamu_lama).
+ */
 Route::controller(TamuController::class)->group(function () {
-    Route::get('/hadir', 'create')->name('tamu.form');
+    // 1. Halaman Awal scan QR (Menampilkan input Gmail pertama kali)
+    Route::get('/hadir', 'index')->name('tamu.index'); 
+    
+    // 2. Validasi Gmail: Menentukan apakah tamu harus ke form_baru atau form_lama
+    Route::post('/tamu/cek', 'check')->name('tamu.check');
+    
+    // 3. Proses simpan data kunjungan (Finalisasi pendaftaran tamu)
     Route::post('/tamu/simpan', 'store')->name('tamu.store');
+    
+    // 4. Fitur Tamu: Unduh Dokumen Panduan (Sesuai Use Case)
+    Route::get('/panduan/{id}', 'downloadPanduan')->name('tamu.panduan.download');
 });
 
 // Logic Login & Logout Dasar
@@ -63,23 +76,20 @@ Route::middleware('auth')->group(function () {
         Route::resource('manajemen_tamu', PetugasController::class)
              ->parameters(['manajemen_tamu' => 'tamu']);
         
+        // Update Status Tamu: Belum, Sedang, atau Sudah Dilayani (Sesuai Use Case)
         Route::patch('manajemen_tamu/{tamu}/status', [PetugasController::class, 'updateStatus'])
              ->name('manajemen_tamu.updateStatus');
 
         /**
-         * PENYEMPURNAAN AKTOR PETUGAS:
-         * Menyesuaikan rute dengan struktur folder view 'petugas.laporan.index' 
-         * dan 'petugas.rating.index'.
+         * PENYEMPURNAAN AKTOR PETUGAS
          */
-        
-        // Jalur Laporan Khusus Petugas
         Route::prefix('laporan')->name('laporan.')->group(function() {
             Route::get('/', [PetugasController::class, 'laporan_index'])->name('index');
         });
 
-        // Jalur Rating & Tanggapan Khusus Petugas (Sesuai Use Case: Menanggapi Kritik & Saran)
         Route::prefix('rating')->name('rating.')->group(function() {
             Route::get('/', [PetugasController::class, 'rating_index'])->name('index');
+            // Menanggapi Kritik & Saran (Sesuai Use Case)
             Route::post('/{id}/tanggapan', [PetugasController::class, 'rating_tanggapan'])->name('tanggapan');
         });
     });
@@ -92,12 +102,11 @@ Route::middleware('auth')->group(function () {
         Route::resource('users', UserController::class)
              ->parameters(['users' => 'user']);
 
-        // --- MASTER DATA (Pusat Kendali Konfigurasi SOWAN v2) ---
+        // --- MASTER DATA ---
         Route::prefix('master')->name('master.')->group(function() {
             
             Route::get('/', [AdminController::class, 'master_index'])->name('index');
 
-            // CRUD Kategori Layanan
             Route::prefix('layanan')->name('layanan.')->group(function() {
                 Route::get('/', [AdminController::class, 'layanan_index'])->name('index');
                 Route::get('/create', [AdminController::class, 'layanan_create'])->name('create');
@@ -107,12 +116,12 @@ Route::middleware('auth')->group(function () {
                 Route::put('/{id}', [AdminController::class, 'layanan_update'])->name('update');
                 Route::delete('/{id}', [AdminController::class, 'layanan_destroy'])->name('destroy');
 
+                // Mengelola Dokumen Panduan Layanan (Sesuai Use Case)
                 Route::get('/{id}/panduan', [AdminController::class, 'layanan_panduan'])->name('panduan');
                 Route::post('/{id}/panduan', [AdminController::class, 'layanan_panduan_store'])->name('panduan.store');
                 Route::delete('/panduan/{id_dokumen}', [AdminController::class, 'layanan_panduan_destroy'])->name('panduan.destroy');
             });
 
-            // CRUD Tujuan Kunjungan
             Route::prefix('tujuan')->name('tujuan.')->group(function() {
                 Route::get('/', [AdminController::class, 'tujuan_index'])->name('index');
                 Route::get('/create', [AdminController::class, 'tujuan_create'])->name('create');
@@ -124,7 +133,7 @@ Route::middleware('auth')->group(function () {
             });
         });
 
-        // --- MENU LAPORAN KUNJUNGAN (ADMIN) 📑 ---
+        // --- MENU LAPORAN KUNJUNGAN ---
         Route::prefix('laporan')->name('laporan.')->group(function() {
             Route::get('/', [AdminController::class, 'laporan_index'])->name('index');
             Route::get('/export', [AdminController::class, 'laporan_export'])->name('export');
@@ -134,7 +143,7 @@ Route::middleware('auth')->group(function () {
             Route::delete('/{id}', [AdminController::class, 'laporan_destroy'])->name('destroy');
         });
 
-        // --- MANAJEMEN RATING LAYANAN (ADMIN) ⭐ ---
+        // --- MANAJEMEN RATING LAYANAN ---
         Route::prefix('rating')->name('rating.')->group(function() {
             Route::get('/', [AdminController::class, 'rating_index'])->name('index');
             Route::get('/{id}', [AdminController::class, 'rating_show'])->name('show');
@@ -143,20 +152,20 @@ Route::middleware('auth')->group(function () {
             Route::delete('/{id}', [AdminController::class, 'rating_destroy'])->name('destroy');
         });
 
-        // --- AKTIVITAS GLOBAL (Audit Log) 🕵️‍♂️ ---
+        // Monitoring Aktivitas Global (Audit Log)
         Route::prefix('aktivitas')->name('aktivitas.')->group(function() {
             Route::get('/', [AdminController::class, 'aktivitas_global'])->name('index');
         });
     });
 
-    // --- GRUP AKSES: PIMPINAN 📊 ---
+    // --- GRUP AKSES: PIMPINAN 👔 ---
     Route::middleware('role:pimpinan')->prefix('pimpinan')->name('pimpinan.')->group(function () {
         Route::get('/dashboard', [TamuController::class, 'pimpinanDashboard'])->name('dashboard');
         Route::get('/laporan', [AdminController::class, 'laporan_index'])->name('laporan.index');
         Route::get('/laporan/export', [AdminController::class, 'laporan_export'])->name('laporan.export');
     });
 
-    // --- FITUR STATISTIK (SHARED) 📈 ---
+    // --- FITUR STATISTIK & GRAFIK (SHARED) ---
     Route::middleware('role:pimpinan,administrator')->group(function () {
         Route::get('/statistik', [TamuController::class, 'stats'])->name('statistik.index');
     });
