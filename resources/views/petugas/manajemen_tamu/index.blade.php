@@ -18,7 +18,7 @@
             </div>
         </div>
         <a href="{{ route('petugas.manajemen_tamu.create') }}" 
-           class="inline-flex items-center px-8 py-4 bg-[#008f5d] dark:bg-emerald-600 text-white text-[11px] font-black uppercase tracking-[0.2em] rounded-[2rem] hover:bg-emerald-700 dark:hover:bg-emerald-500 hover:shadow-[0_15px_30_rgba(0,143,93,0.3)] transition-all duration-500 group shrink-0 border-b-4 border-[#006b46] dark:border-emerald-800 active:border-b-0 active:translate-y-1">
+           class="inline-flex items-center px-8 py-4 bg-[#008f5d] dark:bg-emerald-600 text-white text-[11px] font-black uppercase tracking-[0.2em] rounded-[2rem] hover:bg-emerald-700 dark:hover:bg-emerald-500 hover:shadow-[0_15px_30px_rgba(0,143,93,0.3)] transition-all duration-500 group shrink-0 border-b-4 border-[#006b46] dark:border-emerald-800 active:border-b-0 active:translate-y-1">
             <i class="fas fa-user-plus mr-3 group-hover:rotate-12 transition-transform"></i>
             Registrasi Manual
         </a>
@@ -27,7 +27,6 @@
     {{-- Stats Cards --}}
     <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
         @php
-            // PERBAIKAN: Mengambil data langsung dari variabel count yang dikirim Controller agar lebih akurat
             $stats = [
                 ['label' => 'Menunggu', 'count' => $countMenunggu, 'color' => 'amber', 'icon' => 'fa-clock-rotate-left', 'shadow' => 'shadow-amber-500/10'],
                 ['label' => 'Diproses', 'count' => $countDiproses, 'color' => 'blue', 'icon' => 'fa-bolt-lightning', 'shadow' => 'shadow-blue-500/10'],
@@ -54,13 +53,12 @@
     {{-- Filter & Search Section --}}
     <div class="bg-white dark:bg-slate-800 p-5 rounded-[2.5rem] border border-emerald-50 dark:border-slate-700 shadow-sm transition-colors duration-300">
         <form action="{{ URL::current() }}" method="GET" class="flex flex-col lg:flex-row gap-4">
-            {{-- Search Bar --}}
             <div class="flex-1 relative group">
                 <div class="absolute inset-y-0 left-0 pl-5 flex items-center pointer-events-none text-slate-400 group-focus-within:text-[#008f5d] dark:group-focus-within:text-emerald-400 transition-colors">
                     <i class="fas fa-search text-sm"></i>
                 </div>
                 <input type="text" name="search" value="{{ request('search') }}"
-                       placeholder="CARI NAMA TAMU, INSTANSI, ATAU PETUJUAN..." 
+                       placeholder="CARI NAMA TAMU, INSTANSI, ATAU TUJUAN..." 
                        class="w-full pl-12 pr-4 py-3.5 bg-slate-50 dark:bg-slate-900/50 border-0 rounded-2xl text-[11px] font-bold tracking-widest focus:ring-2 focus:ring-[#008f5d]/20 dark:focus:ring-emerald-500/20 dark:text-slate-200 transition-all placeholder:text-slate-400 dark:placeholder:text-slate-600 uppercase">
             </div>
 
@@ -140,7 +138,6 @@
                                     <i class="fas fa-concierge-bell mr-1"></i> {{ $item->layanan->nama_layanan ?? 'Layanan Tidak Terdaftar' }}
                                 </span>
                                 <p class="text-[10px] font-bold text-slate-600 dark:text-slate-300 uppercase tracking-tighter">
-                                    {{-- PERBAIKAN: Memanggil nama_petugas dari relasi petugasTujuan --}}
                                     <i class="fas fa-user-tie mr-1 text-[#008f5d]"></i> Menemui: {{ $item->petugasTujuan->nama_petugas ?? 'Petugas Piket' }}
                                 </p>
                                 <span class="text-[9px] font-bold text-slate-400 uppercase tracking-tighter italic">
@@ -152,37 +149,37 @@
                             @php
                                 $statusMap = [
                                     'belum dilayani' => [
-                                        'bg' => 'bg-amber-50 dark:bg-amber-900/20',
-                                        'text' => 'text-amber-600 dark:text-amber-400',
-                                        'border' => 'border-amber-100 dark:border-amber-900/30',
+                                        'bg' => 'bg-red-50 dark:bg-red-950/40',
+                                        'text' => 'text-red-600 dark:text-red-400',
+                                        'border' => 'border-red-200 dark:border-red-800/50',
                                         'icon' => 'fa-hourglass-start',
                                         'label' => 'BELUM DILAYANI'
                                     ],
                                     'sedang dilayani' => [
-                                        'bg' => 'bg-blue-50 dark:bg-blue-900/20',
-                                        'text' => 'text-blue-600 dark:text-blue-400',
-                                        'border' => 'border-blue-100 dark:border-blue-900/30',
-                                        'icon' => 'fa-bolt',
+                                        'bg' => 'bg-orange-50 dark:bg-orange-950/40',
+                                        'text' => 'text-orange-600 dark:text-orange-400',
+                                        'border' => 'border-orange-200 dark:border-orange-800/50',
+                                        'icon' => 'fa-bolt-lightning',
                                         'label' => 'SEDANG DILAYANI'
                                     ],
                                     'sudah dilayani' => [
-                                        'bg' => 'bg-emerald-50 dark:bg-emerald-900/20',
-                                        'text' => 'text-emerald-600 dark:text-emerald-400',
-                                        'border' => 'border-emerald-100 dark:border-emerald-900/30',
-                                        'icon' => 'fa-check-circle',
+                                        'bg' => 'bg-emerald-50 dark:bg-emerald-950/40',
+                                        'text' => 'text-[#008f5d] dark:text-emerald-400',
+                                        'border' => 'border-emerald-200 dark:border-emerald-800/50',
+                                        'icon' => 'fa-circle-check',
                                         'label' => 'SUDAH DILAYANI'
                                     ],
                                 ];
                                 $st = $statusMap[$item->status] ?? [
                                     'bg' => 'bg-slate-50 dark:bg-slate-900/20',
                                     'text' => 'text-slate-600 dark:text-slate-400',
-                                    'border' => 'border-slate-100 dark:border-slate-900/30',
+                                    'border' => 'border-slate-200 dark:border-slate-800/50',
                                     'icon' => 'fa-circle',
                                     'label' => strtoupper($item->status)
                                 ];
                             @endphp
-                            <span class="inline-flex items-center text-[9px] font-black uppercase tracking-[0.2em] px-5 py-2.5 rounded-2xl border-2 {{ $st['border'] }} {{ $st['bg'] }} {{ $st['text'] }} shadow-sm transition-all duration-500">
-                                <i class="fas {{ $st['icon'] }} mr-2 @if($item->status == 'sedang dilayani') fa-spin-pulse @endif"></i>
+                            <span class="inline-flex items-center justify-center text-[9px] font-black uppercase tracking-widest px-5 py-2.5 rounded-full border-2 {{ $st['border'] }} {{ $st['bg'] }} {{ $st['text'] }} shadow-sm min-w-[140px] transition-all duration-500">
+                                <i class="fas {{ $st['icon'] }} mr-2 @if($item->status == 'sedang dilayani') fa-beat-fast @endif"></i>
                                 {{ $st['label'] }}
                             </span>
                         </td>
@@ -227,13 +224,13 @@
             </table>
         </div>
 
-        @if($kunjunganCount = $kunjungans->total())
+        @if($kunjungans->total() > 0)
         <div class="px-10 py-8 bg-slate-50/50 dark:bg-slate-900/30 border-t border-emerald-50 dark:border-slate-700">
             <div class="flex flex-col md:flex-row justify-between items-center gap-6">
                 <div class="flex items-center gap-3">
                     <div class="w-2 h-2 rounded-full bg-[#008f5d] animate-pulse"></div>
                     <p class="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest leading-none">
-                        Tampil {{ $kunjungans->firstItem() ?? 0 }} - {{ $kunjungans->lastItem() ?? 0 }} dari {{ $kunjunganCount }} Antrean
+                        Tampil {{ $kunjungans->firstItem() }} - {{ $kunjungans->lastItem() }} dari {{ $kunjungans->total() }} Antrean
                     </p>
                 </div>
                 <div class="custom-pagination">
@@ -282,7 +279,18 @@
         color: #94a3b8; 
         border-color: #1e293b; 
     }
-    .custom-pagination nav a:hover { background-color: #008f5d; color: white; border-color: #008f5d; transform: translateY(-2px); }
+    .custom-pagination nav a:hover { 
+        background-color: #008f5d; 
+        color: white; 
+        border-color: #008f5d; 
+        transform: translateY(-2px); 
+    }
+
+    /* SweetAlert Dark Mode Tuning */
+    .swal2-popup.dark-mode {
+        background-color: #1e293b !important;
+        color: #f1f5f9 !important;
+    }
 </style>
 
 <script>
@@ -315,11 +323,10 @@
                 popup: 'rounded-[3rem] border-4 border-emerald-50 dark:border-slate-700 p-8 shadow-2xl',
                 confirmButton: 'rounded-2xl font-black text-[10px] tracking-widest px-8 py-4 uppercase shadow-lg shadow-emerald-500/20',
                 cancelButton: 'rounded-2xl font-black text-[10px] tracking-widest text-slate-500 px-8 py-4',
+                input: 'custom-radio-group'
             },
             inputValidator: (value) => {
-                if (!value) {
-                    return 'Pilih status terlebih dahulu!';
-                }
+                if (!value) return 'Pilih status terlebih dahulu!';
             }
         }).then((result) => {
             if (result.isConfirmed && result.value) {

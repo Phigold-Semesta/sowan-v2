@@ -34,6 +34,7 @@
                 extend: {
                     colors: {
                         'sowan-emerald': '#008f5d',
+                        'sowan-gold': '#b45309',
                     }
                 }
             }
@@ -41,6 +42,19 @@
     </script>
 
     <style>
+        /* INTEGRASI VARIABEL WARNA MEWAH */
+        :root {
+            --emerald-primary: #008f5d;
+            --emerald-light: #ecfdf5;
+            --gold-accent: #b45309;
+            --gold-light: #fffbeb;
+            --gray-soft: #6b7280;
+            --gray-bg: #f3f4f6;
+            
+            /* Dark Mode Variants */
+            --dark-emerald: #064e3b;
+        }
+
         [x-cloak] { display: none !important; }
         body { 
             font-family: 'Plus Jakarta Sans', sans-serif; 
@@ -62,6 +76,19 @@
         #main-sidebar {
             width: 88px; 
             transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* PENYEMPURNAAN BADGE STATUS */
+        .status-badge {
+            padding: 0.4rem 1rem;
+            border-radius: 9999px;
+            font-size: 0.7rem;
+            font-weight: 800;
+            border: 1px solid;
+            display: inline-flex;
+            align-items: center;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
         }
 
         @media (min-width: 1024px) {
@@ -175,7 +202,6 @@
 
                 <div class="menu-header px-4 py-3 text-[10px] font-black text-emerald-200/50 uppercase tracking-[0.2em] mt-4">Monitoring & Output</div>
 
-                {{-- MENU RATING: TERSEDIA UNTUK ADMIN DAN PETUGAS --}}
                 @if(auth()->user()->role === 'administrator' || auth()->user()->role === 'petugas')
                 @php
                     $ratingRoute = (auth()->user()->role === 'administrator') ? 'admin.rating.index' : 'petugas.rating.index';
@@ -197,7 +223,6 @@
                 </a>
                 @endif
 
-                {{-- LOGIKA MENU LAPORAN YANG DISEMPURNAKAN --}}
                 @php
                     $laporanRoute = null;
                     if(auth()->user()->role === 'administrator') {
