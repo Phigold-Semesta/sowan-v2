@@ -22,27 +22,27 @@ class AuditLog extends Model
      */
     protected $fillable = [
         'id_user',
-        'aktivitas',
+        'aktivitas', // Pastikan kolom ini ada agar sesuai dengan logActivity() di Controller
         'keterangan',
         'waktu',
-        'ip_address', // Ditambahkan agar IP muncul di tabel
-        'user_agent', // Ditambahkan untuk pelacakan browser/perangkat
+        'ip_address', // Penting: Sudah ditambahkan agar tidak error 1054
+        'user_agent', // Penting: Sudah ditambahkan untuk pelacakan browser/perangkat
     ];
 
     /**
-     * Menonaktifkan timestamps default Laravel (created_at/updated_at) 
-     * jika kamu hanya menggunakan satu kolom 'waktu'.
-     * Namun, jika tabelmu punya created_at, biarkan ini menjadi true.
+     * Tetap aktifkan timestamps karena Laravel mencoba mengisi created_at dan updated_at
+     * sesuai dengan pesan error SQL yang muncul tadi.
      */
     public $timestamps = true; 
 
     /**
-     * Casting kolom 'waktu' menjadi objek Carbon agar bisa menggunakan 
-     * fungsi format() atau diffForHumans() di Blade.
+     * Casting kolom menjadi objek Carbon agar bisa menggunakan 
+     * fungsi format() atau diffForHumans() di Blade secara instan.
      */
     protected $casts = [
         'waktu' => 'datetime',
         'created_at' => 'datetime',
+        'updated_at' => 'datetime',
     ];
 
     /**
@@ -56,10 +56,20 @@ class AuditLog extends Model
 
     /**
      * Helper untuk mendapatkan warna status atau icon (Opsional)
-     * Bisa kamu panggil di Blade jika ingin tampilan lebih mewah.
+     * Bisa kamu panggil di Blade jika ingin tampilan lebih mewah khas SOWAN.
      */
     public function getStatusColorAttribute()
     {
+        // Logika warna emerald sesuai branding SOWAN v2
         return 'emerald';
+    }
+
+    /**
+     * Accessor tambahan untuk memudahkan tampilan waktu yang lebih humanis
+     * Contoh penggunaan di blade: $log->format_waktu
+     */
+    public function getFormatWaktuAttribute()
+    {
+        return $this->waktu ? $this->waktu->translatedFormat('d F Y (H:i)') . ' WIB' : '-';
     }
 }

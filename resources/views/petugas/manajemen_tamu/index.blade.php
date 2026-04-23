@@ -18,7 +18,7 @@
             </div>
         </div>
         <a href="{{ route('petugas.manajemen_tamu.create') }}" 
-           class="inline-flex items-center px-8 py-4 bg-[#008f5d] dark:bg-emerald-600 text-white text-[11px] font-black uppercase tracking-[0.2em] rounded-[2rem] hover:bg-emerald-700 dark:hover:bg-emerald-500 hover:shadow-[0_15px_30px_rgba(0,143,93,0.3)] transition-all duration-500 group shrink-0 border-b-4 border-[#006b46] dark:border-emerald-800 active:border-b-0 active:translate-y-1">
+           class="inline-flex items-center px-8 py-4 bg-[#008f5d] dark:bg-emerald-600 text-white text-[11px] font-black uppercase tracking-[0.2em] rounded-[2rem] hover:bg-emerald-700 dark:hover:bg-emerald-500 hover:shadow-[0_15px_30_rgba(0,143,93,0.3)] transition-all duration-500 group shrink-0 border-b-4 border-[#006b46] dark:border-emerald-800 active:border-b-0 active:translate-y-1">
             <i class="fas fa-user-plus mr-3 group-hover:rotate-12 transition-transform"></i>
             Registrasi Manual
         </a>
@@ -27,10 +27,11 @@
     {{-- Stats Cards --}}
     <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
         @php
+            // PERBAIKAN: Mengambil data langsung dari variabel count yang dikirim Controller agar lebih akurat
             $stats = [
-                ['label' => 'Menunggu', 'count' => $kunjungans->where('status', 'belum dilayani')->count(), 'color' => 'amber', 'icon' => 'fa-clock-rotate-left', 'shadow' => 'shadow-amber-500/10'],
-                ['label' => 'Diproses', 'count' => $kunjungans->where('status', 'sedang dilayani')->count(), 'color' => 'blue', 'icon' => 'fa-bolt-lightning', 'shadow' => 'shadow-blue-500/10'],
-                ['label' => 'Selesai', 'count' => $kunjungans->where('status', 'sudah dilayani')->count(), 'color' => 'emerald', 'icon' => 'fa-check-double', 'shadow' => 'shadow-emerald-500/10']
+                ['label' => 'Menunggu', 'count' => $countMenunggu, 'color' => 'amber', 'icon' => 'fa-clock-rotate-left', 'shadow' => 'shadow-amber-500/10'],
+                ['label' => 'Diproses', 'count' => $countDiproses, 'color' => 'blue', 'icon' => 'fa-bolt-lightning', 'shadow' => 'shadow-blue-500/10'],
+                ['label' => 'Selesai', 'count' => $countSelesai, 'color' => 'emerald', 'icon' => 'fa-check-double', 'shadow' => 'shadow-emerald-500/10']
             ];
         @endphp
 
@@ -59,7 +60,7 @@
                     <i class="fas fa-search text-sm"></i>
                 </div>
                 <input type="text" name="search" value="{{ request('search') }}"
-                       placeholder="CARI NAMA TAMU ATAU INSTANSI..." 
+                       placeholder="CARI NAMA TAMU, INSTANSI, ATAU PETUJUAN..." 
                        class="w-full pl-12 pr-4 py-3.5 bg-slate-50 dark:bg-slate-900/50 border-0 rounded-2xl text-[11px] font-bold tracking-widest focus:ring-2 focus:ring-[#008f5d]/20 dark:focus:ring-emerald-500/20 dark:text-slate-200 transition-all placeholder:text-slate-400 dark:placeholder:text-slate-600 uppercase">
             </div>
 
@@ -139,6 +140,7 @@
                                     <i class="fas fa-concierge-bell mr-1"></i> {{ $item->layanan->nama_layanan ?? 'Layanan Tidak Terdaftar' }}
                                 </span>
                                 <p class="text-[10px] font-bold text-slate-600 dark:text-slate-300 uppercase tracking-tighter">
+                                    {{-- PERBAIKAN: Memanggil nama_petugas dari relasi petugasTujuan --}}
                                     <i class="fas fa-user-tie mr-1 text-[#008f5d]"></i> Menemui: {{ $item->petugasTujuan->nama_petugas ?? 'Petugas Piket' }}
                                 </p>
                                 <span class="text-[9px] font-bold text-slate-400 uppercase tracking-tighter italic">
@@ -225,13 +227,13 @@
             </table>
         </div>
 
-        @if(method_exists($kunjungans, 'hasPages') && ($kunjungans->hasPages() || $kunjungans->total() > 0))
+        @if($kunjunganCount = $kunjungans->total())
         <div class="px-10 py-8 bg-slate-50/50 dark:bg-slate-900/30 border-t border-emerald-50 dark:border-slate-700">
             <div class="flex flex-col md:flex-row justify-between items-center gap-6">
                 <div class="flex items-center gap-3">
                     <div class="w-2 h-2 rounded-full bg-[#008f5d] animate-pulse"></div>
                     <p class="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest leading-none">
-                        Tampil {{ $kunjungans->firstItem() ?? 0 }} - {{ $kunjungans->lastItem() ?? 0 }} dari {{ $kunjungans->total() ?? 0 }} Antrean
+                        Tampil {{ $kunjungans->firstItem() ?? 0 }} - {{ $kunjungans->lastItem() ?? 0 }} dari {{ $kunjunganCount }} Antrean
                     </p>
                 </div>
                 <div class="custom-pagination">

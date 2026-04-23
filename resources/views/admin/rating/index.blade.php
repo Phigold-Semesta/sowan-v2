@@ -28,7 +28,7 @@
                     <i class="fas fa-search text-sm"></i>
                 </div>
                 <input type="text" name="search" value="{{ request('search') }}"
-                       placeholder="Cari nama tamu atau instansi..." 
+                       placeholder="Cari komentar atau nama tamu..." 
                        class="w-full pl-11 pr-4 py-3.5 bg-slate-50 dark:bg-slate-900/50 border-0 rounded-2xl text-xs font-bold focus:ring-2 focus:ring-[#008f5d]/20 dark:focus:ring-emerald-500/20 dark:text-slate-200 transition-all placeholder:text-slate-400 dark:placeholder:text-slate-600">
             </div>
 
@@ -60,6 +60,7 @@
                         <option value="5" {{ request('per_page') == '5' ? 'selected' : '' }}>5 Baris</option>
                         <option value="10" {{ request('per_page') == '10' || !request('per_page') ? 'selected' : '' }}>10 Baris</option>
                         <option value="25" {{ request('per_page') == '25' ? 'selected' : '' }}>25 Baris</option>
+                        <option value="all" {{ request('per_page') == 'all' ? 'selected' : '' }}>Semua</option>
                     </select>
                     <div class="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none text-slate-400">
                         <i class="fas fa-chevron-down text-[10px]"></i>
@@ -172,7 +173,7 @@
         </div>
 
         {{-- Pagination --}}
-        @if($ratings->hasPages())
+        @if($ratings instanceof \Illuminate\Pagination\LengthAwarePaginator && $ratings->hasPages())
         <div class="px-10 py-8 bg-slate-50/50 dark:bg-slate-900/30 border-t border-emerald-50 dark:border-slate-700">
             <div class="flex flex-col md:flex-row justify-between items-center gap-6">
                 <div class="flex items-center gap-3">
@@ -213,7 +214,7 @@
             showCancelButton: true,
             confirmButtonText: 'YA, HAPUS DATA',
             cancelButtonText: 'BATALKAN',
-            reverseButtons: true, // Batal di kiri, Hapus di kanan
+            reverseButtons: true,
             buttonsStyling: false,
             customClass: {
                 popup: 'rounded-[2.5rem] border-none shadow-2xl px-4 py-8',
@@ -228,13 +229,12 @@
     }
 
     @if(session('success'))
-        const isDarkSuccess = document.documentElement.classList.contains('dark');
         Swal.fire({
             icon: 'success',
             iconColor: '#008f5d',
-            title: '<span class="text-2xl font-black italic uppercase tracking-tighter ' + (isDarkSuccess ? 'text-white' : 'text-slate-800') + '">Berhasil!</span>',
+            title: '<span class="text-2xl font-black italic uppercase tracking-tighter ' + (document.documentElement.classList.contains('dark') ? 'text-white' : 'text-slate-800') + '">Berhasil!</span>',
             text: "{{ session('success') }}",
-            background: isDarkSuccess ? '#1e293b' : '#ffffff',
+            background: document.documentElement.classList.contains('dark') ? '#1e293b' : '#ffffff',
             showConfirmButton: false,
             timer: 2500,
             customClass: {
@@ -243,10 +243,26 @@
             }
         });
     @endif
+
+    @if(session('error'))
+        Swal.fire({
+            icon: 'error',
+            iconColor: '#f43f5e',
+            title: '<span class="text-2xl font-black italic uppercase tracking-tighter ' + (document.documentElement.classList.contains('dark') ? 'text-white' : 'text-slate-800') + '">Gagal!</span>',
+            text: "{{ session('error') }}",
+            background: document.documentElement.classList.contains('dark') ? '#1e293b' : '#ffffff',
+            showConfirmButton: true,
+            confirmButtonText: 'TUTUP',
+            buttonsStyling: false,
+            customClass: {
+                popup: 'rounded-[2.5rem] border-none shadow-2xl p-10',
+                confirmButton: 'px-8 py-3 bg-rose-600 text-white text-xs font-black uppercase tracking-widest rounded-full'
+            }
+        });
+    @endif
 </script>
 
 <style>
-    /* CSS disamakan persis dengan Manajemen User agar konsisten */
     .custom-scrollbar::-webkit-scrollbar { height: 6px; width: 6px; }
     .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
     .custom-scrollbar::-webkit-scrollbar-thumb { background: #008f5d33; border-radius: 10px; transition: all 0.3s; }

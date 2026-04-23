@@ -487,14 +487,16 @@ class AdminController extends Controller
         return Excel::download(new KunjunganExport($data), $fileName);
     }
 
-    // =========================================================================
-    // --- MANAJEMEN RATING LAYANAN ---
+   // =========================================================================
+    // --- MANAJEMEN RATING LAYANAN (SEMPURNA & DISESUAIKAN SOWAN V2) ---
     // =========================================================================
 
     public function rating_index(Request $request)
     {
+        // Tetap menggunakan eager loading agar performa tetap mewah
         $query = RatingLayanan::with(['kunjungan.tamu', 'kunjungan.layanan', 'user']);
 
+        // Filter Pencarian: Mencari di komentar atau nama tamu
         if ($request->filled('search')) {
             $search = $request->input('search');
             $query->where(function($q) use ($search) {
@@ -505,22 +507,26 @@ class AdminController extends Controller
             });
         }
 
+        // PERBAIKAN: Filter Skor Bintang (Sesuaikan kolom menjadi skor_rating)
         if ($request->filled('skor')) {
-            $query->where('skor', $request->skor);
+            $query->where('skor_rating', $request->skor);
         }
 
         $perPage = $request->input('per_page', 10);
+        
+        // PERBAIKAN: Pengurutan menggunakan id_kunjungan sebagai acuan Primary Key
         $ratings = ($perPage === 'all') 
-            ? $query->latest()->get() 
-            : $query->latest()->paginate((int)$perPage)->withQueryString();
+            ? $query->orderBy('id_kunjungan', 'desc')->get() 
+            : $query->orderBy('id_kunjungan', 'desc')->paginate((int)$perPage)->withQueryString();
 
         return view('admin.rating.index', compact('ratings'));
     }
 
     public function rating_show($id)
     {
+        // PERBAIKAN: Memastikan pencarian menggunakan kolom id_kunjungan
         $rating = RatingLayanan::with(['kunjungan.tamu', 'kunjungan.layanan', 'user'])
-                               ->where('id_rating', $id)
+                               ->where('id_kunjungan', $id)
                                ->firstOrFail();
 
         return view('admin.rating.show', compact('rating'));
@@ -533,14 +539,16 @@ class AdminController extends Controller
         ]);
 
         try {
-            $rating = RatingLayanan::where('id_rating', $id)->firstOrFail();
+            // PERBAIKAN: Mengambil data berdasarkan id_kunjungan
+            $rating = RatingLayanan::where('id_kunjungan', $id)->firstOrFail();
             
             $rating->update([
                 'tanggapan' => $request->tanggapan,
                 'id_user'   => Auth::id(), // ID Admin yang menanggapi
             ]);
 
-            $this->logActivity("Memberikan tanggapan pada rating ID: #$id");
+            // Sinkronisasi Log dengan parameter yang tepat
+            $this->logActivity("Memberikan tanggapan pada rating Kunjungan ID: #$id");
 
             return redirect()->route('admin.rating.index')->with('success', 'Tanggapan berhasil dikirim, bos!');
         } catch (\Exception $e) {
@@ -548,21 +556,29 @@ class AdminController extends Controller
         }
     }
 
+    /**
+     * PERBAIKAN VITAL: Menangani penghapusan menggunakan id_kunjungan
+     * agar sinkron dengan Model sebagai Weak Entity
+     */
     public function rating_destroy($id)
     {
         try {
-            $rating = RatingLayanan::where('id_rating', $id)->firstOrFail();
+            // PERBAIKAN: Mencari data secara spesifik pada kolom id_kunjungan
+            $rating = RatingLayanan::where('id_kunjungan', $id)->firstOrFail();
             
-            $this->logActivity("Menghapus data rating ID: #$id");
+            // Catat log aktivitas sebelum data benar-benar hilang
+            $namaTamu = $rating->kunjungan->tamu->nama_tamu ?? 'Unknown';
+            $this->logActivity("Menghapus data rating Kunjungan ID: #$id dari tamu " . $namaTamu);
 
+            // Eksekusi penghapusan
             $rating->delete();
 
-            return redirect()->route('admin.rating.index')->with('success', 'Data rating berhasil dihapus, bos!');
+            return redirect()->route('admin.rating.index')->with('success', 'Data rating berhasil dihapus secara permanen, bos!');
         } catch (\Exception $e) {
-            return back()->with('error', 'Gagal menghapus rating: ' . $e->getMessage());
+            return redirect()->route('admin.rating.index')->with('error', 'Gagal menghapus rating: ' . $e->getMessage());
         }
     }
-
+    
     private function logActivity($aktivitas)
     {
         AuditLog::create([

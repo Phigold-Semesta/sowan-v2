@@ -36,22 +36,28 @@ class Layanan extends Model
      */
     protected $fillable = [
         'nama_layanan',
+        // Menambahkan atribut lain jika nanti Anda menambah deskripsi atau ikon
+        'deskripsi', 
+        'icon',
     ];
 
     /**
-     * RELASI: Satu layanan bisa memiliki banyak dokumen panduan.
-     * * Nama fungsi diubah menjadi 'dokumens' (jamak) agar sesuai dengan 
-     * standar Eloquent untuk relasi One-to-Many dan sinkron dengan 
-     * pemanggilan di view Blade (@foreach($l->dokumens)).
+     * PERBAIKAN RELASI: Satu layanan bisa memiliki banyak dokumen panduan.
+     * Nama fungsi diubah menjadi 'dokumen' (tanpa 's') agar sinkron dengan 
+     * pemanggilan Eager Loading di AdminController: with(['dokumen']).
      */
-    public function dokumens(): HasMany
+    public function dokumen(): HasMany
     {
-        // Parameter: ModelTujuan, ForeignKeyDiTabelTujuan, LocalKeyDiTabelIni
+        /**
+         * Mengacu pada Model Dokumen. 
+         * Parameter: ModelTujuan, ForeignKeyDiTabelTujuan, LocalKeyDiTabelIni.
+         */
         return $this->hasMany(Dokumen::class, 'id_layanan', 'id_layanan');
     }
 
     /**
      * RELASI: Satu layanan bisa memiliki banyak kunjungan tamu.
+     * Tabel Kunjungan adalah Weak Entity yang bergantung pada Layanan ini.
      */
     public function kunjungans(): HasMany
     {

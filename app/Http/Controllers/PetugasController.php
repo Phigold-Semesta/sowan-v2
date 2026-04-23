@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Tamu;
 use App\Models\Kunjungan;
 use App\Models\Layanan;
-use App\Models\PetugasTujuan;
+use App\Models\PetugasTujuan; // PERBAIKAN: Menggunakan model PetugasTujuan, bukan User
 use App\Models\AuditLog;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -18,12 +18,17 @@ class PetugasController extends Controller
      */
     public function index(Request $request)
     {
-        // PERBAIKAN: Mengganti $request->get() menjadi $request->input() untuk menghindari deprecation warning
+        // Hitung data untuk Card Monitoring agar berfungsi sebagaimana mestinya
+        $countMenunggu = Kunjungan::where('status', 'belum dilayani')->count();
+        $countDiproses = Kunjungan::where('status', 'sedang dilayani')->count();
+        $countSelesai  = Kunjungan::where('status', 'sudah dilayani')->count();
+
         $perPage = $request->input('per_page', 10); 
         
+        // PERBAIKAN: Menggunakan relasi 'petugasTujuan' agar sinkron dengan Model Kunjungan yang baru diperbaiki
         $query = Kunjungan::with(['tamu', 'layanan', 'petugasTujuan']);
 
-        // --- GLOBAL SEARCH (MEMPERTAHANKAN FITUR SEARCH NAMA PETUGAS) ---
+        // --- GLOBAL SEARCH (Disesuaikan dengan kolom tabel SOWAN V2) ---
         if ($request->filled('search')) {
             $search = $request->search;
             $query->where(function ($q) use ($search) {
@@ -37,14 +42,14 @@ class PetugasController extends Controller
                   ->orWhereHas('layanan', function ($queryLayanan) use ($search) {
                       $queryLayanan->where('nama_layanan', 'like', "%{$search}%");
                   })
-                  // Cari berdasarkan Nama Petugas
+                  // PERBAIKAN: Cari berdasarkan Nama Asli Petugas di tabel petugas_tujuan
                   ->orWhereHas('petugasTujuan', function ($queryPetugas) use ($search) {
                       $queryPetugas->where('nama_petugas', 'like', "%{$search}%");
                   });
             });
         }
 
-        // Filter Status (Konsisten menggunakan lowercase: belum dilayani, sedang dilayani, sudah dilayani)
+        // Filter Status (Konsisten menggunakan lowercase) [cite: 2026-02-01]
         if ($request->filled('status')) {
             $query->where('status', $request->status);
         }
@@ -54,7 +59,13 @@ class PetugasController extends Controller
                             ->paginate($perPage == 'all' ? $totalData : $perPage)
                             ->withQueryString();
 
-        return view('petugas.manajemen_tamu.index', compact('kunjungans'));
+        // Mengirimkan data ke view (Pastikan folder resources/views/petugas/manajemen_tamu/index.blade.php ada)
+        return view('petugas.manajemen_tamu.index', compact(
+            'kunjungans', 
+            'countMenunggu', 
+            'countDiproses', 
+            'countSelesai'
+        ));
     }
 
     /**
@@ -63,7 +74,8 @@ class PetugasController extends Controller
     public function create()
     {
         $layanan = Layanan::all();
-        $petugasTujuan = PetugasTujuan::all();
+        // PERBAIKAN: Mengambil data dari tabel petugas_tujuan untuk dropdown pilihan petugas
+        $petugasTujuan = PetugasTujuan::all(); 
         return view('petugas.manajemen_tamu.create', compact('layanan', 'petugasTujuan'));
     }
 
@@ -78,7 +90,7 @@ class PetugasController extends Controller
             'nama_instansi' => 'required|string|max:255',
             'no_wa'         => 'required|string|max:15',
             'id_layanan'    => 'required|exists:layanan,id_layanan',
-            'id_petugas'    => 'required|exists:petugas_tujuan,id_petugas',
+            'id_petugas'    => 'required|exists:petugas_tujuan,id_petugas', // PERBAIKAN: Validasi ke tabel petugas_tujuan
         ]);
 
         DB::transaction(function () use ($validated) {
@@ -96,7 +108,7 @@ class PetugasController extends Controller
                 'id_layanan'    => $validated['id_layanan'],
                 'id_petugas'    => $validated['id_petugas'], 
                 'waktu_masuk'   => now(),
-                'status'        => 'belum dilayani', // Konsistensi string dengan spasi
+                'status'        => 'belum dilayani', // Konsistensi string [cite: 2026-02-01]
             ]);
 
             AuditLog::create([
@@ -115,12 +127,13 @@ class PetugasController extends Controller
      */
     public function show($id)
     {
+        // PERBAIKAN: Menggunakan relasi 'petugasTujuan' agar detail menampilkan nama asli petugas
         $kunjungan = Kunjungan::with(['tamu', 'layanan', 'petugasTujuan'])->findOrFail($id);
         return view('petugas.manajemen_tamu.show', compact('kunjungan'));
     }
 
     /**
-     * Update Status Cepat (Sinkron dengan halaman data tamu).
+     * Update Status Cepat (Sinkron dengan halaman data tamu) [cite: 2026-03-16].
      */
     public function updateStatus(Request $request, $id)
     {
