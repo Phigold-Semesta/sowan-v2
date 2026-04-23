@@ -286,32 +286,76 @@
         transform: translateY(-2px); 
     }
 
-    /* SweetAlert Dark Mode Tuning */
-    .swal2-popup.dark-mode {
-        background-color: #1e293b !important;
+    /* SweetAlert2 Enhancement */
+    .swal2-popup.sowan-swal {
+        border-radius: 3rem !important;
+        padding: 2.5rem !important;
+        border: 4px solid #f0fdf4 !important;
+    }
+    .dark .swal2-popup.sowan-swal {
+        background-color: #0f172a !important;
+        border: 4px solid #1e293b !important;
         color: #f1f5f9 !important;
+    }
+    .swal2-styled.swal2-confirm.sowan-confirm {
+        background-color: #008f5d !important;
+        border-radius: 1.25rem !important;
+        font-size: 10px !important;
+        font-weight: 900 !important;
+        letter-spacing: 0.15em !important;
+        padding: 1rem 2rem !important;
+        box-shadow: 0 10px 25px -5px rgba(0, 143, 93, 0.4) !important;
+    }
+    .swal2-styled.swal2-cancel.sowan-cancel {
+        background-color: #f1f5f9 !important;
+        color: #64748b !important;
+        border-radius: 1.25rem !important;
+        font-size: 10px !important;
+        font-weight: 900 !important;
+        letter-spacing: 0.15em !important;
+        padding: 1rem 2rem !important;
+    }
+    .dark .swal2-styled.swal2-cancel.sowan-cancel {
+        background-color: #1e293b !important;
+        color: #94a3b8 !important;
+    }
+    .swal2-radio.custom-radio-group {
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        gap: 0.75rem !important;
+        padding: 1.5rem !important;
+        background: #f8fafc !important;
+        border-radius: 1.5rem !important;
+        margin-top: 1rem !important;
+    }
+    .dark .swal2-radio.custom-radio-group {
+        background: #1e293b !important;
     }
 </style>
 
 <script>
     function updateStatus(id, name, currentStatus) {
         const isDark = document.documentElement.classList.contains('dark');
+        
         Swal.fire({
             title: 'UPDATE STATUS PELAYANAN',
             html: `
-                <div class="mb-6">
-                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-2">Tamu Sedang Dilayani</p>
-                    <p class="text-sm font-bold text-[#008f5d] dark:text-emerald-400 uppercase tracking-tight italic">${name}</p>
+                <div class="mb-2">
+                    <p class="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em] mb-2 text-center">Data Tamu</p>
+                    <div class="px-6 py-4 bg-emerald-50/50 dark:bg-emerald-900/20 rounded-2xl border border-emerald-100 dark:border-emerald-800/30">
+                        <p class="text-sm font-black text-[#008f5d] dark:text-emerald-400 uppercase tracking-tight text-center">${name}</p>
+                    </div>
                 </div>
             `,
             icon: 'info',
             iconColor: '#008f5d',
-            background: isDark ? '#1e293b' : '#ffffff',
+            background: isDark ? '#0f172a' : '#ffffff',
             color: isDark ? '#f1f5f9' : '#1e293b',
             showCancelButton: true,
             confirmButtonText: 'SIMPAN PERUBAHAN',
             cancelButtonText: 'BATAL',
-            confirmButtonColor: '#008f5d',
+            reverseButtons: true, // Membuat tombol Batal di kiri dan Simpan di kanan
             input: 'radio',
             inputOptions: {
                 'belum dilayani': '⌛ Menunggu Antrean',
@@ -320,10 +364,11 @@
             },
             inputValue: currentStatus,
             customClass: {
-                popup: 'rounded-[3rem] border-4 border-emerald-50 dark:border-slate-700 p-8 shadow-2xl',
-                confirmButton: 'rounded-2xl font-black text-[10px] tracking-widest px-8 py-4 uppercase shadow-lg shadow-emerald-500/20',
-                cancelButton: 'rounded-2xl font-black text-[10px] tracking-widest text-slate-500 px-8 py-4',
-                input: 'custom-radio-group'
+                popup: 'sowan-swal shadow-2xl',
+                confirmButton: 'swal2-confirm sowan-confirm',
+                cancelButton: 'swal2-cancel sowan-cancel',
+                radio: 'custom-radio-group',
+                title: 'text-lg font-black tracking-tighter'
             },
             inputValidator: (value) => {
                 if (!value) return 'Pilih status terlebih dahulu!';
@@ -335,11 +380,12 @@
                 if (inputField && form) {
                     inputField.value = result.value;
                     Swal.fire({ 
-                        title: 'Memproses...', 
-                        background: isDark ? '#1e293b' : '#ffffff',
+                        title: 'MEMPROSES...', 
+                        background: isDark ? '#0f172a' : '#ffffff',
                         color: isDark ? '#f1f5f9' : '#1e293b',
                         didOpen: () => { Swal.showLoading() }, 
-                        showConfirmButton: false 
+                        showConfirmButton: false,
+                        customClass: { popup: 'sowan-swal' }
                     });
                     form.submit();
                 }
@@ -351,19 +397,26 @@
         const isDark = document.documentElement.classList.contains('dark');
         Swal.fire({
             title: 'HAPUS DATA ANTREAN?',
-            html: `<div class="text-[11px] font-bold text-slate-400 uppercase tracking-widest">Anda akan menghapus riwayat kunjungan: <br><b class="text-[#ef4444] text-sm">${name}</b></div>`,
+            html: `
+                <div class="text-[11px] font-bold text-slate-400 uppercase tracking-widest text-center">
+                    Anda akan menghapus riwayat kunjungan: <br>
+                    <b class="text-[#ef4444] text-sm tracking-normal">${name}</b>
+                </div>
+            `,
             icon: 'warning',
             iconColor: '#ef4444',
-            background: isDark ? '#1e293b' : '#ffffff',
+            background: isDark ? '#0f172a' : '#ffffff',
             color: isDark ? '#f1f5f9' : '#1e293b',
             showCancelButton: true,
             confirmButtonColor: '#ef4444',
             confirmButtonText: 'YA, HAPUS PERMANEN!',
             cancelButtonText: 'BATALKAN',
+            reverseButtons: true,
             customClass: {
-                popup: 'rounded-[3rem] border-4 border-red-50 dark:border-slate-700 shadow-2xl',
-                confirmButton: 'rounded-2xl font-black text-[10px] tracking-widest px-8 py-4 uppercase',
-                cancelButton: 'rounded-2xl font-black text-[10px] tracking-widest text-slate-500 px-8 py-4'
+                popup: 'sowan-swal border-red-50 dark:border-red-900/20 shadow-2xl',
+                confirmButton: 'rounded-2xl font-black text-[10px] tracking-widest px-8 py-4 uppercase bg-red-600 hover:bg-red-700',
+                cancelButton: 'swal2-cancel sowan-cancel',
+                title: 'text-lg font-black tracking-tighter'
             }
         }).then((result) => {
             if (result.isConfirmed) {

@@ -36,15 +36,13 @@ class Layanan extends Model
      */
     protected $fillable = [
         'nama_layanan',
-        // Menambahkan atribut lain jika nanti Anda menambah deskripsi atau ikon
         'deskripsi', 
         'icon',
     ];
 
     /**
      * PERBAIKAN RELASI: Satu layanan bisa memiliki banyak dokumen panduan.
-     * Nama fungsi diubah menjadi 'dokumen' (tanpa 's') agar sinkron dengan 
-     * pemanggilan Eager Loading di AdminController: with(['dokumen']).
+     * Saya menyediakan dua nama fungsi agar sinkron dengan Controller manapun.
      */
     public function dokumen(): HasMany
     {
@@ -52,6 +50,14 @@ class Layanan extends Model
          * Mengacu pada Model Dokumen. 
          * Parameter: ModelTujuan, ForeignKeyDiTabelTujuan, LocalKeyDiTabelIni.
          */
+        return $this->hasMany(Dokumen::class, 'id_layanan', 'id_layanan');
+    }
+
+    /**
+     * Alias relasi untuk mendukung pemanggilan with('dokumens') di TamuController.
+     */
+    public function dokumens(): HasMany
+    {
         return $this->hasMany(Dokumen::class, 'id_layanan', 'id_layanan');
     }
 

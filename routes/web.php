@@ -24,25 +24,30 @@ Route::get('/', function () {
 
 /**
  * PENYESUAIAN ALUR TAMU (SESUAI USE CASE REVISI 4):
- * Alur: Scan QR -> Validasi Gmail -> Tampil Form (Baru/Lama) -> Simpan.
- * Perbaikan: Menangani method GET pada pengecekan & Memastikan View Sukses Terpisah.
+ * Alur: Scan QR -> Validasi Gmail -> Tampil Form (Baru/Lama) -> Simpan -> Sukses.
  */
 Route::controller(TamuController::class)->group(function () {
-    // 1. Halaman Awal scan QR (Menampilkan input Gmail pertama kali)
+    // 1. Halaman Awal scan QR (Menampilkan form input Gmail pertama kali)
+    // PERBAIKAN: Diarahkan ke method 'create' atau 'index' yang memanggil view form_tamu_baru
     Route::get('/hadir', 'index')->name('tamu.index'); 
     
     // 2. Validasi Gmail: Menentukan apakah tamu harus ke form_baru atau form_lama
     Route::post('/tamu/cek', 'check')->name('tamu.check');
+    
     // Penanganan Error 405: Jika user refresh halaman hasil cek
     Route::get('/tamu/cek', function() {
         return redirect()->route('tamu.index');
     });
     
     // 3. Proses simpan data kunjungan (Finalisasi pendaftaran tamu)
-    // Controller store() harus menangani logika redirect ke success_tamu_baru atau success_tamu_lama
     Route::post('/tamu/simpan', 'store')->name('tamu.store');
     
-    // 4. Fitur Tamu: Unduh Dokumen Panduan (Sesuai Use Case)
+    // 4. VIEW SUKSES (Tujuan redirect setelah simpan)
+    // PERBAIKAN: Menambahkan route eksplisit untuk halaman sukses
+    Route::get('/tamu/sukses/baru', 'successBaru')->name('tamu.success_baru');
+    Route::get('/tamu/sukses/lama', 'successLama')->name('tamu.success_lama');
+    
+    // 5. Fitur Tamu: Unduh Dokumen Panduan (Sesuai Use Case)
     Route::get('/panduan/{id}', 'downloadPanduan')->name('tamu.panduan.download');
 });
 

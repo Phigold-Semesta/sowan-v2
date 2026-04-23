@@ -53,6 +53,15 @@
             from { opacity: 0; transform: translateY(20px); }
             to { opacity: 1; transform: translateY(0); }
         }
+
+        /* Custom Scrollbar for Textarea */
+        textarea::-webkit-scrollbar {
+            width: 4px;
+        }
+        textarea::-webkit-scrollbar-thumb {
+            background: #10b981;
+            border-radius: 10px;
+        }
     </style>
 </head>
 <body class="p-4 md:p-10">
@@ -66,7 +75,7 @@
                 SOWAN <span class="text-emerald-400">V2</span>
             </h1>
             <p class="text-[10px] md:text-xs font-black uppercase tracking-[0.4em] text-emerald-100/60 mt-2">
-                LPSE Kabupaten Karawang [cite: 2026-03-24]
+                LPSE Kabupaten Karawang
             </p>
         </div>
 
@@ -79,8 +88,11 @@
                 @csrf
                 
                 <input type="hidden" name="gmail" value="{{ $tamu->gmail }}">
-                <input type="hidden" name="tipe_tamu" value="lama"> <div class="mb-10 text-center">
-                    <h2 class="text-2xl md:text-3xl font-black text-emerald-950 uppercase tracking-tighter">
+                <input type="hidden" name="tipe_tamu" value="lama">
+                <input type="hidden" name="redirect_to" value="success_tamu_lama">
+
+                <div class="mb-10 text-center">
+                    <h2 class="text-2xl md:text-3xl font-black text-emerald-950 uppercase tracking-tighter leading-tight">
                         Selamat Datang Kembali, <br>
                         <span class="text-emerald-600 italic font-medium">{{ $tamu->nama_tamu }}</span>
                     </h2>
@@ -128,13 +140,13 @@
 
                     <div class="py-4 flex items-center">
                         <div class="flex-grow h-[1px] bg-emerald-100"></div>
-                        <span class="px-4 text-[9px] font-black text-emerald-300 uppercase tracking-widest">Feedback Anda</span>
+                        <span class="px-4 text-[9px] font-black text-emerald-300 uppercase tracking-widest text-center">Feedback Anda</span>
                         <div class="flex-grow h-[1px] bg-emerald-100"></div>
                     </div>
 
                     <div class="p-6 md:p-8 border-2 border-dashed border-emerald-100 rounded-[2.5rem] bg-emerald-50/20">
                         <div class="text-center mb-6">
-                            <p class="text-[10px] font-black text-emerald-900 uppercase tracking-widest mb-4">Berikan Rating Layanan ✨ [cite: 2026-03-14]</p>
+                            <p class="text-[10px] font-black text-emerald-900 uppercase tracking-widest mb-4">Berikan Rating Layanan ✨</p>
                             <div class="flex justify-center space-x-2 md:space-x-4" id="star-rating">
                                 @for($i=1; $i<=5; $i++)
                                     <button type="button" data-value="{{ $i }}" class="star-btn transition-all duration-300 hover:scale-125 active:scale-90 outline-none">
@@ -159,10 +171,7 @@
                 <div class="mt-10">
                     <button type="submit" 
                         class="w-full py-5 bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs uppercase tracking-[0.3em] rounded-full transition-all shadow-xl hover:shadow-emerald-900/20 active:scale-95 flex items-center justify-center group">
-                        <span>Konfirmasi Kedatangan</span>
-                        <svg class="w-4 h-4 ml-3 transform group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M13 7l5 5m0 0l-5 5m5-5H6"></path>
-                        </svg>
+                        <span>Simpan Data</span>
                     </button>
                     
                     <a href="{{ route('tamu.index') }}" class="block text-center mt-6 text-[9px] font-black uppercase tracking-widest text-emerald-900/40 hover:text-emerald-900 transition-colors">
@@ -191,20 +200,21 @@
                 if (dokumens.length > 0) {
                     dokumens.forEach(doc => {
                         const fileHtml = `
-                            <div class="flex items-center justify-between p-4 bg-emerald-50/60 border border-emerald-100 rounded-2xl animate-slide-up hover:bg-emerald-50 transition-colors shadow-sm">
-                                <div class="flex items-center space-x-4">
-                                    <div class="p-2 bg-white rounded-xl shadow-sm">
-                                        <svg class="w-5 h-5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <div class="flex items-center justify-between p-3 md:p-4 bg-emerald-50/60 border border-emerald-100 rounded-2xl animate-slide-up hover:bg-emerald-50 transition-colors shadow-sm">
+                                <div class="flex items-center space-x-3 md:space-x-4 overflow-hidden">
+                                    <div class="p-2 bg-white rounded-xl shadow-sm flex-shrink-0">
+                                        <svg class="w-4 h-4 md:w-5 md:h-5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
                                         </svg>
                                     </div>
-                                    <div class="max-w-[200px] md:max-w-[300px]">
-                                        <p class="text-[10px] font-black text-emerald-950 uppercase tracking-tight truncate">${doc.nama_dokumen}</p>
-                                        <p class="text-[8px] text-emerald-600 font-black italic tracking-widest uppercase">Panduan Layanan</p>
+                                    <div class="overflow-hidden">
+                                        <p class="text-[9px] md:text-[10px] font-black text-emerald-950 uppercase tracking-tight truncate">${doc.nama_dokumen}</p>
+                                        <p class="text-[7px] md:text-[8px] text-emerald-600 font-black italic tracking-widest uppercase">Panduan Layanan</p>
                                     </div>
                                 </div>
-                                <a href="/storage/${doc.file_path}" download="${doc.nama_dokumen}" class="p-2.5 bg-emerald-600 text-white rounded-xl hover:bg-emerald-700 transition-all active:scale-90">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <a href="/storage/${doc.file_path}" download="${doc.nama_dokumen}" 
+                                   class="p-2 md:p-2.5 bg-emerald-600 text-white rounded-xl hover:bg-emerald-700 transition-all active:scale-90 flex-shrink-0 ml-2">
+                                    <svg class="w-3.5 h-3.5 md:w-4 md:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
                                     </svg>
                                 </a>
