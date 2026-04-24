@@ -45,15 +45,13 @@
     <div class="w-full max-w-md relative z-10">
         <div class="text-center mb-10">
             <div class="flex items-center justify-center mb-4">
-                <div class="inline-flex items-center justify-center w-14 h-14 bg-white rounded-xl shadow-xl transform rotate-6 hover:rotate-0 transition-transform duration-500 z-20">
-                    <span class="text-emerald-600 font-extrabold text-3xl">S</span>
-                </div>
-                
-                <div class="flex items-center bg-emerald-900/40 backdrop-blur-md pl-6 pr-6 py-2 rounded-r-full -ml-4 z-10 border-y border-r border-white/20">
+                <div class="flex items-center bg-emerald-900/40 backdrop-blur-md px-8 py-3 rounded-full border border-white/20 shadow-2xl">
+                    
                     <h1 class="text-white text-3xl font-black tracking-tight uppercase reveal-text">
-                        OWAN <span class="text-emerald-300">v2</span>
+                        SOWAN <span class="text-emerald-300 font-bold ml-1">v2</span>
                     </h1>
-                    <div class="ml-3 text-emerald-300">
+
+                    <div class="ml-4 text-emerald-300">
                         <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
                         </svg>
