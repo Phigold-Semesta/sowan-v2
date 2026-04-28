@@ -16,10 +16,13 @@ use PhpOffice\PhpSpreadsheet\Style\Fill;
 class KunjunganExport implements FromCollection, WithHeadings, WithStyles, WithColumnWidths, WithEvents
 {
     protected $data;
+    protected $title;
 
-    public function __construct($data)
+    // Tambahkan parameter $title agar judul Excel dinamis sesuai filter
+    public function __construct($data, $title = 'LAPORAN KUNJUNGAN TAMU')
     {
         $this->data = $data;
+        $this->title = strtoupper($title);
     }
 
     /**
@@ -46,10 +49,11 @@ class KunjunganExport implements FromCollection, WithHeadings, WithStyles, WithC
     public function headings(): array
     {
         return [
-            ['LAPORAN KUNJUNGAN TAMU - SOWAN V2'], // Baris 1: Judul
-            ['LPSE KABUPATEN KARAWANG'],           // Baris 2: Sub-Judul
-            [''],                                   // Baris 3: Spasi
-            ['No', 'Waktu Masuk', 'Nama Tamu', 'Instansi', 'Layanan', 'Tujuan Petugas', 'Status'] // Baris 4: Header Tabel
+            [$this->title . ' - SOWAN V2'],       // Baris 1: Judul Dinamis
+            ['LPSE KABUPATEN KARAWANG'],          // Baris 2: Sub-Judul
+            ['Dicetak pada: ' . now()->format('d F Y H:i')], // Baris 3: Info Waktu Cetak
+            [''],                                 // Baris 4: Spasi
+            ['No', 'Waktu Masuk', 'Nama Tamu', 'Instansi', 'Layanan', 'Tujuan Petugas', 'Status'] // Baris 5: Header Tabel
         ];
     }
 
@@ -59,12 +63,12 @@ class KunjunganExport implements FromCollection, WithHeadings, WithStyles, WithC
     public function columnWidths(): array
     {
         return [
-            'A' => 5,  // No
-            'B' => 20, // Waktu Masuk
-            'C' => 30, // Nama Tamu
-            'D' => 30, // Instansi
-            'E' => 35, // Layanan
-            'F' => 25, // Tujuan Petugas
+            'A' => 6,  // No
+            'B' => 22, // Waktu Masuk
+            'C' => 35, // Nama Tamu
+            'D' => 35, // Instansi
+            'E' => 40, // Layanan
+            'F' => 30, // Tujuan Petugas
             'G' => 20, // Status
         ];
     }
@@ -74,38 +78,54 @@ class KunjunganExport implements FromCollection, WithHeadings, WithStyles, WithC
      */
     public function styles(Worksheet $sheet)
     {
-        // Styling Judul Besar
+        // Merge Cells untuk Judul agar ke tengah
         $sheet->mergeCells('A1:G1');
         $sheet->mergeCells('A2:G2');
+        $sheet->mergeCells('A3:G3');
         
         return [
-            // Style Judul
-            1 => ['font' => ['bold' => true, 'size' => 16, 'color' => ['rgb' => '064E3B']], 'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER]],
-            2 => ['font' => ['bold' => true, 'size' => 12], 'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER]],
+            // Style Judul Utama (Luxurious Emerald)
+            1 => [
+                'font' => ['bold' => true, 'size' => 16, 'color' => ['rgb' => '064E3B']], 
+                'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER]
+            ],
+            // Style Sub-Judul
+            2 => [
+                'font' => ['bold' => true, 'size' => 12], 
+                'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER]
+            ],
+            // Style Tanggal Cetak
+            3 => [
+                'font' => ['italic' => true, 'size' => 10], 
+                'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER]
+            ],
             
-            // Style Header Tabel (Baris ke-4)
-            4 => [
+            // Style Header Tabel (Baris ke-5 karena ada penambahan info cetak)
+            5 => [
                 'font' => ['bold' => true, 'color' => ['rgb' => 'FFFFFF']],
                 'fill' => [
                     'fillType' => Fill::FILL_SOLID,
-                    'startColor' => ['rgb' => '059669'], // Emerald Green
+                    'startColor' => ['rgb' => '059669'], // Emerald Green SOWAN
                 ],
-                'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER],
+                'alignment' => [
+                    'horizontal' => Alignment::HORIZONTAL_CENTER,
+                    'vertical' => Alignment::VERTICAL_CENTER
+                ],
             ],
         ];
     }
 
     /**
-     * Menambahkan Border dan Alignment Konten
+     * Menambahkan Border, Alignment, dan Zebra Cross (Stripes)
      */
     public function registerEvents(): array
     {
         return [
             AfterSheet::class => function(AfterSheet $event) {
                 $lastRow = $event->sheet->getHighestRow();
-                $cellRange = 'A4:G' . $lastRow; // Seluruh area tabel
+                $cellRange = 'A5:G' . $lastRow; // Area tabel dimulai dari baris 5
 
-                // Tambahkan Border ke seluruh sel data
+                // 1. Tambahkan Border ke seluruh sel data
                 $event->sheet->getStyle($cellRange)->applyFromArray([
                     'borders' => [
                         'allBorders' => [
@@ -118,13 +138,28 @@ class KunjunganExport implements FromCollection, WithHeadings, WithStyles, WithC
                     ],
                 ]);
 
-                // Mengetengahkan kolom No, Waktu, dan Status
-                $event->sheet->getStyle('A5:A' . $lastRow)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
-                $event->sheet->getStyle('B5:B' . $lastRow)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
-                $event->sheet->getStyle('G5:G' . $lastRow)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+                // 2. Mengetengahkan kolom tertentu (No, Waktu, Status)
+                $event->sheet->getStyle('A6:A' . $lastRow)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+                $event->sheet->getStyle('B6:B' . $lastRow)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+                $event->sheet->getStyle('G6:G' . $lastRow)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
                 
-                // Wrap text untuk kolom Layanan agar tidak meluber
-                $event->sheet->getStyle('E5:E' . $lastRow)->getAlignment()->setWrapText(true);
+                // 3. Wrap text untuk kolom Nama, Instansi, dan Layanan agar rapi
+                $event->sheet->getStyle('C6:F' . $lastRow)->getAlignment()->setWrapText(true);
+
+                // 4. Baris Tinggi (Row Height) agar terlihat lega dan mewah
+                for ($i = 6; $i <= $lastRow; $i++) {
+                    $event->sheet->getRowDimension($i)->setRowHeight(25);
+                }
+                $event->sheet->getRowDimension(5)->setRowHeight(30); // Tinggi Header
+
+                // 5. Memberikan warna background selang-seling (Zebra Stripe) agar mudah dibaca
+                for ($i = 6; $i <= $lastRow; $i++) {
+                    if ($i % 2 == 0) {
+                        $event->sheet->getStyle('A' . $i . ':G' . $i)->getFill()
+                            ->setFillType(Fill::FILL_SOLID)
+                            ->getStartColor()->setRGB('ECFDF5'); // Light Emerald
+                    }
+                }
             },
         ];
     }

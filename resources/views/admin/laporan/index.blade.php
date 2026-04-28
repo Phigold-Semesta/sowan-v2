@@ -39,10 +39,10 @@
                  style="display: none;">
                 <div class="py-2">
                     @php 
-                        $currentFilters = request()->only(['start_date', 'end_date', 'id_layanan']);
+                        $currentFilters = request()->only(['start_date', 'end_date', 'id_layanan', 'period']);
                     @endphp
                     
-                    {{-- Export CSV - Sekarang Warna Biru --}}
+                    {{-- Export CSV --}}
                     <a href="{{ route('admin.laporan.export', array_merge($currentFilters, ['format' => 'csv'])) }}" 
                        class="flex items-center px-5 py-3 text-[10px] font-black uppercase tracking-widest text-slate-600 dark:text-slate-300 hover:bg-blue-50 dark:hover:bg-blue-900/10 hover:text-blue-600 transition-colors">
                         <i class="fas fa-file-csv mr-3 text-lg text-blue-500"></i>
@@ -56,7 +56,7 @@
                         Format PDF 
                     </a>
 
-                    {{-- Export Excel (XLSX) - Sekarang Warna Hijau --}}
+                    {{-- Export Excel (XLSX) --}}
                     <a href="{{ route('admin.laporan.export', array_merge($currentFilters, ['format' => 'excel'])) }}" 
                        class="flex items-center px-5 py-3 text-[10px] font-black uppercase tracking-widest text-slate-600 dark:text-slate-300 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 hover:text-[#008f5d] transition-colors">
                         <i class="fas fa-file-excel mr-3 text-lg text-emerald-500"></i>
@@ -68,57 +68,98 @@
     </div>
 
     {{-- Filter Section --}}
-    <div class="bg-white dark:bg-slate-800 p-5 rounded-[2.5rem] border border-emerald-50 dark:border-slate-700 shadow-sm transition-colors duration-300">
-        <form action="{{ route('admin.laporan.index') }}" method="GET" class="flex flex-col lg:flex-row gap-4">
-            {{-- Start Date --}}
-            <div class="flex-1 relative group">
-                <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 group-focus-within:text-[#008f5d] transition-colors">
-                    <i class="fas fa-calendar text-sm"></i>
-                </div>
-                <input type="date" name="start_date" value="{{ request('start_date') }}"
-                       class="w-full pl-11 pr-4 py-3.5 bg-slate-50 dark:bg-slate-900/50 border-0 rounded-2xl text-xs font-bold focus:ring-2 focus:ring-[#008f5d]/20 dark:text-slate-200 transition-all">
-            </div>
+    <div class="space-y-4">
+        {{-- Quick Filter Buttons (Spesifik: Hari, Minggu, Bulan, Tahun) --}}
+        <div class="flex flex-wrap items-center gap-3">
+            @php
+                $activePeriod = request('period');
+            @endphp
+            <a href="{{ route('admin.laporan.index', ['period' => 'today']) }}" 
+               class="px-5 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all duration-300 border {{ $activePeriod == 'today' ? 'bg-[#008f5d] text-white border-[#008f5d] shadow-lg shadow-emerald-500/20' : 'bg-white dark:bg-slate-800 text-slate-500 border-slate-200 dark:border-slate-700 hover:border-[#008f5d] hover:text-[#008f5d]' }}">
+                <i class="fas fa-calendar-day mr-2"></i> Hari Ini
+            </a>
+            <a href="{{ route('admin.laporan.index', ['period' => 'weekly']) }}" 
+               class="px-5 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all duration-300 border {{ $activePeriod == 'weekly' ? 'bg-[#008f5d] text-white border-[#008f5d] shadow-lg shadow-emerald-500/20' : 'bg-white dark:bg-slate-800 text-slate-500 border-slate-200 dark:border-slate-700 hover:border-[#008f5d] hover:text-[#008f5d]' }}">
+                <i class="fas fa-calendar-week mr-2"></i> Minggu Ini
+            </a>
+            <a href="{{ route('admin.laporan.index', ['period' => 'monthly']) }}" 
+               class="px-5 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all duration-300 border {{ $activePeriod == 'monthly' ? 'bg-[#008f5d] text-white border-[#008f5d] shadow-lg shadow-emerald-500/20' : 'bg-white dark:bg-slate-800 text-slate-500 border-slate-200 dark:border-slate-700 hover:border-[#008f5d] hover:text-[#008f5d]' }}">
+                <i class="fas fa-calendar-alt mr-2"></i> Bulan Ini
+            </a>
+            <a href="{{ route('admin.laporan.index', ['period' => 'yearly']) }}" 
+               class="px-5 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all duration-300 border {{ $activePeriod == 'yearly' ? 'bg-[#008f5d] text-white border-[#008f5d] shadow-lg shadow-emerald-500/20' : 'bg-white dark:bg-slate-800 text-slate-500 border-slate-200 dark:border-slate-700 hover:border-[#008f5d] hover:text-[#008f5d]' }}">
+                <i class="fas fa-history mr-2"></i> Tahun Ini
+            </a>
+        </div>
 
-            {{-- End Date --}}
-            <div class="flex-1 relative group">
-                <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 group-focus-within:text-[#008f5d] transition-colors">
-                    <i class="fas fa-calendar-check text-sm"></i>
+        <div class="bg-white dark:bg-slate-800 p-6 rounded-[2.5rem] border border-emerald-50 dark:border-slate-700 shadow-sm transition-all duration-300">
+            <form action="{{ route('admin.laporan.index') }}" method="GET" class="flex flex-col lg:flex-row gap-4 items-end">
+                <input type="hidden" name="period" value="{{ request('period') }}">
+                
+                {{-- Start Date --}}
+                <div class="w-full lg:flex-1 space-y-2 group">
+                    <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Tanggal Mulai</label>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 group-focus-within:text-[#008f5d] transition-colors">
+                            <i class="fas fa-calendar text-sm"></i>
+                        </div>
+                        <input type="date" name="start_date" value="{{ request('start_date') }}"
+                               class="w-full pl-11 pr-4 py-3.5 bg-slate-50 dark:bg-slate-900/50 border-0 rounded-2xl text-xs font-bold focus:ring-2 focus:ring-[#008f5d]/20 dark:text-slate-200 transition-all outline-none">
+                    </div>
                 </div>
-                <input type="date" name="end_date" value="{{ request('end_date') }}"
-                       class="w-full pl-11 pr-4 py-3.5 bg-slate-50 dark:bg-slate-900/50 border-0 rounded-2xl text-xs font-bold focus:ring-2 focus:ring-[#008f5d]/20 dark:text-slate-200 transition-all">
-            </div>
 
-            <div class="flex flex-wrap md:flex-nowrap gap-3">
+                {{-- End Date --}}
+                <div class="w-full lg:flex-1 space-y-2 group">
+                    <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Tanggal Akhir</label>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 group-focus-within:text-[#008f5d] transition-colors">
+                            <i class="fas fa-calendar-check text-sm"></i>
+                        </div>
+                        <input type="date" name="end_date" value="{{ request('end_date') }}"
+                               class="w-full pl-11 pr-4 py-3.5 bg-slate-50 dark:bg-slate-900/50 border-0 rounded-2xl text-xs font-bold focus:ring-2 focus:ring-[#008f5d]/20 dark:text-slate-200 transition-all outline-none">
+                    </div>
+                </div>
+
                 {{-- Layanan Filter --}}
-                <div class="w-full md:w-64 relative">
-                    <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400">
-                        <i class="fas fa-filter text-xs"></i>
-                    </div>
-                    <select name="id_layanan" onchange="this.form.submit()"
-                            class="w-full pl-10 pr-10 py-3.5 bg-slate-50 dark:bg-slate-900/50 border-0 rounded-2xl text-[10px] font-black uppercase tracking-widest focus:ring-2 focus:ring-[#008f5d]/20 dark:text-slate-200 appearance-none cursor-pointer">
-                        <option value="">Semua Layanan</option>
-                        @foreach($listLayanan as $layanan)
-                            <option value="{{ $layanan->id_layanan }}" {{ request('id_layanan') == $layanan->id_layanan ? 'selected' : '' }}>
-                                {{ strtoupper($layanan->nama_layanan) }}
-                            </option>
-                        @endforeach
-                    </select>
-                    <div class="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none text-slate-400">
-                        <i class="fas fa-chevron-down text-[10px]"></i>
+                <div class="w-full lg:w-64 space-y-2 group">
+                    <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Jenis Layanan</label>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400">
+                            <i class="fas fa-filter text-xs"></i>
+                        </div>
+                        <select name="id_layanan"
+                                class="w-full pl-10 pr-10 py-3.5 bg-slate-50 dark:bg-slate-900/50 border-0 rounded-2xl text-[10px] font-black uppercase tracking-widest focus:ring-2 focus:ring-[#008f5d]/20 dark:text-slate-200 appearance-none cursor-pointer outline-none">
+                            <option value="">Semua Layanan</option>
+                            @foreach($listLayanan as $layanan)
+                                <option value="{{ $layanan->id_layanan }}" {{ request('id_layanan') == $layanan->id_layanan ? 'selected' : '' }}>
+                                    {{ strtoupper($layanan->nama_layanan) }}
+                                </option>
+                            @endforeach
+                        </select>
+                        <div class="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none text-slate-400">
+                            <i class="fas fa-chevron-down text-[10px]"></i>
+                        </div>
                     </div>
                 </div>
 
-                <button type="submit" class="px-8 py-3.5 bg-emerald-100 dark:bg-emerald-900/30 text-[#008f5d] dark:text-emerald-400 text-[10px] font-black uppercase tracking-widest rounded-2xl hover:bg-[#008f5d] hover:text-white transition-all duration-300 shadow-sm active:scale-95">
-                    Terapkan Filter
-                </button>
-            </div>
-        </form>
+                <div class="flex gap-2 w-full lg:w-auto">
+                    <button type="submit" class="flex-1 lg:flex-none px-8 py-3.5 bg-[#008f5d] text-white text-[10px] font-black uppercase tracking-widest rounded-2xl hover:bg-emerald-700 transition-all duration-300 shadow-lg shadow-emerald-500/20 active:scale-95">
+                        Terapkan
+                    </button>
+                    @if(request()->anyFilled(['start_date', 'end_date', 'id_layanan', 'period']))
+                    <a href="{{ route('admin.laporan.index') }}" class="px-5 py-3.5 bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-300 rounded-2xl hover:bg-red-50 hover:text-red-600 transition-all active:scale-95 flex items-center justify-center" title="Reset Filter">
+                        <i class="fas fa-undo text-xs"></i>
+                    </a>
+                    @endif
+                </div>
+            </form>
+        </div>
     </div>
 
     {{-- Table Section --}}
     <div class="bg-white dark:bg-slate-800 rounded-[2.5rem] border border-emerald-50 dark:border-slate-700 shadow-xl overflow-hidden transition-colors duration-300">
         <div class="overflow-x-auto custom-scrollbar">
-            <table class="w-full text-left border-collapse">
+            <table class="w-full text-left border-collapse min-w-[1000px]">
                 <thead>
                     <tr class="bg-slate-50/80 dark:bg-slate-900/50 border-b border-emerald-50 dark:border-slate-700 text-nowrap">
                         <th class="px-8 py-6 text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em]">Profil Tamu</th>
@@ -184,15 +225,13 @@
                         </td>
 
                         {{-- Aksi --}}
-                        <td class="px-8 py-5 text-nowrap">
+                        <td class="px-8 py-5 text-nowrap text-center">
                             <div class="flex justify-center items-center gap-2">
                                 <a href="{{ route('admin.laporan.show', $item->id_kunjungan) }}" 
-                                   title="Lihat Detail"
                                    class="w-10 h-10 flex items-center justify-center rounded-2xl bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 hover:bg-blue-600 hover:text-white transition-all active:scale-90 shadow-sm group/btn">
                                     <i class="fas fa-eye text-xs group-hover/btn:rotate-12 transition-transform"></i>
                                 </a>
                                 <a href="{{ route('admin.laporan.edit', $item->id_kunjungan) }}" 
-                                   title="Edit Data"
                                    class="w-10 h-10 flex items-center justify-center rounded-2xl bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400 hover:bg-amber-500 hover:text-white transition-all active:scale-90 shadow-sm group/btn">
                                     <i class="fas fa-pen-nib text-xs group-hover/btn:-rotate-12 transition-transform"></i>
                                 </a>

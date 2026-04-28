@@ -8,6 +8,7 @@ use App\Models\Layanan;
 use App\Models\PetugasTujuan;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Carbon\Carbon;
 
 class TamuController extends Controller
 {
@@ -63,7 +64,7 @@ class TamuController extends Controller
         // Validasi input form: Field profil menjadi nullable jika tipe_tamu adalah 'lama'
         $validated = $request->validate([
             'gmail'         => 'required|email|max:255',
-            'nama_tamu'     => 'required_if:tipe_tamu,baru|string|max:255',
+            'nama_tamu'     => 'required_if:tipe_tamu,baru|nullable|string|max:255',
             'no_wa'         => 'nullable|string|max:15',
             'jenis_tamu'    => 'nullable|string',
             'nama_instansi' => 'nullable|string|max:255',
@@ -81,7 +82,7 @@ class TamuController extends Controller
                 
                 // 1. Logika Sinkronisasi Data Profil Tamu
                 if ($request->tipe_tamu === 'baru') {
-                    // Jika tamu baru, buat atau update profil lengkap
+                    // Jika tamu baru, buat profil lengkap
                     $tamuModel = Tamu::updateOrCreate(
                         ['gmail' => $validated['gmail']],
                         [
@@ -104,10 +105,11 @@ class TamuController extends Controller
                     'id_layanan'  => $validated['id_layanan'],
                     'id_petugas'  => $validated['id_petugas'],
                     'waktu_masuk' => now(),
-                    'status'      => 'belum dilayani',
+                    'status'      => 'belum dilayani', // Sesuai standarisasi dengan spasi
                 ]);
 
                 // 3. Simpan feedback rating (Opsional)
+                // Menggunakan kolom 'skor' sesuai perbaikan dashboard sebelumnya
                 DB::table('rating_layanan')->insert([
                     'id_kunjungan' => $kunjungan->id_kunjungan,
                     'skor'         => $validated['skor'] ?? 0,
@@ -119,22 +121,36 @@ class TamuController extends Controller
                 return $tamuModel; 
             });
 
-            // Alur redirect sukses berdasarkan tipe tamu sesuai keinginan Anda
+            // MENGGUNAKAN REDIRECT AGAR TIDAK KEMBALI KE FORM SAAT REFRESH
             if ($request->tipe_tamu === 'lama') {
-                return view('tamu.success_tamu_lama', [
-                    'nama_tamu' => $result->nama_tamu
-                ]);
+                return redirect()->route('tamu.success.lama', ['nama' => $result->nama_tamu]);
             }
 
-            return view('tamu.success_tamu_baru', [
-                'nama_tamu' => $result->nama_tamu
-            ]);
+            return redirect()->route('tamu.success.baru', ['nama' => $result->nama_tamu]);
 
         } catch (\Exception $e) {
             return redirect()->back()
                 ->withInput()
                 ->with('error', 'Gagal mencatat data kunjungan: ' . $e->getMessage());
         }
+    }
+
+    /**
+     * Halaman sukses untuk tamu baru
+     */
+    public function successBaru(Request $request)
+    {
+        $nama_tamu = $request->query('nama');
+        return view('tamu.success_tamu_baru', compact('nama_tamu'));
+    }
+
+    /**
+     * Halaman sukses untuk tamu lama
+     */
+    public function successLama(Request $request)
+    {
+        $nama_tamu = $request->query('nama');
+        return view('tamu.success_tamu_lama', compact('nama_tamu'));
     }
 
     /**

@@ -43,6 +43,16 @@
 </head>
 <body class="min-h-screen flex flex-col items-center justify-center p-4 md:p-12">
 
+    {{-- Notifikasi Error --}}
+    @if(session('error'))
+    <div class="fixed top-5 right-5 z-50 animate-slide-up">
+        <div class="bg-red-500 text-white px-6 py-4 rounded-2xl shadow-2xl font-bold flex items-center space-x-3">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+            <span>{{ session('error') }}</span>
+        </div>
+    </div>
+    @endif
+
     <div class="mb-10 md:mb-14 text-center w-full animate-slide-up">
         <div class="relative inline-block">
             <div class="absolute -inset-10 bg-emerald-500/20 blur-[100px] rounded-full"></div>
@@ -67,7 +77,7 @@
         <form action="{{ route('tamu.store') }}" method="POST" id="mainForm" class="form-glass rounded-[3rem] md:rounded-[4rem] shadow-[0_50px_100px_-20px_rgba(0,0,0,0.7)] overflow-hidden border border-white/40 transform transition-all">
             @csrf
             
-            {{-- PERBAIKAN: Input hidden untuk identitas alur di controller --}}
+            {{-- Input hidden untuk identitas alur di controller --}}
             <input type="hidden" name="tipe_tamu" value="baru">
             <input type="hidden" name="gmail" value="{{ $gmail }}">
 
@@ -93,6 +103,7 @@
                             <label class="text-[11px] font-black text-emerald-900 uppercase tracking-widest ml-1">Nama Lengkap</label>
                             <input type="text" name="nama_tamu" value="{{ old('nama_tamu') }}" placeholder="Input nama sesuai identitas" required 
                                 class="w-full px-6 py-4 rounded-2xl bg-gray-50 border-2 border-gray-50 focus:bg-white focus:border-emerald-500 outline-none transition-all placeholder-gray-300 font-bold text-sm text-emerald-950 shadow-inner">
+                            @error('nama_tamu') <p class="text-red-500 text-[10px] font-bold mt-1 ml-2">{{ $message }}</p> @enderror
                         </div>
 
                         <div class="group space-y-2">
@@ -180,13 +191,13 @@
                                 </button>
                             @endfor
                         </div>
-                        {{-- PERBAIKAN: name="skor" agar sesuai dengan validation di controller --}}
+                        {{-- PERBAIKAN: value 0 sebagai default agar tidak error di controller --}}
                         <input type="hidden" name="skor" id="rating-value" value="0">
                     </div>
 
                     <div class="group space-y-3">
                         <label class="text-[11px] font-black text-emerald-900 uppercase tracking-widest ml-1">Kesan & Saran</label>
-                        {{-- PERBAIKAN: name="komentar" agar sesuai dengan validation di controller --}}
+                        {{-- PERBAIKAN: Menghindari whitespace dalam textarea agar placeholder muncul --}}
                         <textarea name="komentar" rows="4" placeholder="Berikan masukan berharga Anda untuk layanan kami..."
                             class="w-full px-7 py-6 rounded-[2rem] bg-white border-2 border-emerald-50 focus:border-emerald-500 outline-none transition-all placeholder-gray-300 font-bold text-sm text-emerald-950 shadow-sm resize-none">{{ old('komentar') }}</textarea>
                     </div>

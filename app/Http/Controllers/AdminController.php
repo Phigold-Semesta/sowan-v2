@@ -32,10 +32,9 @@ class AdminController extends Controller
         $totalTamu  = Tamu::count();
         $tamuHariIni = Kunjungan::whereDate('waktu_masuk', Carbon::today())->count();
         
-        $avgValue = RatingLayanan::avg('skor') ?? 0;
+       $avgValue = RatingLayanan::avg('skor') ?? 0;
         $avgRating = number_format($avgValue, 1);
 
-        // Disempurnakan: Eager loading user untuk efisiensi
         $latestLogs = AuditLog::with('user')->latest('waktu')->take(5)->get();
         
         $latestKunjungan = Kunjungan::with(['tamu', 'layanan', 'petugas'])
@@ -307,10 +306,8 @@ class AdminController extends Controller
 
     public function aktivitas_global(Request $request)
     {
-        // Eager loading user agar efisien
         $query = AuditLog::with('user');
 
-        // Filter Pencarian (Aktivitas atau Nama Lengkap User)
         if ($request->filled('search')) {
             $search = $request->input('search');
             $query->where(function($q) use ($search) {
@@ -321,14 +318,11 @@ class AdminController extends Controller
             });
         }
 
-        // Filter Tanggal (Menggunakan kolom 'waktu')
         if ($request->filled('date')) {
             $query->whereDate('waktu', $request->input('date'));
         }
 
         $perPage = $request->input('per_page', 10);
-        
-        // Eksekusi Query dengan urutan waktu terbaru
         $activities = ($perPage === 'all') 
             ? $query->latest('waktu')->get() 
             : $query->latest('waktu')->paginate((int)$perPage)->withQueryString();
@@ -337,19 +331,15 @@ class AdminController extends Controller
     }
 
     // =========================================================================
-    // --- LAPORAN KUNJUNGAN ---
+    // --- LAPORAN KUNJUNGAN (DENGAN FILTER HARIAN/MINGGUAN/BULANAN/TAHUNAN) ---
     // =========================================================================
 
     public function laporan_index(Request $request)
     {
         $query = Kunjungan::with(['tamu', 'layanan', 'petugas']);
 
-        if ($request->filled('start_date') && $request->filled('end_date')) {
-            $query->whereBetween('waktu_masuk', [
-                $request->start_date . ' 00:00:00', 
-                $request->end_date . ' 23:59:59'
-            ]);
-        }
+        // LOGIKA FILTER SPESIFIK (Revisi Dosen)
+        $this->applyFilters($query, $request);
 
         if ($request->filled('id_layanan')) {
             $query->where('id_layanan', $request->id_layanan);
@@ -364,6 +354,36 @@ class AdminController extends Controller
         $listLayanan = $layanan;
 
         return view('admin.laporan.index', compact('kunjungan', 'layanan', 'listLayanan'));
+    }
+
+    /**
+     * Helper Function untuk menerapkan filter waktu secara dinamis
+     */
+    private function applyFilters($query, $request)
+    {
+        if ($request->filled('period')) {
+            switch ($request->period) {
+                case 'today':
+                    $query->whereDate('waktu_masuk', Carbon::today());
+                    break;
+                case 'this_week':
+                    $query->whereBetween('waktu_masuk', [Carbon::now()->startOfWeek(), Carbon::now()->endOfWeek()]);
+                    break;
+                case 'this_month':
+                    $query->whereMonth('waktu_masuk', Carbon::now()->month)
+                          ->whereYear('waktu_masuk', Carbon::now()->year);
+                    break;
+                case 'this_year':
+                    $query->whereYear('waktu_masuk', Carbon::now()->year);
+                    break;
+            }
+        } elseif ($request->filled('start_date') && $request->filled('end_date')) {
+            // Jika user memilih rentang manual
+            $query->whereBetween('waktu_masuk', [
+                $request->start_date . ' 00:00:00', 
+                $request->end_date . ' 23:59:59'
+            ]);
+        }
     }
 
     public function laporan_show($id)
@@ -414,9 +434,8 @@ class AdminController extends Controller
         $format = $request->input('format', 'csv'); 
         $query = Kunjungan::with(['tamu', 'layanan', 'petugas']);
 
-        if ($request->filled('start_date') && $request->filled('end_date')) {
-            $query->whereBetween('waktu_masuk', [$request->start_date . ' 00:00:00', $request->end_date . ' 23:59:59']);
-        }
+        // Terapkan filter yang sama dengan index
+        $this->applyFilters($query, $request);
         
         if ($request->filled('id_layanan')) {
             $query->where('id_layanan', $request->id_layanan);
@@ -487,16 +506,14 @@ class AdminController extends Controller
         return Excel::download(new KunjunganExport($data), $fileName);
     }
 
-   // =========================================================================
-    // --- MANAJEMEN RATING LAYANAN (SEMPURNA & DISESUAIKAN SOWAN V2) ---
+    // =========================================================================
+    // --- MANAJEMEN RATING LAYANAN ---
     // =========================================================================
 
     public function rating_index(Request $request)
     {
-        // Tetap menggunakan eager loading agar performa tetap mewah
         $query = RatingLayanan::with(['kunjungan.tamu', 'kunjungan.layanan', 'user']);
 
-        // Filter Pencarian: Mencari di komentar atau nama tamu
         if ($request->filled('search')) {
             $search = $request->input('search');
             $query->where(function($q) use ($search) {
@@ -507,14 +524,11 @@ class AdminController extends Controller
             });
         }
 
-        // PERBAIKAN: Filter Skor Bintang (Sesuaikan kolom menjadi skor_rating)
         if ($request->filled('skor')) {
             $query->where('skor_rating', $request->skor);
         }
 
         $perPage = $request->input('per_page', 10);
-        
-        // PERBAIKAN: Pengurutan menggunakan id_kunjungan sebagai acuan Primary Key
         $ratings = ($perPage === 'all') 
             ? $query->orderBy('id_kunjungan', 'desc')->get() 
             : $query->orderBy('id_kunjungan', 'desc')->paginate((int)$perPage)->withQueryString();
@@ -524,7 +538,6 @@ class AdminController extends Controller
 
     public function rating_show($id)
     {
-        // PERBAIKAN: Memastikan pencarian menggunakan kolom id_kunjungan
         $rating = RatingLayanan::with(['kunjungan.tamu', 'kunjungan.layanan', 'user'])
                                ->where('id_kunjungan', $id)
                                ->firstOrFail();
@@ -539,15 +552,13 @@ class AdminController extends Controller
         ]);
 
         try {
-            // PERBAIKAN: Mengambil data berdasarkan id_kunjungan
             $rating = RatingLayanan::where('id_kunjungan', $id)->firstOrFail();
             
             $rating->update([
                 'tanggapan' => $request->tanggapan,
-                'id_user'   => Auth::id(), // ID Admin yang menanggapi
+                'id_user'   => Auth::id(), 
             ]);
 
-            // Sinkronisasi Log dengan parameter yang tepat
             $this->logActivity("Memberikan tanggapan pada rating Kunjungan ID: #$id");
 
             return redirect()->route('admin.rating.index')->with('success', 'Tanggapan berhasil dikirim, bos!');
@@ -556,21 +567,14 @@ class AdminController extends Controller
         }
     }
 
-    /**
-     * PERBAIKAN VITAL: Menangani penghapusan menggunakan id_kunjungan
-     * agar sinkron dengan Model sebagai Weak Entity
-     */
     public function rating_destroy($id)
     {
         try {
-            // PERBAIKAN: Mencari data secara spesifik pada kolom id_kunjungan
             $rating = RatingLayanan::where('id_kunjungan', $id)->firstOrFail();
             
-            // Catat log aktivitas sebelum data benar-benar hilang
             $namaTamu = $rating->kunjungan->tamu->nama_tamu ?? 'Unknown';
             $this->logActivity("Menghapus data rating Kunjungan ID: #$id dari tamu " . $namaTamu);
 
-            // Eksekusi penghapusan
             $rating->delete();
 
             return redirect()->route('admin.rating.index')->with('success', 'Data rating berhasil dihapus secara permanen, bos!');
