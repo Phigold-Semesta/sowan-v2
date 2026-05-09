@@ -10,7 +10,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>@yield('title', 'Dashboard') | SOWAN v2</title>
+    <title>@yield('title', 'Dashboard') | SOWAN LPSE Karawang</title>
     
     <script>
         if (localStorage.getItem('theme') === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
@@ -154,7 +154,7 @@
                     <div class="bg-white p-2 rounded-xl shadow-lg shrink-0">
                         <i class="fas fa-book-open text-[#008f5d] text-lg"></i>
                     </div>
-                    <span class="font-extrabold tracking-tighter text-lg uppercase leading-none">LPSE<br><span class="text-emerald-300 text-xs text-nowrap">Karawang SOWAN</span></span>
+                    <span class="font-extrabold tracking-tighter text-lg uppercase leading-none">SOWAN<br><span class="text-emerald-300 text-xs text-nowrap">LPSE Karawang</span></span>
                 </div>
 
                 <div class="icon-buku-collapsed w-full justify-center">
@@ -186,12 +186,12 @@
                 
                 <a href="{{ route('admin.users.index') }}" class="nav-item flex items-center py-4 px-5 rounded-2xl transition-all {{ Route::is('admin.users.*') ? 'sidebar-active' : 'hover:bg-white/10' }}">
                     <i class="fas fa-users-gear w-6 text-center text-sm"></i>
-                    <span class="nav-text ml-3 text-sm font-bold tracking-wide text-nowrap">Manajemen User</span>
+                    <span class="nav-text ml-3 text-sm font-bold tracking-wide text-nowrap">Manajemen Pengguna</span>
                 </a>
 
                 <a href="{{ route('admin.master.index') }}" class="nav-item flex items-center py-4 px-5 rounded-2xl transition-all {{ Route::is('admin.master.*') ? 'sidebar-active' : 'hover:bg-white/10' }}">
                     <i class="fas fa-database w-6 text-center text-sm"></i>
-                    <span class="nav-text ml-3 text-sm font-bold tracking-wide text-nowrap">Master Data</span>
+                    <span class="nav-text ml-3 text-sm font-bold tracking-wide text-nowrap">Data Master</span>
                 </a>
 
                 <a href="{{ route('admin.aktivitas.index') }}" class="nav-item flex items-center py-4 px-5 rounded-2xl transition-all {{ Route::is('admin.aktivitas.*') ? 'sidebar-active' : 'hover:bg-white/10' }}">
@@ -257,7 +257,7 @@
                 <button onclick="confirmLogout(event)" 
                     class="btn-logout nav-item w-full flex items-center justify-center py-4 px-6 rounded-2xl bg-white/5 hover:bg-red-500 hover:shadow-[0_8px_20px_rgba(239,68,68,0.4)] text-red-100 transition-all border border-white/5 group">
                     <i class="fas fa-power-off w-6 text-center group-hover:scale-110 transition-transform"></i>
-                    <span class="nav-text ml-3 text-sm font-bold tracking-widest uppercase text-nowrap">Logout</span>
+                    <span class="nav-text ml-3 text-sm font-bold tracking-widest uppercase text-nowrap">Log out</span>
                 </button>
             </div>
         </aside>
@@ -318,7 +318,7 @@
                 showCancelButton: true,
                 confirmButtonColor: '#008f5d',
                 cancelButtonColor: '#f1f5f9',
-                confirmButtonText: 'YA, LOGOUT',
+                confirmButtonText: 'YA, LOG OUT',
                 cancelButtonText: 'BATAL',
                 reverseButtons: true,
                 background: document.documentElement.classList.contains('dark') ? '#064e3b' : '#fff',
