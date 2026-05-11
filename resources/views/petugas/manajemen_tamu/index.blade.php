@@ -147,6 +147,8 @@
                         </td>
                         <td class="px-6 py-6 text-center">
                             @php
+                                // PERBAIKAN: Menyamakan Key Status dengan Database & Menambahkan Class Tailwind yang valid
+                                $statusKey = trim(strtolower($item->status));
                                 $statusMap = [
                                     'belum dilayani' => [
                                         'bg' => 'bg-red-50 dark:bg-red-950/40',
@@ -156,9 +158,9 @@
                                         'label' => 'BELUM DILAYANI'
                                     ],
                                     'sedang dilayani' => [
-                                        'bg' => 'bg-orange-50 dark:bg-orange-950/40',
-                                        'text' => 'text-orange-600 dark:text-orange-400',
-                                        'border' => 'border-orange-200 dark:border-orange-800/50',
+                                        'bg' => 'bg-amber-50 dark:bg-amber-950/40',
+                                        'text' => 'text-amber-600 dark:text-amber-400',
+                                        'border' => 'border-amber-200 dark:border-amber-800/50',
                                         'icon' => 'fa-bolt-lightning',
                                         'label' => 'SEDANG DILAYANI'
                                     ],
@@ -170,16 +172,16 @@
                                         'label' => 'SUDAH DILAYANI'
                                     ],
                                 ];
-                                $st = $statusMap[$item->status] ?? [
-                                    'bg' => 'bg-slate-50 dark:bg-slate-900/20',
-                                    'text' => 'text-slate-600 dark:text-slate-400',
-                                    'border' => 'border-slate-200 dark:border-slate-800/50',
+                                $st = $statusMap[$statusKey] ?? [
+                                    'bg' => 'bg-slate-100 dark:bg-slate-900/50',
+                                    'text' => 'text-slate-500 dark:text-slate-400',
+                                    'border' => 'border-slate-200 dark:border-slate-800',
                                     'icon' => 'fa-circle',
                                     'label' => strtoupper($item->status)
                                 ];
                             @endphp
                             <span class="inline-flex items-center justify-center text-[9px] font-black uppercase tracking-widest px-5 py-2.5 rounded-full border-2 {{ $st['border'] }} {{ $st['bg'] }} {{ $st['text'] }} shadow-sm min-w-[140px] transition-all duration-500">
-                                <i class="fas {{ $st['icon'] }} mr-2 @if($item->status == 'sedang dilayani') fa-beat-fast @endif"></i>
+                                <i class="fas {{ $st['icon'] }} mr-2 @if($statusKey == 'sedang dilayani') fa-beat-fast @endif"></i>
                                 {{ $st['label'] }}
                             </span>
                         </td>
@@ -355,7 +357,7 @@
             showCancelButton: true,
             confirmButtonText: 'SIMPAN PERUBAHAN',
             cancelButtonText: 'BATAL',
-            reverseButtons: true, // Membuat tombol Batal di kiri dan Simpan di kanan
+            reverseButtons: true,
             input: 'radio',
             inputOptions: {
                 'belum dilayani': '⌛ Menunggu Antrean',
