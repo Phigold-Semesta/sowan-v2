@@ -23,6 +23,16 @@ class Kunjungan extends Model
     protected $primaryKey = 'id_kunjungan';
 
     /**
+     * PERBAIKAN: Casting tipe data.
+     * Memastikan 'waktu_masuk' dan 'waktu_keluar' otomatis menjadi objek Carbon.
+     * Ini vital agar Dashboard bisa melakukan filter waktu secara akurat.
+     */
+    protected $casts = [
+        'waktu_masuk' => 'datetime',
+        'waktu_keluar' => 'datetime',
+    ];
+
+    /**
      * Atribut yang dapat diisi secara massal.
      */
     protected $fillable = [
@@ -37,6 +47,7 @@ class Kunjungan extends Model
     /**
      * RELASI: Ke RatingLayanan (Satu kunjungan punya satu rating).
      * Sesuai rencana, rating_layanan menjadi Weak Entity murni [cite: 2026-03-23].
+     * Digunakan untuk menghitung avg_rating di Dashboard melalui tabel relasi.
      */
     public function ratingLayanan(): HasOne
     {
@@ -80,13 +91,14 @@ class Kunjungan extends Model
         ]);
     }
 
-    // Dipakai oleh PetugasController yang memanggil ->with(['petugasTujuan'])
-    // Menjamin konsistensi data agar tidak muncul "Petugas Piket" jika data tersedia
+    /**
+     * PENYEMPURNAAN: Alias Relasi untuk Fleksibilitas.
+     * Tetap mempertahankan petugasTujuan agar tidak memutus dependensi kode 
+     * yang sudah Anda tulis di PetugasController sebelumnya.
+     */
     public function petugasTujuan(): BelongsTo
     {
-        // Diarahkan ke PetugasTujuan untuk memastikan relasi di PetugasController aman
-        return $this->belongsTo(PetugasTujuan::class, 'id_petugas', 'id_petugas')->withDefault([
-            'nama_petugas' => 'Petugas Piket'
-        ]);
+        // Menjamin konsistensi data dengan memanggil relasi yang sama
+        return $this->petugas();
     }
 }

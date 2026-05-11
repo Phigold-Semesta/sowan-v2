@@ -1,14 +1,14 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="p-4 md:p-8 transition-colors duration-500 bg-emerald-50 dark:bg-slate-950 min-h-screen">
+<div class="p-4 md:p-8 transition-colors duration-500 bg-slate-50 dark:bg-slate-950 min-h-screen">
     {{-- 1. Header Section --}}
     <div class="mb-10 flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
         <div>
             <h1 class="text-4xl font-black text-emerald-900 dark:text-emerald-400 tracking-tighter uppercase italic drop-shadow-sm">
                 Dashboard <span class="text-emerald-700 dark:text-white">Petugas</span>
             </h1>
-            <p class="text-emerald-600/70 dark:text-slate-400 font-bold mt-1 tracking-wide">
+            <p class="text-slate-500 dark:text-slate-400 font-bold mt-1 tracking-wide">
                 SOWAN V2 • Monitoring Kehadiran Tamu LPSE Karawang
                 <span class="ml-2 px-3 py-1 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 text-[10px] rounded-full italic animate-pulse border border-emerald-200 dark:border-emerald-800">
                     ⚡ Helpdesk Aktif
@@ -16,75 +16,86 @@
             </p>
         </div>
         <div class="hidden md:block text-right">
-            <p class="text-[10px] font-black text-emerald-800/40 dark:text-slate-500 uppercase tracking-[0.3em]">Waktu Lokal</p>
-            <p id="realtime-clock" class="text-sm font-bold text-emerald-900 dark:text-emerald-300">{{ now()->format('d M Y | H:i:s') }} WIB</p>
+            <p class="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.3em]">Waktu Lokal</p>
+            <p id="realtime-clock" class="text-sm font-bold text-emerald-900 dark:text-emerald-300 tracking-tight">{{ now()->format('d M Y | H:i:s') }} WIB</p>
         </div>
     </div>
 
-    {{-- 2. Baris Statistik Pelayanan (Emerald Theme) --}}
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
+    {{-- 2. Baris Statistik Utama (5 Card Eksklusif) --}}
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-10">
         
-        {{-- Total Tamu Hari Ini --}}
-        <div class="group bg-white dark:bg-slate-900 p-6 rounded-[2.5rem] shadow-2xl shadow-emerald-900/5 dark:shadow-black/20 transition-all duration-500 hover:-translate-y-2 border border-emerald-100 dark:border-slate-800">
-            <div class="flex justify-between items-start">
-                <div>
-                    <p class="text-emerald-800/50 dark:text-slate-500 text-[10px] uppercase font-black tracking-[0.2em] mb-1">Tamu Hari Ini</p>
-                    <h3 class="text-4xl font-black text-emerald-900 dark:text-emerald-100 tracking-tighter">{{ $stats['total'] ?? 0 }}</h3>
-                </div>
-                <div class="bg-emerald-50 dark:bg-emerald-900/20 p-4 rounded-2xl text-2xl group-hover:bg-emerald-600 group-hover:text-white transition-all duration-500 shadow-lg shadow-emerald-100 dark:shadow-none">👥</div>
+        {{-- Card 1: Total Kunjungan Hari Ini --}}
+        <div class="group bg-white dark:bg-slate-900 p-6 rounded-[2.5rem] shadow-xl shadow-emerald-900/5 border border-slate-100 dark:border-slate-800 transition-all duration-500 hover:-translate-y-2">
+            <p class="text-slate-400 dark:text-slate-500 text-[9px] uppercase font-black tracking-[0.2em] mb-1 text-center">Total Kunjungan</p>
+            <div class="flex flex-col items-center">
+                <h3 class="text-4xl font-black text-emerald-900 dark:text-emerald-100 tracking-tighter">{{ number_format($stats['total_hari_ini'] ?? 0) }}</h3>
+                <span class="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 uppercase italic mt-1">Hari Ini</span>
             </div>
-            <div class="mt-4 flex items-center gap-2 bg-emerald-50 dark:bg-emerald-900/40 p-1.5 rounded-lg w-fit text-[9px] text-emerald-700 dark:text-emerald-400 font-bold uppercase">
-                <span class="flex h-2 w-2 rounded-full bg-emerald-500 animate-ping"></span> 
-                Update Real-time
+            <div class="mt-4 w-full h-1 bg-emerald-100 dark:bg-emerald-900/30 rounded-full overflow-hidden">
+                <div class="h-full bg-emerald-500 w-full animate-pulse"></div>
             </div>
         </div>
 
-        {{-- Belum Dilayani (Emerald-Gold Accent) --}}
-        <div class="group bg-white dark:bg-slate-900 p-6 rounded-[2.5rem] shadow-2xl shadow-emerald-900/5 dark:shadow-black/20 transition-all duration-500 hover:-translate-y-2 border-b-4 border-emerald-200 dark:border-emerald-800">
-            <div class="flex justify-between items-start">
-                <div>
-                    <p class="text-emerald-600 text-[10px] uppercase font-black tracking-[0.2em] mb-1">Belum Dilayani</p>
-                    <h3 class="text-4xl font-black text-emerald-900 dark:text-slate-200 tracking-tighter">{{ $stats['belum'] ?? 0 }}</h3>
+        {{-- Card 2: Belum Dilayani --}}
+        <div class="group bg-white dark:bg-slate-900 p-6 rounded-[2.5rem] shadow-xl shadow-red-900/5 border-b-4 border-red-500 transition-all duration-500 hover:-translate-y-2 text-center">
+            <p class="text-red-500/60 dark:text-red-400 text-[9px] uppercase font-black tracking-[0.2em] mb-1 font-bold">Belum Dilayani</p>
+            <div class="flex flex-col items-center">
+                <h3 class="text-4xl font-black text-red-600 dark:text-red-400 tracking-tighter">{{ $stats['belum'] ?? 0 }}</h3>
+                <div class="flex items-center gap-1 mt-1">
+                    <span class="w-1.5 h-1.5 bg-red-500 rounded-full animate-ping"></span>
+                    <span class="text-[10px] font-bold text-slate-400 uppercase">Antrean</span>
                 </div>
-                <div class="bg-emerald-50 dark:bg-emerald-900/30 p-4 rounded-2xl text-2xl group-hover:rotate-12 transition-all duration-500 shadow-lg shadow-emerald-100 dark:shadow-none">⏳</div>
             </div>
-            <p class="mt-4 text-[9px] text-emerald-400 font-bold uppercase italic tracking-wider">Menunggu Konfirmasi</p>
         </div>
 
-        {{-- Sedang Dilayani (Emerald Light) --}}
-        <div class="group bg-white dark:bg-slate-900 p-6 rounded-[2.5rem] shadow-2xl shadow-emerald-900/5 dark:shadow-black/20 transition-all duration-500 hover:-translate-y-2 border-b-4 border-emerald-500">
-            <div class="flex justify-between items-start">
-                <div>
-                    <p class="text-emerald-500 text-[10px] uppercase font-black tracking-[0.2em] mb-1">Sedang Dilayani</p>
-                    <h3 class="text-4xl font-black text-emerald-600 dark:text-emerald-400 tracking-tighter">{{ $stats['sedang'] ?? 0 }}</h3>
-                </div>
-                <div class="bg-emerald-50 dark:bg-emerald-800/30 p-4 rounded-2xl text-2xl group-hover:scale-110 transition-all duration-500 shadow-lg shadow-emerald-100 dark:shadow-none">📑</div>
+        {{-- Card 3: Sedang Dilayani --}}
+        <div class="group bg-white dark:bg-slate-900 p-6 rounded-[2.5rem] shadow-xl shadow-blue-900/5 border-b-4 border-blue-500 transition-all duration-500 hover:-translate-y-2 text-center">
+            <p class="text-blue-500/60 dark:text-blue-400 text-[9px] uppercase font-black tracking-[0.2em] mb-1 font-bold">Sedang Proses</p>
+            <div class="flex flex-col items-center">
+                <h3 class="text-4xl font-black text-blue-600 dark:text-blue-400 tracking-tighter">{{ $stats['sedang'] ?? 0 }}</h3>
+                <span class="text-[10px] font-bold text-slate-400 uppercase mt-1">Melayani</span>
             </div>
-            <p class="mt-4 text-[9px] text-emerald-500 font-bold uppercase italic tracking-wider">Proses Helpdesk</p>
         </div>
 
-        {{-- Selesai Dilayani (Emerald Dark - The Hero Card) --}}
-        <div class="group bg-emerald-900 dark:bg-emerald-950 p-6 rounded-[2.5rem] shadow-2xl shadow-emerald-900/20 dark:shadow-black/40 transition-all duration-500 hover:-translate-y-2 border-b-4 border-emerald-400">
+        {{-- Card 4: Sudah Dilayani --}}
+        <div class="group bg-white dark:bg-slate-900 p-6 rounded-[2.5rem] shadow-xl shadow-emerald-900/5 border-b-4 border-emerald-500 transition-all duration-500 hover:-translate-y-2 text-center">
+            <p class="text-emerald-500/60 dark:text-emerald-400 text-[9px] uppercase font-black tracking-[0.2em] mb-1 font-bold">Selesai</p>
+            <div class="flex flex-col items-center">
+                <h3 class="text-4xl font-black text-emerald-600 dark:text-emerald-400 tracking-tighter">{{ $stats['sudah'] ?? 0 }}</h3>
+                <span class="text-[10px] font-bold text-slate-400 uppercase mt-1 italic">Real-time</span>
+            </div>
+        </div>
+
+        {{-- Card 5: RATING LAYANAN (Sesuai Gambar Admin - Mewah & Ikonik) --}}
+        @php
+            $avgRating = $stats['avg_rating'] ?? 0;
+            $ratingPercentage = ($avgRating / 5) * 100;
+        @endphp
+        <div class="group bg-[#064e3b] dark:bg-emerald-950 p-6 rounded-[2.5rem] shadow-xl shadow-emerald-900/20 border border-emerald-500/20 transition-all duration-500 hover:-translate-y-2 relative overflow-hidden">
             <div class="flex justify-between items-start mb-2">
-                <div>
-                    <p class="text-emerald-300 text-[10px] uppercase font-black tracking-[0.2em] mb-1">Selesai Dilayani</p>
-                    <h3 class="text-4xl font-black text-white tracking-tighter">{{ $stats['sudah'] ?? 0 }}</h3>
-                </div>
-                <div class="text-4xl group-hover:scale-125 transition-transform duration-500">✅</div>
+                <p class="text-emerald-400 text-[9px] uppercase font-black tracking-[0.2em]">Rating Layanan</p>
+                <span class="text-2xl animate-bounce">🤩</span>
             </div>
-            <p class="mt-4 text-[9px] text-emerald-400 font-bold uppercase italic tracking-wider">Pelayanan Tuntas</p>
+            <div class="flex flex-col">
+                <h3 class="text-3xl font-black text-white tracking-tighter">
+                    {{ number_format($avgRating, 1) }}<span class="text-xs opacity-50 ml-1">/ 5.0</span>
+                </h3>
+                <div class="w-full bg-emerald-900/50 dark:bg-slate-800 h-2 rounded-full mt-4 overflow-hidden border border-emerald-700/30">
+                    <div class="bg-gradient-to-r from-emerald-400 to-emerald-300 h-full transition-all duration-1000 shadow-[0_0_15px_rgba(52,211,153,0.6)]" style="width: {{ $ratingPercentage }}%"></div>
+                </div>
+            </div>
         </div>
     </div>
 
-    {{-- 3. Baris Visualisasi & Aksi --}}
+    {{-- 3. Baris Visualisasi (Grafik & Tujuan Utama) --}}
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-10 items-stretch">
-        {{-- Grafik Tren Kunjungan --}}
+        {{-- Grafik Analisis Mingguan (Gaya Admin) --}}
         <div class="lg:col-span-2 flex">
-            <div class="w-full bg-white dark:bg-slate-900 p-8 rounded-[3rem] shadow-2xl shadow-emerald-900/5 dark:shadow-black/20 border border-emerald-50 dark:border-slate-800 flex flex-col">
+            <div class="w-full bg-white dark:bg-slate-900 p-8 rounded-[3.5rem] shadow-2xl shadow-emerald-900/5 border border-slate-50 dark:border-slate-800 flex flex-col">
                 <div class="flex justify-between items-center mb-8">
-                    <h3 class="text-emerald-900 dark:text-emerald-400 font-black uppercase text-sm tracking-widest flex items-center gap-2">
-                        <span class="w-8 h-8 bg-emerald-900 dark:bg-emerald-500 text-white rounded-lg flex items-center justify-center text-xs">📈</span>
-                        Analisis Kunjungan Mingguan
+                    <h3 class="text-emerald-900 dark:text-emerald-400 font-black uppercase text-sm tracking-widest flex items-center gap-3">
+                        <span class="w-10 h-10 bg-emerald-100 dark:bg-emerald-900/50 text-emerald-600 rounded-xl flex items-center justify-center shadow-inner">📈</span>
+                        Analisis Mingguan
                     </h3>
                 </div>
                 <div class="flex-grow min-h-[350px]">
@@ -93,125 +104,158 @@
             </div>
         </div>
 
-        {{-- Quick Menu & Logs --}}
+        {{-- Panel Tujuan Utama (Gaya Admin - Donut Chart) --}}
         <div class="flex flex-col gap-6">
-            {{-- Tombol Registrasi Manual --}}
-            <div class="w-full bg-gradient-to-br from-emerald-700 to-emerald-950 p-8 rounded-[3rem] shadow-xl text-white flex flex-col justify-between group overflow-hidden relative border border-emerald-400/20 transition-all hover:scale-[1.02]">
+            {{-- Registrasi Tamu Manual Button --}}
+            <a href="{{ route('petugas.manajemen_tamu.create') }}" class="group block w-full bg-emerald-600 dark:bg-emerald-500 p-8 rounded-[3rem] shadow-xl text-white relative overflow-hidden transition-all hover:scale-[1.02] active:scale-95">
                 <div class="relative z-10">
-                    <h3 class="text-2xl font-black tracking-tighter italic uppercase mb-2 text-emerald-50">Registrasi Manual</h3>
-                    <p class="text-emerald-200/80 text-xs font-medium mb-6">Tamu tidak bisa scan QR? Daftarkan langsung di sini.</p>
-                    <a href="{{ route('petugas.manajemen_tamu.create') }}" class="inline-block px-8 py-4 bg-emerald-500 text-emerald-950 font-black rounded-2xl hover:bg-white active:scale-95 transition-all shadow-xl text-xs uppercase tracking-widest">
-                        Buat Data Tamu →
-                    </a>
+                    <h3 class="text-2xl font-black tracking-tighter uppercase italic mb-1">Registrasi Tamu Manual</h3>
+                    <p class="text-emerald-100/70 text-[10px] font-bold uppercase tracking-widest">Input Data Tamu Baru →</p>
                 </div>
-                <div class="absolute -right-5 -bottom-5 text-9xl opacity-10 group-hover:rotate-12 transition-transform duration-700">📝</div>
-            </div>
+            </a>
 
-            {{-- Audit Log Terakhir --}}
-            <div class="w-full bg-white dark:bg-slate-900 p-8 rounded-[3rem] shadow-2xl border border-emerald-50 dark:border-slate-800 flex-grow">
-                <h3 class="text-emerald-900 dark:text-emerald-400 font-black uppercase text-sm tracking-widest mb-6 flex items-center gap-2">
-                    <span class="w-8 h-8 bg-emerald-50 dark:bg-slate-800 text-emerald-600 rounded-lg flex items-center justify-center text-xs">📜</span>
-                    Log Aktivitas Anda
+            {{-- Card Tujuan Utama (Menggantikan Log Aktivitas seperti di Admin) --}}
+            <div class="w-full bg-white dark:bg-slate-900 p-8 rounded-[3.5rem] shadow-2xl border border-slate-50 dark:border-slate-800 flex-grow">
+                <h3 class="text-emerald-900 dark:text-emerald-400 font-black uppercase text-sm tracking-widest mb-6 flex items-center gap-3">
+                    <span class="w-10 h-10 bg-emerald-100 dark:bg-emerald-900/50 text-emerald-600 rounded-xl flex items-center justify-center shadow-inner">🎯</span>
+                    Tujuan Utama
                 </h3>
-                <div class="space-y-4 overflow-y-auto max-h-[300px] pr-2">
-                    @forelse($logs ?? [] as $log)
-                    <div class="flex items-start gap-4 p-4 rounded-[1.5rem] hover:bg-emerald-50 dark:hover:bg-slate-800/50 transition-colors border border-transparent hover:border-emerald-100 dark:hover:border-slate-700">
-                        <div class="w-2 h-2 mt-2 rounded-full bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]"></div>
-                        <div class="flex-grow">
-                            <p class="text-xs font-bold text-emerald-900 dark:text-slate-300 leading-tight mb-1">{{ $log->aktivitas }}</p>
-                            <span class="text-[10px] text-emerald-600/50 dark:text-slate-400 font-black uppercase tracking-tighter">{{ $log->created_at->diffForHumans() }}</span>
+                
+                <div class="relative flex justify-center items-center mb-6">
+                    <canvas id="tujuanChart" width="200" height="200"></canvas>
+                </div>
+
+                <div class="space-y-4">
+                    {{-- Progres Bar Statis (Bisa dikoneksikan ke data dinamis nantinya) --}}
+                    <div>
+                        <div class="flex justify-between text-[10px] font-black uppercase text-slate-500 mb-1">
+                            <span>Konsultasi LPSE</span>
+                            <span class="text-emerald-600">65%</span>
+                        </div>
+                        <div class="h-1.5 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+                            <div class="h-full bg-emerald-500 rounded-full" style="width: 65%"></div>
                         </div>
                     </div>
-                    @empty
-                    <div class="flex flex-col items-center justify-center py-10 opacity-50">
-                        <div class="text-4xl mb-2">🍃</div>
-                        <p class="text-emerald-900 dark:text-slate-400 text-xs font-bold uppercase">Belum ada aktivitas</p>
+                    <div>
+                        <div class="flex justify-between text-[10px] font-black uppercase text-slate-500 mb-1">
+                            <span>Verifikasi Berkas</span>
+                            <span class="text-emerald-600">20%</span>
+                        </div>
+                        <div class="h-1.5 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+                            <div class="h-full bg-emerald-400 rounded-full" style="width: 20%"></div>
+                        </div>
                     </div>
-                    @endforelse
                 </div>
             </div>
         </div>
     </div>
 
-    {{-- 4. Footer Banner --}}
-    <div class="bg-gradient-to-r from-emerald-950 via-emerald-900 to-emerald-800 rounded-[2.5rem] p-8 text-white shadow-2xl shadow-emerald-900/40 border border-emerald-500/20">
-        <div class="flex flex-col md:flex-row justify-between items-center gap-6 text-center md:text-left">
-            <div class="flex flex-col md:flex-row items-center gap-5">
-                <div class="w-16 h-16 bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl flex items-center justify-center text-3xl shadow-inner">📊</div>
-                <div>
-                    <h4 class="text-xl font-black tracking-tight uppercase italic text-emerald-50">Navigasi Operasional</h4>
-                    <p class="text-emerald-300/80 text-sm font-medium italic">Kelola antrean tamu dan pantau laporan SOWAN secara real-time.</p>
-                </div>
+    {{-- 4. Footer Fast Access --}}
+    <div class="bg-gradient-to-r from-emerald-950 to-emerald-800 rounded-[3rem] p-8 text-white shadow-2xl shadow-emerald-900/30 border border-emerald-500/20">
+        <div class="flex flex-col md:flex-row justify-between items-center gap-8 px-4">
+            <div class="text-center md:text-left">
+                <h4 class="text-2xl font-black tracking-tight uppercase italic text-emerald-50">Navigasi Operasional</h4>
+                <p class="text-emerald-300/70 text-xs font-medium italic">Manajemen antrean tamu LPSE Karawang SOWAN V2.</p>
             </div>
             <div class="flex flex-wrap justify-center gap-4">
-                <a href="{{ route('petugas.manajemen_tamu.index') }}" class="px-8 py-4 bg-white text-emerald-900 font-black rounded-2xl hover:scale-105 active:scale-95 transition-all shadow-xl text-xs uppercase tracking-wider">
-                    Monitor Tamu 👥
+                <a href="{{ route('petugas.manajemen_tamu.index') }}" class="px-8 py-4 bg-white text-emerald-900 font-black rounded-2xl hover:scale-105 active:scale-95 transition-all text-xs uppercase tracking-widest shadow-lg">
+                    Manajemen Tamu 👥
                 </a>
-                <a href="{{ route('petugas.laporan.index') }}" class="px-8 py-4 bg-emerald-400 text-emerald-950 font-black rounded-2xl hover:scale-105 active:scale-95 transition-all shadow-xl text-xs uppercase tracking-wider">
-                    Lihat Laporan 📂
+                <a href="{{ route('petugas.laporan.index') }}" class="px-8 py-4 bg-emerald-400 text-emerald-950 font-black rounded-2xl hover:scale-105 active:scale-95 transition-all text-xs uppercase tracking-widest shadow-lg">
+                    Cetak Laporan 📂
                 </a>
             </div>
         </div>
     </div>
 </div>
 
-{{-- Scripts Visualisasi --}}
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
     // Realtime Clock
     setInterval(() => {
-        const now = new Date();
-        const options = { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' };
-        document.getElementById('realtime-clock').textContent = now.toLocaleDateString('id-ID', options) + ' WIB';
+        const clockElement = document.getElementById('realtime-clock');
+        if(clockElement) {
+            clockElement.textContent = new Date().toLocaleDateString('id-ID', { 
+                day: '2-digit', month: 'short', year: 'numeric', 
+                hour: '2-digit', minute: '2-digit', second: '2-digit' 
+            }) + ' WIB';
+        }
     }, 1000);
 
-    // Deteksi Mode Gelap & Chart Config
-    const isDark = document.documentElement.classList.contains('dark');
-    const chartTextColor = isDark ? '#94a3b8' : '#064e3b';
-    const gridColor = isDark ? '#1e293b' : '#ecfdf5';
+    document.addEventListener('DOMContentLoaded', function() {
+        const isDark = document.documentElement.classList.contains('dark');
+        
+        // --- 1. GRAFIK ANALISIS MINGGUAN (Line Chart) ---
+        const gCtx = document.getElementById('visitorChart').getContext('2d');
+        const labels = {!! json_encode($chartLabels) !!};
+        const dataSet = {!! json_encode($chartData) !!};
 
-    Chart.defaults.font.family = "'Plus Jakarta Sans', sans-serif";
-    Chart.defaults.color = chartTextColor;
+        const gGrad = gCtx.createLinearGradient(0, 0, 0, 400);
+        gGrad.addColorStop(0, 'rgba(16, 185, 129, 0.4)');
+        gGrad.addColorStop(1, 'rgba(16, 185, 129, 0)');
 
-    const gCtx = document.getElementById('visitorChart').getContext('2d');
-    const gGrad = gCtx.createLinearGradient(0, 0, 0, 350);
-    gGrad.addColorStop(0, isDark ? 'rgba(52, 211, 153, 0.2)' : 'rgba(16, 185, 129, 0.3)');
-    gGrad.addColorStop(1, 'rgba(16, 185, 129, 0)');
-
-    new Chart(gCtx, {
-        type: 'line',
-        data: {
-            labels: {!! json_encode($chartLabels ?? ['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min']) !!},
-            datasets: [{
-                label: 'Kunjungan',
-                data: {!! json_encode($chartData ?? [0, 0, 0, 0, 0, 0, 0]) !!},
-                borderColor: '#10b981',
-                backgroundColor: gGrad,
-                fill: true,
-                tension: 0.4,
-                borderWidth: 6,
-                pointBackgroundColor: isDark ? '#064e3b' : '#fff',
-                pointBorderColor: '#10b981',
-                pointBorderWidth: 4,
-                pointRadius: 6,
-                pointHoverRadius: 8
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: { legend: { display: false } },
-            scales: {
-                y: { 
-                    grid: { color: gridColor }, 
-                    ticks: { font: { weight: 'bold' }, beginAtZero: true } 
-                },
-                x: { 
-                    grid: { display: false }, 
-                    ticks: { font: { weight: 'bold' } } 
+        new Chart(gCtx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Jumlah Tamu',
+                    data: dataSet,
+                    borderColor: '#10b981',
+                    backgroundColor: gGrad,
+                    fill: true,
+                    tension: 0.4,
+                    borderWidth: 6,
+                    pointBackgroundColor: '#fff',
+                    pointBorderColor: '#10b981',
+                    pointBorderWidth: 4,
+                    pointRadius: 6,
+                    pointHoverRadius: 10,
+                    pointHoverBorderWidth: 5
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        grid: { color: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)' },
+                        ticks: { color: '#94a3b8', font: { weight: 'bold' } }
+                    },
+                    x: {
+                        grid: { display: false },
+                        ticks: { color: '#94a3b8', font: { weight: 'bold' } }
+                    }
                 }
             }
-        }
+        });
+
+        // --- 2. GRAFIK TUJUAN UTAMA (Donut Chart - Persis Admin) ---
+        const tCtx = document.getElementById('tujuanChart').getContext('2d');
+        new Chart(tCtx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Konsultasi', 'Verifikasi', 'Lainnya'],
+                datasets: [{
+                    data: [65, 20, 15],
+                    backgroundColor: ['#059669', '#34d399', '#ecfdf5'],
+                    borderWidth: 0,
+                    hoverOffset: 10
+                }]
+            },
+            options: {
+                cutout: '80%',
+                responsive: false,
+                plugins: { legend: { display: false } }
+            }
+        });
     });
 </script>
+
+<style>
+    canvas { filter: drop-shadow(0 15px 25px rgba(16, 185, 129, 0.15)); }
+    .shadow-inner { box-shadow: inset 0 2px 4px 0 rgba(0, 0, 0, 0.06); }
+</style>
 @endsection

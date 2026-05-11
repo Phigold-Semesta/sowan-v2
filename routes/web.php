@@ -154,16 +154,12 @@ Route::middleware('auth')->group(function () {
 
 
 
+
+
     // --- GRUP AKSES: PETUGAS 📋 ---
-
-    Route::middleware('role:petugas')->prefix('petugas')->name('petugas.')->group(function () {
-
-        Route::get('/dashboard', function () {
-
-            return view('petugas.dashboard');
-
-        })->name('dashboard');
-
+Route::middleware('role:petugas')->prefix('petugas')->name('petugas.')->group(function () {
+    // Diarahkan ke PetugasController agar variabel $logs dikirim ke view
+    Route::get('/dashboard', [PetugasController::class, 'dashboard'])->name('dashboard');
 
 
         // Manajemen Tamu (Resource)
