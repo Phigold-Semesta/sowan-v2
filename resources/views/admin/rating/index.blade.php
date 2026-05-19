@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Monitoring Rating')
+@section('title', 'Rating & Saran Layanan - SOWAN V2')
 
 @section('content')
 <div class="space-y-8 animate__animated animate__fadeIn">
@@ -8,153 +8,214 @@
     <div class="flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div>
             <h1 class="text-3xl font-black text-slate-800 dark:text-white tracking-tighter uppercase italic">
-                Rating <span class="text-[#008f5d] dark:text-emerald-400">& Saran</span>
+                ⭐ Monitoring Rating <span class="text-[#046A38] dark:text-emerald-400">& Saran Layanan</span>
             </h1>
             <div class="flex items-center gap-2 mt-1">
-                <span class="h-1 w-8 bg-[#008f5d] dark:bg-emerald-500 rounded-full"></span>
+                <span class="h-1 w-8 bg-[#046A38] dark:bg-emerald-500 rounded-full"></span>
                 <p class="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em]">
-                    Pantau kepuasan tamu dan kualitas layanan SOWAN
+                    Pantau tingkat kepuasan, ulasan, serta saran dari tamu LPSE Karawang secara real-time
                 </p>
             </div>
+        </div>
+        <div class="shrink-0">
+            <span class="inline-block bg-white dark:bg-slate-800 text-[#046A38] dark:text-emerald-400 font-black text-xs uppercase tracking-widest px-4 py-2.5 rounded-2xl shadow-sm border border-emerald-50 dark:border-slate-700">
+                SOWAN V2 Premium UI
+            </span>
         </div>
     </div>
 
     {{-- Filter & Search Section --}}
     <div class="bg-white dark:bg-slate-800 p-5 rounded-[2.5rem] border border-emerald-50 dark:border-slate-700 shadow-sm transition-colors duration-300">
-        <form action="{{ route('admin.rating.index') }}" method="GET" class="flex flex-col lg:flex-row gap-4">
+        <form action="{{ route('petugas.rating.index') }}" method="GET" class="flex flex-col lg:flex-row gap-4">
             {{-- Search Input --}}
             <div class="flex-1 relative group">
-                <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 group-focus-within:text-[#008f5d] dark:group-focus-within:text-emerald-400 transition-colors">
+                <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 group-focus-within:text-[#046A38] dark:group-focus-within:text-emerald-400 transition-colors">
                     <i class="fas fa-search text-sm"></i>
                 </div>
                 <input type="text" name="search" value="{{ request('search') }}"
-                       placeholder="Cari komentar atau nama tamu..." 
-                       class="w-full pl-11 pr-4 py-3.5 bg-slate-50 dark:bg-slate-900/50 border-0 rounded-2xl text-xs font-bold focus:ring-2 focus:ring-[#008f5d]/20 dark:focus:ring-emerald-500/20 dark:text-slate-200 transition-all placeholder:text-slate-400 dark:placeholder:text-slate-600">
+                       placeholder="Cari nama tamu atau saran..." 
+                       class="w-full pl-11 pr-4 py-3.5 bg-slate-50 dark:bg-slate-900/50 border-0 rounded-2xl text-xs font-bold focus:ring-2 focus:ring-[#046A38]/20 dark:focus:ring-emerald-500/20 dark:text-slate-200 transition-all placeholder:text-slate-400 dark:placeholder:text-slate-600">
             </div>
 
             <div class="flex flex-wrap md:flex-nowrap gap-3">
                 {{-- Skor Filter --}}
-                <div class="w-full md:w-48 relative">
+                <div class="w-full md:w-56 relative">
                     <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400">
                         <i class="fas fa-star text-xs"></i>
                     </div>
-                    <select name="skor" onchange="this.form.submit()"
-                            class="w-full pl-10 pr-10 py-3.5 bg-slate-50 dark:bg-slate-900/50 border-0 rounded-2xl text-[10px] font-black uppercase tracking-widest focus:ring-2 focus:ring-[#008f5d]/20 dark:text-slate-200 appearance-none cursor-pointer">
-                        <option value="">Semua Skor</option>
-                        @for($i=5; $i>=1; $i--)
-                            <option value="{{ $i }}" {{ request('skor') == $i ? 'selected' : '' }}>{{ $i }} Bintang</option>
-                        @endfor
+                    <select name="skor_rating" onchange="this.form.submit()"
+                            class="w-full pl-10 pr-10 py-3.5 bg-slate-50 dark:bg-slate-900/50 border-0 rounded-2xl text-[10px] font-black uppercase tracking-widest focus:ring-2 focus:ring-[#046A38]/20 dark:text-slate-200 appearance-none cursor-pointer">
+                        <option value="">--- Semua Rating Bintang ---</option>
+                        <option value="5" {{ request('skor_rating') == '5' ? 'selected' : '' }}>⭐⭐⭐⭐⭐ (5 Bintang)</option>
+                        <option value="4" {{ request('skor_rating') == '4' ? 'selected' : '' }}>⭐⭐⭐⭐ (4 Bintang)</option>
+                        <option value="3" {{ request('skor_rating') == '3' ? 'selected' : '' }}>⭐⭐⭐ (3 Bintang)</option>
+                        <option value="2" {{ request('skor_rating') == '2' ? 'selected' : '' }}>⭐⭐ (2 Bintang)</option>
+                        <option value="1" {{ request('skor_rating') == '1' ? 'selected' : '' }}>⭐ (1 Bintang)</option>
                     </select>
                     <div class="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none text-slate-400">
                         <i class="fas fa-chevron-down text-[10px]"></i>
                     </div>
                 </div>
 
-                {{-- Per Page Filter --}}
-                <div class="w-full md:w-36 relative">
-                    <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400">
-                        <i class="fas fa-eye text-xs"></i>
-                    </div>
-                    <select name="per_page" onchange="this.form.submit()"
-                            class="w-full pl-10 pr-10 py-3.5 bg-slate-50 dark:bg-slate-900/50 border-0 rounded-2xl text-[10px] font-black uppercase tracking-widest focus:ring-2 focus:ring-[#008f5d]/20 dark:text-slate-200 appearance-none cursor-pointer">
-                        <option value="5" {{ request('per_page') == '5' ? 'selected' : '' }}>5 Baris</option>
-                        <option value="10" {{ request('per_page') == '10' || !request('per_page') ? 'selected' : '' }}>10 Baris</option>
-                        <option value="25" {{ request('per_page') == '25' ? 'selected' : '' }}>25 Baris</option>
-                        <option value="all" {{ request('per_page') == 'all' ? 'selected' : '' }}>Semua</option>
-                    </select>
-                    <div class="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none text-slate-400">
-                        <i class="fas fa-chevron-down text-[10px]"></i>
-                    </div>
+                {{-- Action Buttons --}}
+                <div class="flex gap-2 w-full md:w-auto">
+                    <button type="submit" class="px-6 py-3.5 bg-[#046A38] text-white text-[10px] font-black uppercase tracking-widest rounded-2xl hover:bg-[#03532B] transition-all duration-300 shadow-sm active:scale-95 flex items-center gap-2">
+                        <i class="fas fa-filter text-xs"></i> Filter
+                    </button>
+                    
+                    @if(request()->filled('search') || request()->filled('skor_rating'))
+                        <a href="{{ route('petugas.rating.index') }}" class="px-4 py-3.5 bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 rounded-2xl hover:bg-slate-200 dark:hover:bg-slate-650 transition-all flex items-center justify-center" title="Reset Filter">
+                            <i class="fas fa-undo text-xs"></i>
+                        </a>
+                    @endif
                 </div>
-
-                <button type="submit" class="px-6 py-3.5 bg-emerald-100 dark:bg-emerald-900/30 text-[#008f5d] dark:text-emerald-400 text-[10px] font-black uppercase tracking-widest rounded-2xl hover:bg-[#008f5d] hover:text-white dark:hover:bg-emerald-600 transition-all duration-300 shadow-sm active:scale-95">
-                    Filter
-                </button>
             </div>
         </form>
     </div>
 
-    {{-- Table Section --}}
+    {{-- Data Section --}}
     <div class="bg-white dark:bg-slate-800 rounded-[2.5rem] border border-emerald-50 dark:border-slate-700 shadow-xl overflow-hidden transition-colors duration-300">
         <div class="overflow-x-auto custom-scrollbar">
             <table class="w-full text-left border-collapse">
                 <thead>
                     <tr class="bg-slate-50/80 dark:bg-slate-900/50 border-b border-emerald-50 dark:border-slate-700 text-nowrap">
                         <th class="px-8 py-6 text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em]">Profil Tamu</th>
-                        <th class="px-6 py-6 text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em]">Layanan</th>
+                        <th class="px-6 py-6 text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em]">Layanan Yang Diakses</th>
                         <th class="px-6 py-6 text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em]">Penilaian</th>
-                        <th class="px-6 py-6 text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em]">Status</th>
+                        <th class="px-6 py-6 text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em]">Waktu & Status</th>
                         <th class="px-8 py-6 text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em] text-center">Aksi</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-emerald-50/50 dark:divide-slate-700/50">
                     @forelse($ratings as $rating)
                     <tr class="hover:bg-emerald-50/40 dark:hover:bg-slate-900/40 transition-all duration-200 group">
+                        {{-- Profil Tamu --}}
                         <td class="px-8 py-5">
                             <div class="flex items-center gap-4">
                                 <div class="relative shrink-0">
-                                    <div class="p-0.5 rounded-[1.2rem] bg-gradient-to-tr from-emerald-100 to-white dark:from-emerald-900 dark:to-slate-800 shadow-sm group-hover:from-emerald-400 group-hover:to-emerald-200 transition-all duration-500">
-                                        <img src="https://ui-avatars.com/api/?name={{ urlencode($rating->kunjungan->tamu->nama_tamu) }}&background=008f5d&color=fff&bold=true" 
+                                    <div class="p-0.5 rounded-[1.2rem] bg-gradient-to-tr from-emerald-100 to-white dark:from-emerald-900 dark:to-slate-800 shadow-sm group-hover:from-[#046A38] group-hover:to-emerald-400 transition-all duration-500">
+                                        <img src="https://ui-avatars.com/api/?name={{ urlencode($rating->kunjungan->tamu->nama_tamu ?? 'T') }}&background=046A38&color=fff&bold=true" 
                                              class="w-12 h-12 rounded-[1.1rem] border-2 border-white dark:border-slate-700 object-cover group-hover:scale-105 transition-transform">
                                     </div>
                                 </div>
                                 <div class="min-w-0">
-                                    <p class="text-sm font-black text-slate-800 dark:text-slate-200 uppercase tracking-tight truncate group-hover:text-[#008f5d] dark:group-hover:text-emerald-400 transition-colors">
-                                        {{ $rating->kunjungan->tamu->nama_tamu }}
+                                    <p class="text-sm font-black text-slate-800 dark:text-slate-200 uppercase tracking-tight truncate group-hover:text-[#046A38] dark:group-hover:text-emerald-400 transition-colors">
+                                        {{ $rating->kunjungan->tamu->nama_tamu ?? 'Anonim' }}
                                     </p>
-                                    <p class="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
-                                        {{ $rating->kunjungan->tamu->instansi ?? 'Umum' }}
+                                    <p class="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider truncate">
+                                        📩 {{ $rating->kunjungan->gmail ?? '-' }}
                                     </p>
+                                    <span class="inline-block mt-1 text-[9px] font-bold bg-slate-100 dark:bg-slate-900 text-slate-600 dark:text-slate-400 px-2 py-0.5 rounded border border-slate-200/50 dark:border-slate-800">
+                                        🏛️ {{ $rating->kunjungan->tamu->nama_instansi ?? '-' }}
+                                    </span>
                                 </div>
                             </div>
                         </td>
+
+                        {{-- Layanan --}}
                         <td class="px-6 py-5">
-                            <span class="text-[10px] font-black text-[#008f5d] dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/20 px-3 py-1.5 rounded-xl border border-emerald-100 dark:border-emerald-800/30 text-nowrap">
-                                {{ $rating->kunjungan->layanan->nama_layanan }}
+                            <span class="text-[10px] font-black text-[#046A38] dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/20 px-3 py-1.5 rounded-xl border border-emerald-100 dark:border-emerald-800/30 text-nowrap">
+                                💼 {{ $rating->kunjungan->layanan->nama_layanan ?? 'Layanan Umum' }}
                             </span>
                         </td>
+
+                        {{-- Penilaian Star --}}
                         <td class="px-6 py-5">
                             <div class="flex items-center gap-1 text-amber-400">
-                                @for($i=1; $i<=5; $i++)
+                                @for($i = 1; $i <= 5; $i++)
                                     <i class="{{ $i <= $rating->skor ? 'fas' : 'far' }} fa-star text-xs"></i>
                                 @endfor
-                                <span class="ml-2 text-xs font-black text-slate-700 dark:text-slate-300">({{ $rating->skor }})</span>
+                                <span class="ml-2 text-xs font-black text-slate-700 dark:text-slate-300">({{ $rating->skor }}/5)</span>
                             </div>
                         </td>
+
+                        {{-- Waktu & Status Tanggapan --}}
                         <td class="px-6 py-5">
-                            @if($rating->tanggapan)
-                                <span class="inline-flex items-center text-[9px] font-black uppercase tracking-widest px-3 py-1.5 rounded-xl border bg-emerald-50 text-emerald-600 border-emerald-100 dark:bg-emerald-900/20 dark:text-emerald-400 dark:border-emerald-800/30">
-                                    <i class="fas fa-check-circle mr-1.5"></i> Sudah Ditanggapi
-                                </span>
-                            @else
-                                <span class="inline-flex items-center text-[9px] font-black uppercase tracking-widest px-3 py-1.5 rounded-xl border bg-amber-50 text-amber-600 border-amber-100 dark:bg-amber-900/20 dark:text-amber-400 dark:border-amber-800/30">
-                                    <i class="fas fa-clock mr-1.5 animate-pulse"></i> Perlu Tanggapan
-                                </span>
-                            @endif
+                            <div class="space-y-1.5">
+                                <p class="text-[10px] font-bold text-slate-400 dark:text-slate-500">
+                                    <i class="far fa-calendar-alt mr-1"></i> {{ \Carbon\Carbon::parse($rating->waktu_rating)->translatedFormat('d M Y, H:i') }} WIB
+                                </p>
+                                <div>
+                                    @if($rating->tanggapan)
+                                        <span class="inline-flex items-center text-[9px] font-black uppercase tracking-widest px-2.5 py-1 rounded-xl border bg-emerald-50 text-emerald-600 border-emerald-100 dark:bg-emerald-900/20 dark:text-emerald-400 dark:border-emerald-800/30">
+                                            <i class="fas fa-check-circle mr-1"></i> Ditanggapi
+                                        </span>
+                                    @else
+                                        <span class="inline-flex items-center text-[9px] font-black uppercase tracking-widest px-2.5 py-1 rounded-xl border bg-amber-50 text-amber-600 border-amber-100 dark:bg-amber-900/20 dark:text-amber-400 dark:border-amber-800/30">
+                                            <i class="fas fa-clock mr-1 animate-pulse"></i> Pending
+                                        </span>
+                                    @endif
+                                </div>
+                            </div>
                         </td>
+
+                        {{-- Aksi --}}
                         <td class="px-8 py-5 text-nowrap">
                             <div class="flex justify-center items-center gap-2">
-                                {{-- Tombol Detail --}}
-                                <a href="{{ route('admin.rating.show', $rating->id_rating) }}" 
-                                   title="Lihat Detail & Beri Tanggapan"
-                                   class="w-10 h-10 flex items-center justify-center rounded-2xl bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 hover:bg-blue-600 hover:text-white dark:hover:bg-blue-500 hover:shadow-[0_5px_15px_rgba(37,99,235,0.3)] transition-all active:scale-90">
-                                    <i class="fas fa-eye text-xs"></i>
-                                </a>
-
-                                {{-- Tombol Hapus --}}
-                                <form id="delete-form-{{ $rating->id_rating }}" action="{{ route('admin.rating.destroy', $rating->id_rating) }}" method="POST" class="hidden">
-                                    @csrf
-                                    @method('DELETE')
-                                </form>
+                                {{-- Tombol Detail / Tanggapan (Membuka Modal Tailwind Custom) --}}
                                 <button type="button" 
-                                        onclick="confirmDelete('{{ $rating->id_rating }}', '{{ $rating->kunjungan->tamu->nama_tamu }}')"
-                                        class="w-10 h-10 flex items-center justify-center rounded-2xl bg-rose-50 dark:bg-rose-900/20 text-rose-600 dark:text-rose-400 hover:bg-rose-600 hover:text-white transition-all active:scale-90 shadow-sm"
-                                        title="Hapus Rating">
-                                    <i class="fas fa-trash-alt text-xs"></i>
+                                        onclick="openModalRating('{{ $rating->id_rating ?? $loop->index }}')"
+                                        title="Lihat Ulasan & Beri Tanggapan"
+                                        class="w-10 h-10 flex items-center justify-center rounded-2xl bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 hover:bg-blue-600 hover:text-white dark:hover:bg-blue-500 hover:shadow-[0_5px_15px_rgba(37,99,235,0.3)] transition-all active:scale-90">
+                                    <i class="fas fa-comment-dots text-xs"></i>
                                 </button>
                             </div>
                         </td>
                     </tr>
+
+                    {{-- MODAL INTERAKTIF (DI-RENDER DI DALAM LOOP AGAR SESUAI DATA RATING) --}}
+                    <div id="modalDetailRating-{{ $rating->id_rating ?? $loop->index }}" class="fixed inset-0 z-55 hidden overflow-y-auto" aria-hidden="true">
+                        {{-- Backdrop --}}
+                        <div class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm transition-opacity" onclick="closeModalRating('{{ $rating->id_rating ?? $loop->index }}')"></div>
+                        
+                        {{-- Modal Content --}}
+                        <div class="flex min-h-full items-center justify-center p-4 text-center">
+                            <div class="relative w-full max-w-lg transform overflow-hidden rounded-[2.5rem] bg-white dark:bg-slate-800 text-left align-middle shadow-2xl transition-all border border-emerald-50 dark:border-slate-700 animate__animated animate__zoomIn animate__faster">
+                                {{-- Header --}}
+                                <div class="px-8 py-6 bg-gradient-to-r from-[#046A38] to-[#023e20] text-white flex items-center justify-between">
+                                    <h3 class="text-md font-black uppercase tracking-tight italic flex items-center gap-2">
+                                        <i class="fas fa-star text-amber-400"></i> Detail Kritik & Saran
+                                    </h3>
+                                    <button type="button" onclick="closeModalRating('{{ $rating->id_rating ?? $loop->index }}')" class="text-white/70 hover:text-white transition-colors">
+                                        <i class="fas fa-times text-lg"></i>
+                                    </button>
+                                </div>
+
+                                {{-- Body --}}
+                                <div class="p-8 space-y-6">
+                                    <div class="p-4 bg-slate-50 dark:bg-slate-900 rounded-2xl border-l-4 border-[#FFF200]">
+                                        <label class="block text-slate-400 dark:text-slate-500 text-[10px] font-black uppercase tracking-widest mb-1">Kritik, Ulasan, atau Saran Tamu:</label>
+                                        <p class="text-slate-700 dark:text-slate-300 text-xs font-bold italic leading-relaxed">
+                                            "{{ $rating->saran ?? 'Tamu tidak memberikan ulasan teks tertulis (Hanya memberikan rating bintang).' }}"
+                                        </p>
+                                    </div>
+
+                                    {{-- Form Tanggapan Petugas --}}
+                                    <form action="{{ route('petugas.rating.tanggapan', $rating->id_rating ?? 1) }}" method="POST" class="space-y-4">
+                                        @csrf
+                                        <div class="space-y-2">
+                                            <label class="block text-slate-700 dark:text-slate-300 text-xs font-black uppercase tracking-tight">Kirim Tanggapan / Tindak Lanjut Petugas:</label>
+                                            <textarea name="tanggapan" rows="3" required placeholder="Tulis tanggapan atau konfirmasi perbaikan dari LPSE..."
+                                                      class="w-full p-4 bg-slate-50 dark:bg-slate-900 border-0 rounded-2xl text-xs font-bold focus:ring-2 focus:ring-[#046A38]/20 dark:text-slate-200 placeholder:text-slate-400 dark:placeholder:text-slate-600 leading-relaxed">{{ $rating->tanggapan ?? '' }}</textarea>
+                                            <p class="text-[9px] text-slate-400 dark:text-slate-500 font-medium">*Tanggapan ini bersifat opsional untuk memberikan feedback positif kepada pelapor/tamu jika diperlukan.</p>
+                                        </div>
+
+                                        {{-- Actions Footer --}}
+                                        <div class="flex justify-end gap-2 pt-2">
+                                            <button type="button" onclick="closeModalRating('{{ $rating->id_rating ?? $loop->index }}')"
+                                                    class="px-6 py-3 bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-300 text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-slate-200 transition-all">
+                                                Tutup
+                                            </button>
+                                            <button type="submit" 
+                                                    class="px-6 py-3 bg-[#046A38] text-white text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-[#03532B] shadow-lg shadow-emerald-900/20 transition-all flex items-center gap-2">
+                                                <i class="fas fa-paper-plane"></i> Simpan Tanggapan
+                                            </button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                     @empty
                     <tr>
                         <td colspan="5" class="px-8 py-24 text-center">
@@ -177,7 +238,7 @@
         <div class="px-10 py-8 bg-slate-50/50 dark:bg-slate-900/30 border-t border-emerald-50 dark:border-slate-700">
             <div class="flex flex-col md:flex-row justify-between items-center gap-6">
                 <div class="flex items-center gap-3">
-                    <div class="w-2 h-2 rounded-full bg-[#008f5d] dark:bg-emerald-500"></div>
+                    <div class="w-2 h-2 rounded-full bg-[#046A38] dark:bg-emerald-500"></div>
                     <p class="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest leading-none">
                         Tampil {{ $ratings->firstItem() ?? 0 }} - {{ $ratings->lastItem() ?? 0 }} dari {{ $ratings->total() }} Penilaian
                     </p>
@@ -191,47 +252,31 @@
     </div>
 </div>
 
-{{-- Script SweetAlert2 --}}
+{{-- Script SweetAlert2 & Modal Handler --}}
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
-    function confirmDelete(id, tamuName) {
-        const isDark = document.documentElement.classList.contains('dark');
-        
-        Swal.fire({
-            title: '<span class="text-2xl font-black italic uppercase tracking-tighter ' + (isDark ? 'text-white' : 'text-slate-800') + '">Hapus Rating?</span>',
-            html: `
-                <div class="mt-4">
-                    <p class="text-xs font-bold text-slate-500 uppercase tracking-widest leading-relaxed">
-                        Anda akan menghapus data penilaian dari:<br>
-                        <span class="text-rose-500 font-black">${tamuName}</span><br>
-                        <span class="text-[10px] mt-2 block opacity-70">Tindakan ini permanen dan tidak bisa dibatalkan!</span>
-                    </p>
-                </div>
-            `,
-            icon: 'warning',
-            iconColor: '#f43f5e',
-            background: isDark ? '#1e293b' : '#ffffff',
-            showCancelButton: true,
-            confirmButtonText: 'YA, HAPUS DATA',
-            cancelButtonText: 'BATALKAN',
-            reverseButtons: true,
-            buttonsStyling: false,
-            customClass: {
-                popup: 'rounded-[2.5rem] border-none shadow-2xl px-4 py-8',
-                confirmButton: 'ml-3 px-8 py-3 bg-[#008f5d] text-white text-xs font-black uppercase tracking-widest rounded-full hover:bg-emerald-700 shadow-lg shadow-emerald-500/20 transition-all active:scale-95',
-                cancelButton: 'px-8 py-3 bg-slate-200 dark:bg-slate-700 text-slate-500 dark:text-slate-300 text-xs font-black uppercase tracking-widest rounded-full hover:bg-slate-300 dark:hover:bg-slate-600 transition-all active:scale-95'
-            }
-        }).then((result) => {
-            if (result.isConfirmed) {
-                document.getElementById('delete-form-' + id).submit();
-            }
-        });
+    // Fungsi Manajemen Modal Tailwind Manual (Bebas dari dependensi Bootstrap)
+    function openModalRating(id) {
+        const modal = document.getElementById('modalDetailRating-' + id);
+        if(modal) {
+            modal.classList.remove('hidden');
+            document.body.style.overflow = 'hidden'; // Lock scroll body belakang
+        }
     }
 
+    function closeModalRating(id) {
+        const modal = document.getElementById('modalDetailRating-' + id);
+        if(modal) {
+            modal.classList.add('hidden');
+            document.body.style.overflow = ''; // Restore scroll body
+        }
+    }
+
+    // Flash Alert Notifikasi menggunakan SweetAlert2 dengan style Premium SOWAN V2
     @if(session('success'))
         Swal.fire({
             icon: 'success',
-            iconColor: '#008f5d',
+            iconColor: '#046A38',
             title: '<span class="text-2xl font-black italic uppercase tracking-tighter ' + (document.documentElement.classList.contains('dark') ? 'text-white' : 'text-slate-800') + '">Berhasil!</span>',
             text: "{{ session('success') }}",
             background: document.documentElement.classList.contains('dark') ? '#1e293b' : '#ffffff',
@@ -263,23 +308,25 @@
 </script>
 
 <style>
+    /* Custom Scrollbar Styling */
     .custom-scrollbar::-webkit-scrollbar { height: 6px; width: 6px; }
     .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
-    .custom-scrollbar::-webkit-scrollbar-thumb { background: #008f5d33; border-radius: 10px; transition: all 0.3s; }
-    .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #008f5d; }
+    .custom-scrollbar::-webkit-scrollbar-thumb { background: #046A3833; border-radius: 10px; transition: all 0.3s; }
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #046A38; }
 
     .dark .custom-scrollbar::-webkit-scrollbar-track { background: rgba(15, 23, 42, 0.5); }
     .dark .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(16, 185, 129, 0.2); }
 
+    /* Custom Tailwind Pagination Adjustments */
     .custom-pagination nav > div:first-child { display: none; }
     .custom-pagination nav span[aria-current="page"] > span {
-        background: #008f5d !important;
-        border-color: #008f5d !important;
+        background: #046A38 !important;
+        border-color: #046A38 !important;
         border-radius: 14px;
         font-weight: 800;
         font-size: 10px;
         color: white !important;
-        box-shadow: 0 4px 12px rgba(0,143,93,0.2);
+        box-shadow: 0 4px 12px rgba(4,106,56,0.2);
     }
     .custom-pagination nav a, .custom-pagination nav span {
         border-radius: 14px;

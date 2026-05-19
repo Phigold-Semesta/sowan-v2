@@ -178,30 +178,21 @@ Route::middleware('role:petugas')->prefix('petugas')->name('petugas.')->group(fu
 
 
 
-        /**
-
+     /**
          * PENYEMPURNAAN AKTOR PETUGAS
-
          */
-
         Route::prefix('laporan')->name('laporan.')->group(function() {
-
-            Route::get('/', [PetugasController::class, 'laporan_index'])->name('index');
-
+            // 🔥 PERBAIKAN: Ubah 'laporan_index' menjadi 'laporanIndex'
+            Route::get('/', [PetugasController::class, 'laporanIndex'])->name('index');
         });
-
-
 
         Route::prefix('rating')->name('rating.')->group(function() {
-
-            Route::get('/', [PetugasController::class, 'rating_index'])->name('index');
-
-            // Menanggapi Kritik & Saran (Sesuai Use Case)
-
-            Route::post('/{id}/tanggapan', [PetugasController::class, 'rating_tanggapan'])->name('tanggapan');
-
+            // 🔥 PERBAIKAN: Ubah 'rating_index' menjadi 'ratingIndex'
+            Route::get('/', [PetugasController::class, 'ratingIndex'])->name('index');
+            
+            // 🔥 PERBAIKAN: Ubah 'rating_tanggapan' menjadi 'ratingTanggapan' (Sesuai Use Case)
+            Route::post('/{id}/tanggapan', [PetugasController::class, 'ratingTanggapan'])->name('tanggapan');
         });
-
     });
 
 
