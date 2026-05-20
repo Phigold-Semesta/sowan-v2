@@ -18,7 +18,6 @@ class KunjunganExport implements FromCollection, WithHeadings, WithStyles, WithC
     protected $data;
     protected $title;
 
-    // Tambahkan parameter $title agar judul Excel dinamis sesuai filter
     public function __construct($data, $title = 'LAPORAN KUNJUNGAN TAMU')
     {
         $this->data = $data;
@@ -26,11 +25,12 @@ class KunjunganExport implements FromCollection, WithHeadings, WithStyles, WithC
     }
 
     /**
-     * Mengambil data koleksi
+     * Mengambil data koleksi dengan memastikan tipe data adalah Collection
      */
     public function collection()
     {
-        return $this->data->map(function($row, $index) {
+        // Memastikan $this->data adalah koleksi agar method map() tersedia
+        return collect($this->data)->map(function($row, $index) {
             return [
                 $index + 1,
                 $row->waktu_masuk,
@@ -49,11 +49,11 @@ class KunjunganExport implements FromCollection, WithHeadings, WithStyles, WithC
     public function headings(): array
     {
         return [
-            [$this->title . ' - SOWAN V2'],       // Baris 1: Judul Dinamis
-            ['LPSE KABUPATEN KARAWANG'],          // Baris 2: Sub-Judul
-            ['Dicetak pada: ' . now()->format('d F Y H:i')], // Baris 3: Info Waktu Cetak
-            [''],                                 // Baris 4: Spasi
-            ['No', 'Waktu Masuk', 'Nama Tamu', 'Instansi', 'Layanan', 'Tujuan Petugas', 'Status'] // Baris 5: Header Tabel
+            [$this->title . ' - SOWAN V2'],
+            ['LPSE KABUPATEN KARAWANG'],
+            ['Dicetak pada: ' . now()->format('d F Y H:i')],
+            [''],
+            ['No', 'Waktu Masuk', 'Nama Tamu', 'Instansi', 'Layanan', 'Tujuan Petugas', 'Status']
         ];
     }
 
@@ -63,13 +63,13 @@ class KunjunganExport implements FromCollection, WithHeadings, WithStyles, WithC
     public function columnWidths(): array
     {
         return [
-            'A' => 6,  // No
-            'B' => 22, // Waktu Masuk
-            'C' => 35, // Nama Tamu
-            'D' => 35, // Instansi
-            'E' => 40, // Layanan
-            'F' => 30, // Tujuan Petugas
-            'G' => 20, // Status
+            'A' => 6,
+            'B' => 22,
+            'C' => 35,
+            'D' => 35,
+            'E' => 40,
+            'F' => 30,
+            'G' => 20,
         ];
     }
 
@@ -78,34 +78,28 @@ class KunjunganExport implements FromCollection, WithHeadings, WithStyles, WithC
      */
     public function styles(Worksheet $sheet)
     {
-        // Merge Cells untuk Judul agar ke tengah
         $sheet->mergeCells('A1:G1');
         $sheet->mergeCells('A2:G2');
         $sheet->mergeCells('A3:G3');
         
         return [
-            // Style Judul Utama (Luxurious Emerald)
             1 => [
                 'font' => ['bold' => true, 'size' => 16, 'color' => ['rgb' => '064E3B']], 
                 'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER]
             ],
-            // Style Sub-Judul
             2 => [
                 'font' => ['bold' => true, 'size' => 12], 
                 'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER]
             ],
-            // Style Tanggal Cetak
             3 => [
                 'font' => ['italic' => true, 'size' => 10], 
                 'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER]
             ],
-            
-            // Style Header Tabel (Baris ke-5 karena ada penambahan info cetak)
             5 => [
                 'font' => ['bold' => true, 'color' => ['rgb' => 'FFFFFF']],
                 'fill' => [
                     'fillType' => Fill::FILL_SOLID,
-                    'startColor' => ['rgb' => '059669'], // Emerald Green SOWAN
+                    'startColor' => ['rgb' => '059669'],
                 ],
                 'alignment' => [
                     'horizontal' => Alignment::HORIZONTAL_CENTER,
@@ -123,9 +117,10 @@ class KunjunganExport implements FromCollection, WithHeadings, WithStyles, WithC
         return [
             AfterSheet::class => function(AfterSheet $event) {
                 $lastRow = $event->sheet->getHighestRow();
-                $cellRange = 'A5:G' . $lastRow; // Area tabel dimulai dari baris 5
+                if ($lastRow < 5) return; // Proteksi jika data kosong
+                
+                $cellRange = 'A5:G' . $lastRow;
 
-                // 1. Tambahkan Border ke seluruh sel data
                 $event->sheet->getStyle($cellRange)->applyFromArray([
                     'borders' => [
                         'allBorders' => [
@@ -138,26 +133,22 @@ class KunjunganExport implements FromCollection, WithHeadings, WithStyles, WithC
                     ],
                 ]);
 
-                // 2. Mengetengahkan kolom tertentu (No, Waktu, Status)
                 $event->sheet->getStyle('A6:A' . $lastRow)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
                 $event->sheet->getStyle('B6:B' . $lastRow)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
                 $event->sheet->getStyle('G6:G' . $lastRow)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
                 
-                // 3. Wrap text untuk kolom Nama, Instansi, dan Layanan agar rapi
                 $event->sheet->getStyle('C6:F' . $lastRow)->getAlignment()->setWrapText(true);
 
-                // 4. Baris Tinggi (Row Height) agar terlihat lega dan mewah
                 for ($i = 6; $i <= $lastRow; $i++) {
                     $event->sheet->getRowDimension($i)->setRowHeight(25);
                 }
-                $event->sheet->getRowDimension(5)->setRowHeight(30); // Tinggi Header
+                $event->sheet->getRowDimension(5)->setRowHeight(30);
 
-                // 5. Memberikan warna background selang-seling (Zebra Stripe) agar mudah dibaca
                 for ($i = 6; $i <= $lastRow; $i++) {
                     if ($i % 2 == 0) {
                         $event->sheet->getStyle('A' . $i . ':G' . $i)->getFill()
                             ->setFillType(Fill::FILL_SOLID)
-                            ->getStartColor()->setRGB('ECFDF5'); // Light Emerald
+                            ->getStartColor()->setRGB('ECFDF5');
                     }
                 }
             },

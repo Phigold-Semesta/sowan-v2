@@ -8,9 +8,11 @@ use App\Models\Layanan;
 use App\Models\PetugasTujuan;
 use App\Models\AuditLog;
 use App\Models\RatingLayanan;
+use App\Exports\KunjunganExport; // Import class export
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
+use Maatwebsite\Excel\Facades\Excel; // Import facade Excel
 use Carbon\Carbon;
 
 class PetugasController extends Controller
@@ -24,16 +26,14 @@ class PetugasController extends Controller
         $today = $now->toDateString();
         $userId = Auth::id();
 
-        // 1. Ambil Statistik Operasional (Sudah disinkronkan ke string database, bos!)
         $stats = [
             'total_hari_ini' => Kunjungan::whereDate('waktu_masuk', $today)->count(), 
             'belum'          => Kunjungan::whereDate('waktu_masuk', $today)->where('status', 'Belum Dilayani')->count(),
             'sedang'         => Kunjungan::whereDate('waktu_masuk', $today)->where('status', 'Sedang Dilayani')->count(),
             'sudah'          => Kunjungan::whereDate('waktu_masuk', $today)->where('status', 'Sudah Dilayani')->count(),
-            'avg_rating'     => RatingLayanan::avg('skor') ?? 0, // PERBAIKAN: Disesuaikan kembali ke nama kolom asli database 'skor', bos!
+            'avg_rating'     => RatingLayanan::avg('skor') ?? 0,
         ];
 
-        // 2. Data Grafik Mingguan (7 Hari Terakhir)
         $chartLabels = [];
         $chartData = [];
         
@@ -44,18 +44,15 @@ class PetugasController extends Controller
             $chartData[] = Kunjungan::whereDate('waktu_masuk', $formattedDate)->count();
         }
 
-        // 3. Ambil Log Aktivitas Petugas
         $logs = AuditLog::where('id_user', $userId)
                         ->latest('waktu')
                         ->take(5)
                         ->get();
 
-        // 🔥 PERBAIKAN SINKRONISASI DATABASE: Menggunakan 'created_at' & tetap menggunakan 'paginate(5)' agar mendukung method links() di view index, bos!
         $ratings = RatingLayanan::with(['kunjungan.tamu', 'kunjungan.layanan'])
                                 ->latest('created_at')
                                 ->paginate(5);
 
-        // 🔥 KOREKSI UTAMA: Mengembalikan target view ke file index asli dashboard petugas agar tidak masuk ke halaman rating, bos! AMAN!
         return view('petugas.dashboard', compact('stats', 'chartLabels', 'chartData', 'logs', 'ratings'));
     }
 
@@ -100,7 +97,6 @@ class PetugasController extends Controller
                             ->paginate($perPage == 'all' ? $totalData : $perPage)
                             ->withQueryString();
 
-        // PERBAIKAN SINKRONISASI DIREKTORI: Folder disesuaikan ke 'manajemen_tamu' bukan 'data-tamu'
         return view('petugas.manajemen_tamu.index', compact(
             'kunjungans', 
             'countMenunggu', 
@@ -110,24 +106,21 @@ class PetugasController extends Controller
     }
 
     /**
-     * FITUR BARU: Menampilkan Laporan Kunjungan (SOWAN V2)
+     * FITUR LAPORAN KUNJUNGAN
      */
     public function laporanIndex(Request $request)
     {
         $layanans = Layanan::all();
         $query = Kunjungan::with(['tamu', 'layanan', 'petugas']);
 
-        // Filter Rentang Tanggal
         if ($request->filled('tgl_awal') && $request->filled('tgl_akhir')) {
             $query->whereBetween('waktu_masuk', [$request->tgl_awal . ' 00:00:00', $request->tgl_akhir . ' 23:59:59']);
         }
 
-        // Filter Layanan
         if ($request->filled('id_layanan')) {
             $query->where('id_layanan', $request->id_layanan);
         }
 
-        // Filter Status
         if ($request->filled('status')) {
             $query->where('status', $request->status);
         }
@@ -137,19 +130,51 @@ class PetugasController extends Controller
         return view('petugas.laporan.index', compact('kunjungans', 'layanans'));
     }
 
+   /**
+     * FITUR EXPORT LAPORAN (DIPERBAIKI)
+     * Sekarang melakukan query data berdasarkan filter sebelum dikirim ke Export class
+     */
+    public function laporan_export(Request $request)
+    {
+        $format = $request->get('format', 'excel');
+        
+        // 1. Siapkan Query
+        $query = Kunjungan::with(['tamu', 'layanan', 'petugas']);
+
+        // 2. Terapkan Filter yang sama dengan halaman index
+        if ($request->filled('tgl_awal') && $request->filled('tgl_akhir')) {
+            $query->whereBetween('waktu_masuk', [$request->tgl_awal . ' 00:00:00', $request->tgl_akhir . ' 23:59:59']);
+        }
+
+        if ($request->filled('id_layanan')) {
+            $query->where('id_layanan', $request->id_layanan);
+        }
+
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+
+        // 3. Ambil data (Gunakan get() agar menjadi Collection, bukan paginate!)
+        $data = $query->latest('waktu_masuk')->get();
+        
+        // 4. Tentukan nama file
+        $fileName = 'Laporan_SOWAN_LPSE_' . date('Ymd_His') . ($format === 'pdf' ? '.pdf' : '.xlsx');
+        
+        // 5. Kirim data yang sudah di-get ke KunjunganExport
+        return Excel::download(new KunjunganExport($data), $fileName);
+    }
+
     /**
-     * FITUR BARU: Menampilkan Menu Halaman Rating & Saran Layanan (SOWAN V2)
+     * FITUR RATING & SARAN
      */
     public function ratingIndex(Request $request)
     {
         $query = RatingLayanan::with(['kunjungan.tamu', 'kunjungan.layanan']);
 
-        // Filter berdasarkan skor rating jika ada
         if ($request->filled('skor_rating')) {
-            $query->where('skor', $request->skor_rating); // PERBAIKAN: Diarahkan ke filter kolom database 'skor', bos!
+            $query->where('skor', $request->skor_rating);
         }
 
-        // Fitur Pencarian berdasarkan nama tamu atau ulasan saran
         if ($request->filled('search')) {
             $search = $request->search;
             $query->where(function ($q) use ($search) {
@@ -160,26 +185,24 @@ class PetugasController extends Controller
             });
         }
 
-        // PERBAIKAN: Mengubah pengurutan ke kolom 'created_at' agar halaman indeks ulasan utama tidak meledak, bos!
         $ratings = $query->latest('created_at')->paginate(10)->withQueryString();
 
         return view('petugas.rating.index', compact('ratings'));
     }
 
     /**
-     * Tampilan form registrasi manual.
+     * FORM REGISTRASI MANUAL
      */
     public function create()
     {
         $layanans = Layanan::all();
         $petugasTujuan = PetugasTujuan::all(); 
         
-        // PERBAIKAN SINKRONISASI DIREKTORI: Folder disesuaikan ke 'manajemen_tamu' bukan 'data-tamu'
         return view('petugas.manajemen_tamu.create', compact('layanans', 'petugasTujuan'));
     }
 
     /**
-     * PROSES SIMPAN REGISTRASI MANUAL (SOWAN V2)
+     * SIMPAN REGISTRASI MANUAL
      */
     public function store(Request $request)
     {
@@ -212,7 +235,7 @@ class PetugasController extends Controller
                 'id_layanan'  => $validated['id_layanan'],
                 'id_petugas'  => Auth::id(), 
                 'waktu_masuk' => now(),
-                'status'      => 'Belum Dilayani', // Sudah disinkronkan ke kapital
+                'status'      => 'Belum Dilayani',
                 'keperluan'   => $validated['keperluan'],
             ]);
 
@@ -225,7 +248,6 @@ class PetugasController extends Controller
             ]);
 
             DB::commit();
-            // 🔥 SINKRONISASI REDIRECT: Diarahkan ke rute resource manajemen_tamu yang benar
             return redirect()->route('petugas.manajemen_tamu.index')
                 ->with('success', 'Tamu berhasil didaftarkan secara manual! ✅');
 
@@ -235,20 +257,12 @@ class PetugasController extends Controller
         }
     }
 
-    /**
-     * Detail kunjungan tamu.
-     */
     public function show(string|int $id)
     {
         $kunjungan = Kunjungan::with(['tamu', 'layanan', 'petugas'])->findOrFail($id);
-        
-        // PERBAIKAN SINKRONISASI DIREKTORI: Folder disesuaikan ke 'manajemen_tamu' bukan 'data-tamu'
         return view('petugas.manajemen_tamu.show', compact('kunjungan'));
     }
 
-    /**
-     * Update Status Pelayanan.
-     */
     public function updateStatus(Request $request, string|int $id)
     {
         $request->validate([
@@ -275,7 +289,6 @@ class PetugasController extends Controller
                 'user_agent' => $request->userAgent(),
             ]);
 
-            // 🔥 SINKRONISASI REDIRECT: Diarahkan ke rute resource manajemen_tamu yang benar
             return redirect()->route('petugas.manajemen_tamu.index')
                 ->with('success', "Status pelayanan {$kunjungan->tamu->nama_tamu} berhasil diperbarui! ✨");
 
@@ -284,9 +297,6 @@ class PetugasController extends Controller
         }
     }
 
-    /**
-     * Menghapus record kunjungan.
-     */
     public function destroy(string|int $id)
     {
         $kunjungan = Kunjungan::with('tamu')->findOrFail($id);
@@ -302,7 +312,6 @@ class PetugasController extends Controller
             'user_agent' => request()->userAgent(),
         ]);
 
-        // 🔥 SINKRONISASI REDIRECT: Diarahkan ke rute resource manajemen_tamu yang benar
         return redirect()->route('petugas.manajemen_tamu.index')
             ->with('success', 'Data kunjungan telah berhasil dihapus.');
     }

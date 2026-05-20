@@ -156,45 +156,28 @@ Route::middleware('auth')->group(function () {
 
 
 
-    // --- GRUP AKSES: PETUGAS 📋 ---
-Route::middleware('role:petugas')->prefix('petugas')->name('petugas.')->group(function () {
-    // Diarahkan ke PetugasController agar variabel $logs dikirim ke view
-    Route::get('/dashboard', [PetugasController::class, 'dashboard'])->name('dashboard');
-
-
-        // Manajemen Tamu (Resource)
+    // --- GRUP AKSES: PETUGAS 📋 (PERBAIKAN) ---
+    Route::middleware('role:petugas')->prefix('petugas')->name('petugas.')->group(function () {
+        Route::get('/dashboard', [PetugasController::class, 'dashboard'])->name('dashboard');
 
         Route::resource('manajemen_tamu', PetugasController::class)
-
              ->parameters(['manajemen_tamu' => 'tamu']);
-
         
-
-        // Update Status Tamu: Belum, Sedang, atau Sudah Dilayani (Sesuai Use Case)
-
         Route::patch('manajemen_tamu/{tamu}/status', [PetugasController::class, 'updateStatus'])
-
              ->name('manajemen_tamu.updateStatus');
 
-
-
-     /**
-         * PENYEMPURNAAN AKTOR PETUGAS
-         */
+        // Grup laporan diperbaiki posisinya
         Route::prefix('laporan')->name('laporan.')->group(function() {
-            // 🔥 PERBAIKAN: Ubah 'laporan_index' menjadi 'laporanIndex'
             Route::get('/', [PetugasController::class, 'laporanIndex'])->name('index');
+            Route::get('/export', [PetugasController::class, 'laporan_export'])->name('export'); 
         });
 
+        // Grup rating sekarang sudah benar berada di dalam grup petugas
         Route::prefix('rating')->name('rating.')->group(function() {
-            // 🔥 PERBAIKAN: Ubah 'rating_index' menjadi 'ratingIndex'
             Route::get('/', [PetugasController::class, 'ratingIndex'])->name('index');
-            
-            // 🔥 PERBAIKAN: Ubah 'rating_tanggapan' menjadi 'ratingTanggapan' (Sesuai Use Case)
             Route::post('/{id}/tanggapan', [PetugasController::class, 'ratingTanggapan'])->name('tanggapan');
         });
-    });
-
+    }); // <--- Penutup tunggal untuk seluruh grup petugas
 
 
     // --- GRUP AKSES: ADMINISTRATOR 🛡️ ---
