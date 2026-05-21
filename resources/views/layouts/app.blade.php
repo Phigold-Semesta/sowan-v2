@@ -164,92 +164,81 @@
                 </div>
             </div>
 
-            <nav class="flex-1 px-4 mt-6 overflow-y-auto custom-scrollbar space-y-2">
-                <div class="menu-header px-4 py-3 text-[10px] font-black text-emerald-200/50 uppercase tracking-[0.2em]">Navigasi Utama</div>
-                
-                <a href="{{ route('dashboard') }}" class="nav-item flex items-center py-4 px-5 rounded-2xl transition-all {{ Route::is('dashboard') ? 'sidebar-active' : 'hover:bg-white/10' }}">
-                    <i class="fas fa-chart-line w-6 text-center text-sm"></i>
-                    <span class="nav-text ml-3 text-sm font-bold tracking-wide text-nowrap">
-                        {{ auth()->user()->role === 'pimpinan' ? 'Dashboard Eksekutif' : 'Dashboard' }}
-                    </span>
-                </a>
+           <nav class="flex-1 px-4 mt-6 overflow-y-auto custom-scrollbar space-y-2">
+    <div class="menu-header px-4 py-3 text-[10px] font-black text-emerald-200/50 uppercase tracking-[0.2em]">Navigasi Utama</div>
+    
+    {{-- Dashboard (Berubah label jika Pimpinan) --}}
+    <a href="{{ route('dashboard') }}" class="nav-item flex items-center py-4 px-5 rounded-2xl transition-all {{ Route::is('dashboard') ? 'sidebar-active' : 'hover:bg-white/10' }}">
+        <i class="fas fa-chart-line w-6 text-center text-sm"></i>
+        <span class="nav-text ml-3 text-sm font-bold tracking-wide text-nowrap">
+            {{ auth()->user()->role === 'pimpinan' ? 'Dashboard Eksekutif' : 'Dashboard' }}
+        </span>
+    </a>
 
-                @if(auth()->user()->role === 'petugas')
-                <a href="{{ route('petugas.manajemen_tamu.index') }}" class="nav-item flex items-center py-4 px-5 rounded-2xl transition-all {{ Route::is('petugas.manajemen_tamu.*') ? 'sidebar-active' : 'hover:bg-white/10' }}">
-                    <i class="fas fa-user-check w-6 text-center text-sm"></i>
-                    <span class="nav-text ml-3 text-sm font-bold tracking-wide text-nowrap">Data Tamu</span>
-                </a>
-                @endif
+    {{-- Menu Khusus Pimpinan --}}
+    @if(auth()->user()->role === 'pimpinan')
+        <a href="{{ route('pimpinan.laporan.index') }}" class="nav-item flex items-center py-4 px-5 rounded-2xl transition-all {{ Route::is('pimpinan.laporan.*') ? 'sidebar-active' : 'hover:bg-white/10' }}">
+            <i class="fas fa-file-export w-6 text-center text-sm"></i>
+            <span class="nav-text ml-3 text-sm font-bold tracking-wide text-nowrap">Rekapitulasi Laporan</span>
+        </a>
+        <a href="{{ route('pimpinan.aktivitas.index') }}" class="nav-item flex items-center py-4 px-5 rounded-2xl transition-all {{ Route::is('pimpinan.aktivitas.*') ? 'sidebar-active' : 'hover:bg-white/10' }}">
+            <i class="fas fa-fingerprint w-6 text-center text-sm"></i>
+            <span class="nav-text ml-3 text-sm font-bold tracking-wide text-nowrap">Aktivitas Global</span>
+        </a>
+        <a href="{{ route('pimpinan.rating.index') }}" class="nav-item flex items-center py-4 px-5 rounded-2xl transition-all {{ Route::is('pimpinan.rating.*') ? 'sidebar-active' : 'hover:bg-white/10' }}">
+            <i class="fas fa-star-half-stroke w-6 text-center text-sm"></i>
+            <span class="nav-text ml-3 text-sm font-bold tracking-wide text-nowrap">Rating Layanan</span>
+        </a>
+    @endif
 
-                @if(auth()->user()->role === 'administrator')
-                <div class="menu-header px-4 py-3 text-[10px] font-black text-emerald-200/50 uppercase tracking-[0.2em] mt-4">Manajemen Sistem</div>
-                
-                <a href="{{ route('admin.users.index') }}" class="nav-item flex items-center py-4 px-5 rounded-2xl transition-all {{ Route::is('admin.users.*') ? 'sidebar-active' : 'hover:bg-white/10' }}">
-                    <i class="fas fa-users-gear w-6 text-center text-sm"></i>
-                    <span class="nav-text ml-3 text-sm font-bold tracking-wide text-nowrap">Manajemen Pengguna</span>
-                </a>
+    {{-- Menu Khusus Petugas --}}
+    @if(auth()->user()->role === 'petugas')
+        <a href="{{ route('petugas.manajemen_tamu.index') }}" class="nav-item flex items-center py-4 px-5 rounded-2xl transition-all {{ Route::is('petugas.manajemen_tamu.*') ? 'sidebar-active' : 'hover:bg-white/10' }}">
+            <i class="fas fa-user-check w-6 text-center text-sm"></i>
+            <span class="nav-text ml-3 text-sm font-bold tracking-wide text-nowrap">Data Tamu</span>
+        </a>
+    @endif
 
-                <a href="{{ route('admin.master.index') }}" class="nav-item flex items-center py-4 px-5 rounded-2xl transition-all {{ Route::is('admin.master.*') ? 'sidebar-active' : 'hover:bg-white/10' }}">
-                    <i class="fas fa-database w-6 text-center text-sm"></i>
-                    <span class="nav-text ml-3 text-sm font-bold tracking-wide text-nowrap">Data Master</span>
-                </a>
-
-                <a href="{{ route('admin.aktivitas.index') }}" class="nav-item flex items-center py-4 px-5 rounded-2xl transition-all {{ Route::is('admin.aktivitas.*') ? 'sidebar-active' : 'hover:bg-white/10' }}">
-                    <i class="fas fa-fingerprint w-6 text-center text-sm"></i>
-                    <span class="nav-text ml-3 text-sm font-bold tracking-wide text-nowrap">Aktivitas Global</span>
-                </a>
-                @endif
-
-                <div class="menu-header px-4 py-3 text-[10px] font-black text-emerald-200/50 uppercase tracking-[0.2em] mt-4">Monitoring & Output</div>
-
-                @if(auth()->user()->role === 'administrator' || auth()->user()->role === 'petugas')
-                @php
-                    $ratingRoute = (auth()->user()->role === 'administrator') ? 'admin.rating.index' : 'petugas.rating.index';
-                @endphp
-                <a href="{{ route($ratingRoute) }}" class="nav-item flex items-center py-4 px-5 rounded-2xl transition-all {{ Route::is($ratingRoute) ? 'sidebar-active' : 'hover:bg-white/10' }}">
-                    <div class="relative">
-                        <i class="fas fa-star-half-stroke w-6 text-center text-sm"></i>
-                        @php
-                            $pendingRatingCount = \App\Models\RatingLayanan::whereNull('tanggapan')->count();
-                        @endphp
-                        @if($pendingRatingCount > 0)
-                            <span class="absolute -top-2 -right-2 flex h-4 w-4">
-                                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-                                <span class="relative inline-flex rounded-full h-4 w-4 bg-red-600 text-[9px] items-center justify-center font-bold">{{ $pendingRatingCount }}</span>
-                            </span>
-                        @endif
-                    </div>
-                    <span class="nav-text ml-3 text-sm font-bold tracking-wide text-nowrap">Rating Layanan</span>
-                </a>
-                @endif
-
-                @php
-                    $laporanRoute = null;
-                    if(auth()->user()->role === 'administrator') {
-                        $laporanRoute = 'admin.laporan.index';
-                    } elseif(auth()->user()->role === 'pimpinan') {
-                        $laporanRoute = 'pimpinan.laporan.index';
-                    } elseif(auth()->user()->role === 'petugas') {
-                        $laporanRoute = 'petugas.laporan.index';
-                    }
-                @endphp
-
-                @if($laporanRoute)
-                <a href="{{ route($laporanRoute) }}" class="nav-item flex items-center py-4 px-5 rounded-2xl transition-all {{ Route::is($laporanRoute) ? 'sidebar-active' : 'hover:bg-white/10' }}">
-                    <i class="fas fa-file-export w-6 text-center text-sm"></i>
-                    <span class="nav-text ml-3 text-sm font-bold tracking-wide text-nowrap">
-                        @if(auth()->user()->role === 'pimpinan')
-                            Rekapitulasi Laporan
-                        @elseif(auth()->user()->role === 'petugas')
-                            Laporan Kunjungan
-                        @else
-                            Laporan Global
-                        @endif
-                    </span>
-                </a>
-                @endif
-            </nav>
-
+    {{-- Menu Khusus Administrator --}}
+    @if(auth()->user()->role === 'administrator')
+        <div class="menu-header px-4 py-3 text-[10px] font-black text-emerald-200/50 uppercase tracking-[0.2em] mt-4">Manajemen Sistem</div>
+        <a href="{{ route('admin.users.index') }}" class="nav-item flex items-center py-4 px-5 rounded-2xl transition-all {{ Route::is('admin.users.*') ? 'sidebar-active' : 'hover:bg-white/10' }}">
+            <i class="fas fa-users-gear w-6 text-center text-sm"></i>
+            <span class="nav-text ml-3 text-sm font-bold tracking-wide text-nowrap">Manajemen Pengguna</span>
+        </a>
+        <a href="{{ route('admin.master.index') }}" class="nav-item flex items-center py-4 px-5 rounded-2xl transition-all {{ Route::is('admin.master.*') ? 'sidebar-active' : 'hover:bg-white/10' }}">
+            <i class="fas fa-database w-6 text-center text-sm"></i>
+            <span class="nav-text ml-3 text-sm font-bold tracking-wide text-nowrap">Data Master</span>
+        </a>
+        <a href="{{ route('admin.aktivitas.index') }}" class="nav-item flex items-center py-4 px-5 rounded-2xl transition-all {{ Route::is('admin.aktivitas.*') ? 'sidebar-active' : 'hover:bg-white/10' }}">
+            <i class="fas fa-fingerprint w-6 text-center text-sm"></i>
+            <span class="nav-text ml-3 text-sm font-bold tracking-wide text-nowrap">Aktivitas Global</span>
+        </a>
+        
+        <div class="menu-header px-4 py-3 text-[10px] font-black text-emerald-200/50 uppercase tracking-[0.2em] mt-4">Monitoring & Output</div>
+        <a href="{{ route('admin.rating.index') }}" class="nav-item flex items-center py-4 px-5 rounded-2xl transition-all {{ Route::is('admin.rating.*') ? 'sidebar-active' : 'hover:bg-white/10' }}">
+            <i class="fas fa-star-half-stroke w-6 text-center text-sm"></i>
+            <span class="nav-text ml-3 text-sm font-bold tracking-wide text-nowrap">Rating Layanan</span>
+        </a>
+        <a href="{{ route('admin.laporan.index') }}" class="nav-item flex items-center py-4 px-5 rounded-2xl transition-all {{ Route::is('admin.laporan.*') ? 'sidebar-active' : 'hover:bg-white/10' }}">
+            <i class="fas fa-file-export w-6 text-center text-sm"></i>
+            <span class="nav-text ml-3 text-sm font-bold tracking-wide text-nowrap">Laporan Global</span>
+        </a>
+    @endif
+    
+    {{-- Menu Monitoring (Petugas) --}}
+    @if(auth()->user()->role === 'petugas')
+        <div class="menu-header px-4 py-3 text-[10px] font-black text-emerald-200/50 uppercase tracking-[0.2em] mt-4">Monitoring & Output</div>
+        <a href="{{ route('petugas.rating.index') }}" class="nav-item flex items-center py-4 px-5 rounded-2xl transition-all {{ Route::is('petugas.rating.*') ? 'sidebar-active' : 'hover:bg-white/10' }}">
+            <i class="fas fa-star-half-stroke w-6 text-center text-sm"></i>
+            <span class="nav-text ml-3 text-sm font-bold tracking-wide text-nowrap">Rating Layanan</span>
+        </a>
+        <a href="{{ route('petugas.laporan.index') }}" class="nav-item flex items-center py-4 px-5 rounded-2xl transition-all {{ Route::is('petugas.laporan.*') ? 'sidebar-active' : 'hover:bg-white/10' }}">
+            <i class="fas fa-file-export w-6 text-center text-sm"></i>
+            <span class="nav-text ml-3 text-sm font-bold tracking-wide text-nowrap">Laporan Kunjungan</span>
+        </a>
+    @endif
+</nav>
             <div class="p-4 mb-4">
                 <form id="logout-form" action="{{ route('logout') }}" method="POST" class="hidden">
                     @csrf

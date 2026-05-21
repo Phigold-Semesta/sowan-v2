@@ -12,6 +12,8 @@ use App\Http\Controllers\PetugasController;
 
 use App\Http\Controllers\AdminController;
 
+use App\Http\Controllers\PimpinanController;
+
 use Illuminate\Support\Facades\Route;
 
 use Illuminate\Support\Facades\Auth;
@@ -308,26 +310,25 @@ Route::middleware('auth')->group(function () {
 
 
 
-    // --- GRUP AKSES: PIMPINAN 👔 ---
-
+   // --- GRUP AKSES: PIMPINAN 👔 ---
     Route::middleware('role:pimpinan')->prefix('pimpinan')->name('pimpinan.')->group(function () {
-
-        Route::get('/dashboard', [TamuController::class, 'pimpinanDashboard'])->name('dashboard');
-
-        Route::get('/laporan', [AdminController::class, 'laporan_index'])->name('laporan.index');
-
-        Route::get('/laporan/export', [AdminController::class, 'laporan_export'])->name('laporan.export');
-
+        // Mengarahkan ke method di PimpinanController
+        Route::get('/dashboard', [PimpinanController::class, 'dashboard'])->name('dashboard');
+        
+        // Mengarahkan ke laporanKinerja di PimpinanController sesuai direktori pimpinan.laporan.index
+        Route::get('/laporan', [PimpinanController::class, 'laporanIndex'])->name('laporan.index');
+        
+        // Monitoring Rating sesuai direktori pimpinan.rating.index
+        Route::get('/rating', [PimpinanController::class, 'ratingIndex'])->name('rating.index');
+        
+        // Log Aktivitas sesuai direktori pimpinan.aktivitas.index
+        Route::get('/aktivitas', [PimpinanController::class, 'aktivitasIndex'])->name('aktivitas.index');
     });
 
-
-
     // --- FITUR STATISTIK & GRAFIK (SHARED) ---
-
-    Route::middleware('role:pimpinan,administrator')->group(function () {
-
+    // Pastikan middleware role mendukung array jika Anda menggunakan custom logic
+    Route::middleware(['role:pimpinan,administrator'])->group(function () {
         Route::get('/statistik', [TamuController::class, 'stats'])->name('statistik.index');
-
     });
 
 });
