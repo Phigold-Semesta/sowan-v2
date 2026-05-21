@@ -317,6 +317,9 @@ Route::middleware('auth')->group(function () {
         
         // Mengarahkan ke laporanKinerja di PimpinanController sesuai direktori pimpinan.laporan.index
         Route::get('/laporan', [PimpinanController::class, 'laporanIndex'])->name('laporan.index');
+
+        // TAMBAHKAN RUTE INI untuk Export Data
+    Route::get('/laporan/export', [PimpinanController::class, 'laporanExport'])->name('laporan.export');
         
         // Monitoring Rating sesuai direktori pimpinan.rating.index
         Route::get('/rating', [PimpinanController::class, 'ratingIndex'])->name('rating.index');
