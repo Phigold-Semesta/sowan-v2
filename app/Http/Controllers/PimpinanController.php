@@ -50,7 +50,6 @@ class PimpinanController extends Controller
         return view('pimpinan.laporan.index', compact('kunjungan', 'listLayanan'));
     }
 
-    // --- PERBAIKAN: METHOD EKSPOR DENGAN PENANGANAN EKSTENSI YANG TEPAT ---
     public function laporanExport(Request $request)
     {
         $query = Kunjungan::with(['tamu', 'layanan', 'petugas']);
@@ -74,7 +73,6 @@ class PimpinanController extends Controller
         $format = $request->format ?? 'csv';
         $fileName = 'Laporan_Kunjungan_' . date('YmdHis');
 
-        // Menentukan ekstensi dan driver yang tepat agar tidak ada lagi dialog "Select an app"
         if ($format === 'pdf') {
             return Excel::download(new KunjunganExport($kunjungan), $fileName . '.pdf', \Maatwebsite\Excel\Excel::MPDF);
         } elseif ($format === 'excel') {
@@ -88,6 +86,13 @@ class PimpinanController extends Controller
     {
         $ratings = RatingLayanan::with(['kunjungan.tamu', 'kunjungan.layanan'])->latest()->paginate(15);
         return view('pimpinan.rating.index', compact('ratings'));
+    }
+
+    // --- PENAMBAHAN METHOD SHOW UNTUK AJAX MODAL ---
+    public function ratingShow($id)
+    {
+        $rating = RatingLayanan::with(['kunjungan.tamu', 'kunjungan.layanan'])->findOrFail($id);
+        return view('pimpinan.rating.show', compact('rating'));
     }
 
     public function aktivitasIndex(Request $request)
