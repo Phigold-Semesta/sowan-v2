@@ -122,12 +122,12 @@
                     <button type="submit" class="w-full bg-emerald-400 hover:bg-emerald-300 text-emerald-950 font-black py-4 rounded-full shadow-[0_15px_40px_rgba(52,211,153,0.3)] transition-all mt-8 text-xs tracking-[0.2em] uppercase">LOG IN</button>
                 </form>
 
-                {{-- Form Tamu - Perbaikan pada action route --}}
+                {{-- Form Tamu - Perbaikan: name diubah ke "gmail" agar sinkron dengan Controller --}}
                 <form id="tamu-form" action="{{ route('tamu.login') }}" method="POST" class="space-y-6 hidden">
                     @csrf
                     <div class="group">
-                        <label for="email" class="block text-emerald-200 text-[10px] uppercase font-black tracking-[0.3em] mb-2.5 ml-6 opacity-80">Email Tamu</label>
-                        <input type="email" name="email" id="email" class="w-full px-8 py-4 bg-white/10 border border-white/10 rounded-full focus:outline-none focus:ring-2 focus:ring-emerald-400 text-white text-sm" placeholder="Contoh: user@gmail.com" required>
+                        <label for="gmail" class="block text-emerald-200 text-[10px] uppercase font-black tracking-[0.3em] mb-2.5 ml-6 opacity-80">Email Tamu</label>
+                        <input type="email" name="gmail" id="gmail" class="w-full px-8 py-4 bg-white/10 border border-white/10 rounded-full focus:outline-none focus:ring-2 focus:ring-emerald-400 text-white text-sm" placeholder="Contoh: user@gmail.com" required>
                     </div>
                     <button type="submit" class="w-full bg-emerald-400 hover:bg-emerald-300 text-emerald-950 font-black py-4 rounded-full shadow-[0_15px_40px_rgba(52,211,153,0.3)] transition-all mt-8 text-xs tracking-[0.2em] uppercase">LANJUTKAN</button>
                 </form>
