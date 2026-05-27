@@ -215,7 +215,7 @@
         </form>
         @else
         <div class="max-w-xl mx-auto">
-            <form action="{{ route('tamu.check') }}" method="POST" class="form-glass rounded-[3.5rem] shadow-[0_50px_100px_-20px_rgba(0,0,0,0.7)] border border-white/40 overflow-hidden">
+            <form action="{{ route('tamu.store') }}" method="POST" class="form-glass rounded-[3.5rem] shadow-[0_50px_100px_-20px_rgba(0,0,0,0.7)] border border-white/40 overflow-hidden">
                 @csrf
                 <div class="p-10 md:p-20 text-center">
                     <div class="mb-10">

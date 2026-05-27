@@ -8,6 +8,7 @@ use App\Models\Layanan;
 use App\Models\PetugasTujuan;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class TamuController extends Controller
 {
@@ -37,11 +38,9 @@ class TamuController extends Controller
         $tamu = Tamu::where('gmail', $gmail)->first();
 
         if ($tamu) {
-            // Tamu lama ditemukan, arahkan ke form tamu lama
             return view('tamu.form_tamu_lama', compact('tamu', 'layanan', 'petugas', 'gmail'));
         }
 
-        // Tamu baru, arahkan ke form tamu baru
         return view('tamu.form_tamu_baru', compact('layanan', 'petugas', 'gmail'));
     }
 
@@ -50,6 +49,8 @@ class TamuController extends Controller
      */
     public function store(Request $request)
     {
+        Log::info('Proses store tamu dimulai:', $request->all());
+
         $validated = $request->validate([
             'gmail'         => 'required|email|max:255',
             'nama_tamu'     => 'required_if:tipe_tamu,baru|nullable|string|max:255',
@@ -62,15 +63,13 @@ class TamuController extends Controller
             'id_petugas'    => 'required|exists:petugas_tujuan,id_petugas',
             'skor'          => 'nullable|integer|min:0|max:5', 
             'komentar'      => 'nullable|string',
-            'tipe_tamu'     => 'required|string'
+            'tipe_tamu'     => 'required|string|in:baru,lama'
         ]);
 
         try {
-            $result = DB::transaction(function () use ($request, $validated) {
-                
-                // 1. Sinkronisasi Data Profil Tamu
-                if ($request->tipe_tamu === 'baru') {
-                    $tamuModel = Tamu::updateOrCreate(
+            $tamuModel = DB::transaction(function () use ($validated) {
+                if ($validated['tipe_tamu'] === 'baru') {
+                    return Tamu::updateOrCreate(
                         ['gmail' => $validated['gmail']],
                         [
                             'nama_tamu'     => $validated['nama_tamu'],
@@ -81,54 +80,49 @@ class TamuController extends Controller
                             'hadir_sebagai' => $validated['hadir_sebagai'],
                         ]
                     );
-                } else {
-                    $tamuModel = Tamu::where('gmail', $validated['gmail'])->firstOrFail();
                 }
-
-                // 2. Simpan entri kunjungan
-                $kunjungan = Kunjungan::create([
-                    'gmail'       => $tamuModel->gmail,
-                    'id_layanan'  => $validated['id_layanan'],
-                    'id_petugas'  => $validated['id_petugas'],
-                    'waktu_masuk' => now(),
-                    'status'      => 'belum dilayani', 
-                ]);
-
-                // 3. Simpan feedback rating
-                DB::table('rating_layanan')->insert([
-                    'id_kunjungan' => $kunjungan->id_kunjungan,
-                    'skor'         => $validated['skor'] ?? 0,
-                    'komentar'     => $validated['komentar'] ?? null,
-                    'created_at'   => now(),
-                    'updated_at'   => now(),
-                ]);
-
-                return $tamuModel; 
+                return Tamu::where('gmail', $validated['gmail'])->firstOrFail();
             });
 
-            // Redirect dengan membawa data nama agar halaman sukses dinamis
-            if ($request->tipe_tamu === 'lama') {
-                return redirect()->route('tamu.success_lama', ['nama' => $result->nama_tamu]);
-            }
+            $kunjungan = Kunjungan::create([
+                'gmail'       => $tamuModel->gmail,
+                'id_layanan'  => $validated['id_layanan'],
+                'id_petugas'  => $validated['id_petugas'],
+                'waktu_masuk' => now(),
+                'status'      => 'belum dilayani', 
+            ]);
 
-            return redirect()->route('tamu.success_baru', ['nama' => $result->nama_tamu]);
+            DB::table('rating_layanan')->insert([
+                'id_kunjungan' => $kunjungan->id_kunjungan,
+                'skor'         => $validated['skor'] ?? 0,
+                'komentar'     => $validated['komentar'] ?? null,
+                'created_at'   => now(),
+                'updated_at'   => now(),
+            ]);
+
+            $targetRoute = ($validated['tipe_tamu'] === 'lama') ? 'tamu.success_lama' : 'tamu.success_baru';
+            
+            // Redirect langsung ke rute sukses dengan nama sebagai parameter
+            return redirect()->route($targetRoute, ['nama' => $tamuModel->nama_tamu]);
 
         } catch (\Exception $e) {
+            Log::error('Error Fatal Store Tamu: ' . $e->getMessage());
             return redirect()->back()
                 ->withInput()
-                ->with('error', 'Gagal mencatat data kunjungan: ' . $e->getMessage());
+                ->withErrors(['error' => 'Data tidak dapat diproses: ' . $e->getMessage()]);
         }
     }
 
-    public function successBaru(Request $request)
+    /**
+     * Menerima parameter nama dan menampilkan view sukses
+     */
+    public function successBaru(string $nama)
     {
-        $nama_tamu = $request->query('nama');
-        return view('tamu.success_tamu_baru', compact('nama_tamu'));
+        return view('tamu.success_tamu_baru', ['nama_tamu' => $nama]);
     }
 
-    public function successLama(Request $request)
+    public function successLama(string $nama)
     {
-        $nama_tamu = $request->query('nama');
-        return view('tamu.success_tamu_lama', compact('nama_tamu'));
+        return view('tamu.success_tamu_lama', ['nama_tamu' => $nama]);
     }
 }

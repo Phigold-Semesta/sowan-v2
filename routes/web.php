@@ -63,9 +63,10 @@ Route::controller(TamuController::class)->group(function () {
     // 3. Proses simpan data kunjungan
     Route::post('/tamu/simpan', 'store')->name('tamu.store');
     
-    // 4. VIEW SUKSES (Menggunakan parameter wajib untuk nama tamu agar lebih rapi)
-    Route::get('/tamu/sukses/baru/{nama}', 'successBaru')->name('tamu.success_baru');
-    Route::get('/tamu/sukses/lama/{nama}', 'successLama')->name('tamu.success_lama');
+    // 4. VIEW SUKSES (Menggunakan parameter wajib untuk nama tamu)
+    // Penambahan 'where' agar parameter nama bisa menerima karakter spasi/karakter khusus jika diperlukan
+    Route::get('/tamu/sukses/baru/{nama}', 'successBaru')->name('tamu.success_baru')->where('nama', '.*');
+    Route::get('/tamu/sukses/lama/{nama}', 'successLama')->name('tamu.success_lama')->where('nama', '.*');
     
     // 5. Fitur Tamu: Unduh Dokumen Panduan
     Route::get('/panduan/{id}', 'downloadPanduan')->name('tamu.panduan.download');
