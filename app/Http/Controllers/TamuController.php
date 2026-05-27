@@ -8,60 +8,48 @@ use App\Models\Layanan;
 use App\Models\PetugasTujuan;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Carbon\Carbon;
 
 class TamuController extends Controller
 {
     /**
      * Tampilan awal saat tamu pertama kali datang (Scan QR).
-     * Diarahkan langsung ke form_tamu_baru.
      */
     public function index()
     {
         $gmail = null;
-
-        $layanan = Layanan::with('dokumens')
-            ->orderBy('nama_layanan', 'asc')
-            ->get();
-            
+        $layanan = Layanan::with('dokumens')->orderBy('nama_layanan', 'asc')->get();
         $petugas = PetugasTujuan::orderBy('nama_petugas', 'asc')->get();
 
         return view('tamu.form_tamu_baru', compact('gmail', 'layanan', 'petugas'));
     }
 
     /**
-     * Validasi Gmail.
-     * Memeriksa apakah tamu sudah pernah berkunjung atau belum.
+     * Validasi Gmail: Membedakan tamu baru dan tamu lama.
      */
     public function check(Request $request)
     {
         $request->validate(['gmail' => 'required|email|max:255']);
         $gmail = $request->gmail;
 
-        $layanan = Layanan::with('dokumens')
-            ->orderBy('nama_layanan', 'asc')
-            ->get();
-            
+        $layanan = Layanan::with('dokumens')->orderBy('nama_layanan', 'asc')->get();
         $petugas = PetugasTujuan::orderBy('nama_petugas', 'asc')->get();
 
         $tamu = Tamu::where('gmail', $gmail)->first();
 
         if ($tamu) {
-            // Jika tamu lama ditemukan, tampilkan form khusus tamu lama
+            // Tamu lama ditemukan, arahkan ke form tamu lama
             return view('tamu.form_tamu_lama', compact('tamu', 'layanan', 'petugas', 'gmail'));
         }
 
-        // Jika tamu baru, tetap di form_tamu_baru dengan gmail yang sudah terisi
+        // Tamu baru, arahkan ke form tamu baru
         return view('tamu.form_tamu_baru', compact('layanan', 'petugas', 'gmail'));
     }
 
     /**
-     * Simpan Data Kunjungan & Rating.
-     * Disempurnakan untuk menangani alur tamu lama & baru secara dinamis.
+     * Simpan Data Kunjungan & Rating secara dinamis.
      */
     public function store(Request $request)
     {
-        // Validasi input form: Field profil menjadi nullable jika tipe_tamu adalah 'lama'
         $validated = $request->validate([
             'gmail'         => 'required|email|max:255',
             'nama_tamu'     => 'required_if:tipe_tamu,baru|nullable|string|max:255',
@@ -74,15 +62,14 @@ class TamuController extends Controller
             'id_petugas'    => 'required|exists:petugas_tujuan,id_petugas',
             'skor'          => 'nullable|integer|min:0|max:5', 
             'komentar'      => 'nullable|string',
-            'tipe_tamu'     => 'required|string' // 'baru' atau 'lama'
+            'tipe_tamu'     => 'required|string'
         ]);
 
         try {
             $result = DB::transaction(function () use ($request, $validated) {
                 
-                // 1. Logika Sinkronisasi Data Profil Tamu
+                // 1. Sinkronisasi Data Profil Tamu
                 if ($request->tipe_tamu === 'baru') {
-                    // Jika tamu baru, buat profil lengkap
                     $tamuModel = Tamu::updateOrCreate(
                         ['gmail' => $validated['gmail']],
                         [
@@ -95,21 +82,19 @@ class TamuController extends Controller
                         ]
                     );
                 } else {
-                    // Jika tamu lama, ambil data yang sudah ada berdasarkan gmail
                     $tamuModel = Tamu::where('gmail', $validated['gmail'])->firstOrFail();
                 }
 
-                // 2. Simpan entri kunjungan baru
+                // 2. Simpan entri kunjungan
                 $kunjungan = Kunjungan::create([
                     'gmail'       => $tamuModel->gmail,
                     'id_layanan'  => $validated['id_layanan'],
                     'id_petugas'  => $validated['id_petugas'],
                     'waktu_masuk' => now(),
-                    'status'      => 'belum dilayani', // Sesuai standarisasi dengan spasi
+                    'status'      => 'belum dilayani', 
                 ]);
 
-                // 3. Simpan feedback rating (Opsional)
-                // Menggunakan kolom 'skor' sesuai perbaikan dashboard sebelumnya
+                // 3. Simpan feedback rating
                 DB::table('rating_layanan')->insert([
                     'id_kunjungan' => $kunjungan->id_kunjungan,
                     'skor'         => $validated['skor'] ?? 0,
@@ -121,12 +106,12 @@ class TamuController extends Controller
                 return $tamuModel; 
             });
 
-            // MENGGUNAKAN REDIRECT AGAR TIDAK KEMBALI KE FORM SAAT REFRESH
+            // Redirect dengan membawa data nama agar halaman sukses dinamis
             if ($request->tipe_tamu === 'lama') {
-                return redirect()->route('tamu.success.lama', ['nama' => $result->nama_tamu]);
+                return redirect()->route('tamu.success_lama', ['nama' => $result->nama_tamu]);
             }
 
-            return redirect()->route('tamu.success.baru', ['nama' => $result->nama_tamu]);
+            return redirect()->route('tamu.success_baru', ['nama' => $result->nama_tamu]);
 
         } catch (\Exception $e) {
             return redirect()->back()
@@ -135,37 +120,15 @@ class TamuController extends Controller
         }
     }
 
-    /**
-     * Halaman sukses untuk tamu baru
-     */
     public function successBaru(Request $request)
     {
         $nama_tamu = $request->query('nama');
         return view('tamu.success_tamu_baru', compact('nama_tamu'));
     }
 
-    /**
-     * Halaman sukses untuk tamu lama
-     */
     public function successLama(Request $request)
     {
         $nama_tamu = $request->query('nama');
         return view('tamu.success_tamu_lama', compact('nama_tamu'));
-    }
-
-    /**
-     * Halaman Dashboard khusus Pimpinan.
-     */
-    public function pimpinanDashboard()
-    {
-        return view('pimpinan.dashboard');
-    }
-
-    /**
-     * Halaman Statistik Admin.
-     */
-    public function stats()
-    {
-        return view('admin.statistik.index');
     }
 }

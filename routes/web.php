@@ -41,92 +41,46 @@ use Illuminate\Support\Facades\Auth;
 // --- 1. JALUR PUBLIK & AUTENTIKASI 🚪 ---
 
 Route::get('/', function () {
-
     return redirect()->route('login');
-
 });
-
-
 
 /**
-
  * PENYESUAIAN ALUR TAMU (SESUAI USE CASE REVISI 4):
-
  * Alur: Scan QR -> Validasi Gmail -> Tampil Form (Baru/Lama) -> Simpan -> Sukses.
-
  */
-
 Route::controller(TamuController::class)->group(function () {
-
-    // 1. Halaman Awal scan QR (Menampilkan form input Gmail pertama kali)
-
-    // PERBAIKAN: Diarahkan ke method 'create' atau 'index' yang memanggil view form_tamu_baru
-
+    // 1. Halaman Awal scan QR
     Route::get('/hadir', 'index')->name('tamu.index'); 
-
     
-
-    // 2. Validasi Gmail: Menentukan apakah tamu harus ke form_baru atau form_lama
-
-    Route::post('/tamu/cek', 'check')->name('tamu.check');
-
+    // 2. Validasi Gmail
+    Route::post('/tamu/cek', 'check')->name('tamu.login');
     
-
-    // Penanganan Error 405: Jika user refresh halaman hasil cek
-
+    // Penanganan Error 405 (Jika user refresh halaman hasil cek)
     Route::get('/tamu/cek', function() {
-
         return redirect()->route('tamu.index');
-
     });
-
     
-
-    // 3. Proses simpan data kunjungan (Finalisasi pendaftaran tamu)
-
+    // 3. Proses simpan data kunjungan
     Route::post('/tamu/simpan', 'store')->name('tamu.store');
-
     
-
-    // 4. VIEW SUKSES (Tujuan redirect setelah simpan)
-
-    // PERBAIKAN: Menambahkan route eksplisit untuk halaman sukses
-
-    Route::get('/tamu/sukses/baru', 'successBaru')->name('tamu.success_baru');
-
-    Route::get('/tamu/sukses/lama', 'successLama')->name('tamu.success_lama');
-
+    // 4. VIEW SUKSES (Menggunakan parameter wajib untuk nama tamu agar lebih rapi)
+    Route::get('/tamu/sukses/baru/{nama}', 'successBaru')->name('tamu.success_baru');
+    Route::get('/tamu/sukses/lama/{nama}', 'successLama')->name('tamu.success_lama');
     
-
-    // 5. Fitur Tamu: Unduh Dokumen Panduan (Sesuai Use Case)
-
+    // 5. Fitur Tamu: Unduh Dokumen Panduan
     Route::get('/panduan/{id}', 'downloadPanduan')->name('tamu.panduan.download');
-
 });
-
-
 
 // Logic Login & Logout Dasar
-
 Route::middleware('guest')->group(function () {
-
     Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
-
     Route::post('/login', [AuthController::class, 'authenticate'])->name('login.proses');
-
 });
 
-
-
 // --- 2. AREA TERPROTEKSI (WAJIB LOGIN) 🔐 ---
-
 Route::middleware('auth')->group(function () {
 
-
-
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
-
-
 
     /**
 
