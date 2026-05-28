@@ -54,7 +54,6 @@
             to { opacity: 1; transform: translateY(0); }
         }
 
-        /* Custom Scrollbar for Textarea */
         textarea::-webkit-scrollbar {
             width: 4px;
         }
@@ -87,9 +86,10 @@
             <form action="{{ route('tamu.store') }}" method="POST" class="p-8 md:p-12">
                 @csrf
                 
+                {{-- Perbaikan: Input hidden untuk identifikasi tamu lama --}}
                 <input type="hidden" name="gmail" value="{{ $tamu->gmail }}">
-                <input type="hidden" name="tipe_tamu" value="lama">
-                <input type="hidden" name="redirect_to" value="success_tamu_lama">
+                <input type="hidden" name="nama_tamu" value="{{ $tamu->nama_tamu }}">
+                <input type="hidden" name="is_lama" value="1">
 
                 <div class="mb-10 text-center">
                     <h2 class="text-2xl md:text-3xl font-black text-emerald-950 uppercase tracking-tighter leading-tight">
@@ -187,14 +187,12 @@
     </div>
 
     <script>
-        // Logika Dropdown Layanan & Dokumen
+        // Script untuk menampilkan panduan layanan
         document.getElementById('select-layanan').addEventListener('change', function() {
             const container = document.getElementById('file-guide-container');
             const selectedOption = this.options[this.selectedIndex];
             const docsData = selectedOption.getAttribute('data-docs');
-
             container.innerHTML = '';
-
             if (docsData) {
                 const dokumens = JSON.parse(docsData);
                 if (dokumens.length > 0) {
@@ -226,22 +224,17 @@
             }
         });
 
-        // Star Rating Logic
+        // Script untuk Rating Bintang
         const starBtns = document.querySelectorAll('.star-btn');
         const ratingInput = document.getElementById('rating-value');
-
         starBtns.forEach(btn => {
             btn.addEventListener('click', function() {
                 const val = parseInt(this.getAttribute('data-value'));
                 ratingInput.value = val;
                 updateStars(val);
             });
-            btn.addEventListener('mouseenter', function() {
-                updateStars(parseInt(this.getAttribute('data-value')));
-            });
-            btn.addEventListener('mouseleave', function() {
-                updateStars(parseInt(ratingInput.value));
-            });
+            btn.addEventListener('mouseenter', function() { updateStars(parseInt(this.getAttribute('data-value'))); });
+            btn.addEventListener('mouseleave', function() { updateStars(parseInt(ratingInput.value)); });
         });
 
         function updateStars(value) {
