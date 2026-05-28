@@ -78,7 +78,7 @@
         
         <div class="mb-6 md:mb-10">
             <h1 class="text-4xl md:text-6xl font-black italic tracking-tighter text-white leading-none">
-                SOWAN <span class="text-emerald-400">V2</span>
+                SOWAN <span class="text-emerald-400">LPSE</span>
             </h1>
             <div class="flex items-center justify-center space-x-3 mt-3 opacity-50">
                 <div class="h-[1px] w-6 bg-emerald-400"></div>

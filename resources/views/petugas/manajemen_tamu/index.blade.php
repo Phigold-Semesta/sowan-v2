@@ -102,26 +102,26 @@
             <table class="w-full text-left border-collapse">
                 <thead>
                     <tr class="bg-slate-50/50 dark:bg-slate-900/50 border-b border-slate-100 dark:border-slate-700">
-                        <th class="px-10 py-7 text-[11px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em]">Profil Tamu</th>
-                        <th class="px-6 py-7 text-[11px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em]">Layanan & Petugas</th>
+                        <th class="px-10 py-7 text-[11px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em] w-16 text-center">No.Antrean</th>
+                        <th class="px-6 py-7 text-[11px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em] text-center">Profil Tamu</th>
+                        <th class="px-6 py-7 text-[11px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em] text-center">Layanan & Petugas</th>
                         <th class="px-6 py-7 text-[11px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em] text-center">Status</th>
-                        <th class="px-10 py-7 text-[11px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em] text-right">Tindakan</th>
+                        <th class="px-10 py-7 text-[11px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em] text-center">Tindakan</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-50 dark:divide-slate-700/50">
-                    @forelse($kunjungans as $item)
+                    @forelse($kunjungans as $index => $item)
                     <tr class="hover:bg-emerald-50/40 dark:hover:bg-emerald-950/10 transition-all duration-300 group">
-                        <td class="px-10 py-6">
-                            <div class="flex items-center gap-5">
-                                <div class="relative shrink-0">
-                                    <div class="w-14 h-14 rounded-[1.5rem] bg-gradient-to-br from-[#008f5d] to-emerald-300 p-0.5 shadow-lg group-hover:scale-110 group-hover:rotate-3 transition-all duration-500">
-                                        <div class="w-full h-full rounded-[1.4rem] bg-white dark:bg-slate-800 flex items-center justify-center">
-                                            <span class="text-transparent bg-clip-text bg-gradient-to-br from-[#008f5d] to-emerald-400 font-black text-xl">
-                                                {{ substr($item->tamu->nama_tamu ?? '?', 0, 1) }}
-                                            </span>
-                                        </div>
-                                    </div>
-                                </div>
+                        <td class="px-10 py-6 text-center">
+                             <div class="relative w-12 h-12 mx-auto flex items-center justify-center">
+                                 <div class="absolute inset-0 bg-[#008f5d] rotate-3 rounded-2xl opacity-10 group-hover:rotate-6 transition-transform"></div>
+                                 <div class="relative w-full h-full flex items-center justify-center rounded-2xl bg-white dark:bg-slate-800 border-2 border-[#008f5d] text-[14px] font-black text-[#008f5d] dark:text-emerald-400 shadow-lg">
+                                     {{ $item->nomor_antrean ?? '-' }}
+                                 </div>
+                             </div>
+                        </td>
+                        <td class="px-6 py-6 text-center">
+                            <div class="flex items-center justify-center gap-5">
                                 <div class="min-w-0">
                                     <p class="text-sm font-black text-slate-800 dark:text-slate-200 uppercase tracking-tight truncate mb-0.5 group-hover:text-[#008f5d] transition-colors">
                                         {{ $item->tamu->nama_tamu ?? 'Tamu Tidak Terdaftar' }}
@@ -132,8 +132,8 @@
                                 </div>
                             </div>
                         </td>
-                        <td class="px-6 py-6">
-                            <div class="flex flex-col gap-1.5">
+                        <td class="px-6 py-6 text-center">
+                            <div class="flex flex-col items-center justify-center gap-1.5">
                                 <span class="px-3 py-1 bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 text-[9px] font-black uppercase rounded-xl border border-emerald-100 dark:border-emerald-800/30 w-fit">
                                     <i class="fas fa-concierge-bell mr-1"></i> {{ $item->layanan->nama_layanan ?? 'Layanan Tidak Terdaftar' }}
                                 </span>
@@ -147,7 +147,6 @@
                         </td>
                         <td class="px-6 py-6 text-center">
                             @php
-                                // PERBAIKAN: Menyamakan Key Status dengan Database & Menambahkan Class Tailwind yang valid
                                 $statusKey = trim(strtolower($item->status));
                                 $statusMap = [
                                     'belum dilayani' => [
@@ -180,13 +179,13 @@
                                     'label' => strtoupper($item->status)
                                 ];
                             @endphp
-                            <span class="inline-flex items-center justify-center text-[9px] font-black uppercase tracking-widest px-5 py-2.5 rounded-full border-2 {{ $st['border'] }} {{ $st['bg'] }} {{ $st['text'] }} shadow-sm min-w-[140px] transition-all duration-500">
+                            <span class="inline-flex items-center justify-center text-[9px] font-black uppercase tracking-widest px-5 py-2.5 rounded-full border-2 {{ $st['border'] }} {{ $st['bg'] }} {{ $st['text'] }} shadow-sm min-w-[140px] transition-all duration-500 mx-auto">
                                 <i class="fas {{ $st['icon'] }} mr-2 @if($statusKey == 'sedang dilayani') fa-beat-fast @endif"></i>
                                 {{ $st['label'] }}
                             </span>
                         </td>
-                        <td class="px-10 py-6">
-                            <div class="flex justify-end items-center gap-3">
+                        <td class="px-10 py-6 text-center">
+                            <div class="flex justify-center items-center gap-3">
                                 <button type="button" onclick="updateStatus('{{ $item->id_kunjungan }}', '{{ addslashes($item->tamu->nama_tamu ?? 'Tamu') }}', '{{ $item->status }}')"
                                         class="w-11 h-11 flex items-center justify-center rounded-[1.2rem] bg-emerald-50 dark:bg-emerald-900/20 text-[#008f5d] dark:text-emerald-400 hover:bg-[#008f5d] hover:text-white transition-all shadow-sm border border-emerald-100 dark:border-emerald-800/50 group/btn">
                                     <i class="fas fa-pen-to-square text-sm"></i>
@@ -212,7 +211,7 @@
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="4" class="px-10 py-32 text-center">
+                        <td colspan="5" class="px-10 py-32 text-center">
                             <div class="flex flex-col items-center justify-center">
                                 <div class="w-24 h-24 bg-slate-50 dark:bg-slate-900 rounded-[2.5rem] flex items-center justify-center mb-6 text-slate-200 dark:text-slate-800 border border-slate-100 dark:border-slate-700">
                                     <i class="fas fa-search fa-3x"></i>
