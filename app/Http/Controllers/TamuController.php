@@ -53,7 +53,7 @@ class TamuController extends Controller
         return view('tamu.form_tamu_baru', compact('gmail', 'layanan', 'petugas'));
     }
 
-   public function store(Request $request)
+  public function store(Request $request)
 {
     // 1. Validasi tetap sama
     $validated = $request->validate([
@@ -70,12 +70,13 @@ class TamuController extends Controller
     ]);
 
     try {
-        $tamuModel = DB::transaction(function () use ($validated, $request) {
+        // Menggunakan array agar bisa mengembalikan objek Tamu DAN Kunjungan
+        $result = DB::transaction(function () use ($validated, $request) {
             // 2. Cek apakah tamu sudah ada
             $tamu = Tamu::where('gmail', $validated['gmail'])->first();
 
             if ($tamu) {
-                // Jika tamu sudah ada (Lama), lakukan update jika datanya dikirim
+                // Jika tamu sudah ada (Lama), lakukan update
                 if ($request->has('nama_tamu')) {
                     $tamu->update([
                         'nama_tamu'     => $validated['nama_tamu'],
@@ -97,13 +98,20 @@ class TamuController extends Controller
                 ]);
             }
 
-            // 4. Simpan Kunjungan
+            // 3. Logika Nomor Antrean Otomatis (+1)
+            $tanggalHariIni = now()->format('Y-m-d');
+            $antreanTerakhir = Kunjungan::whereDate('waktu_masuk', $tanggalHariIni)
+                                        ->max('nomor_antrean') ?? 0;
+            $nomorAntreanBaru = $antreanTerakhir + 1;
+
+            // 4. Simpan Kunjungan dengan nomor antrean
             $kunjungan = Kunjungan::create([
-                'gmail'       => $tamu->gmail,
-                'id_layanan'  => $validated['id_layanan'],
-                'id_petugas'  => $validated['id_petugas'],
-                'waktu_masuk' => now(),
-                'status'      => 'belum dilayani',
+                'gmail'         => $tamu->gmail,
+                'id_layanan'    => $validated['id_layanan'],
+                'id_petugas'    => $validated['id_petugas'],
+                'waktu_masuk'   => now(),
+                'nomor_antrean' => $nomorAntreanBaru,
+                'status'        => 'belum dilayani',
             ]);
 
             // 5. Simpan Rating
@@ -115,17 +123,18 @@ class TamuController extends Controller
                 'updated_at'   => now(),
             ]);
 
-            return $tamu;
+            return ['tamu' => $tamu, 'kunjungan' => $kunjungan];
         });
 
-        // 6. Redirect dengan aman
+        // 6. Redirect dengan menyertakan nomor antrean ke view menggunakan Session Flash
         $routeName = $request->has('is_lama') ? 'tamu.success_lama' : 'tamu.success_baru';
         
         session()->forget('gmail');
 
+        // Mengirim data melalui session flash agar terbaca di view
         return redirect()->route($routeName, [
-            'nama_tamu' => urlencode($tamuModel->nama_tamu)
-        ]);
+            'nama_tamu' => urlencode($result['tamu']->nama_tamu)
+        ])->with('antrean', $result['kunjungan']->nomor_antrean);
 
     } catch (\Exception $e) {
         Log::error("Error saat simpan tamu: " . $e->getMessage());

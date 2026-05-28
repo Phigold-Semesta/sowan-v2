@@ -243,11 +243,16 @@
                 <form id="logout-form" action="{{ route('logout') }}" method="POST" class="hidden">
                     @csrf
                 </form>
-                <button onclick="confirmLogout(event)" 
-                    class="btn-logout nav-item w-full flex items-center justify-center py-4 px-6 rounded-2xl bg-white/5 hover:bg-red-500 hover:shadow-[0_8px_20px_rgba(239,68,68,0.4)] text-red-100 transition-all border border-white/5 group">
-                    <i class="fas fa-power-off w-6 text-center group-hover:scale-110 transition-transform"></i>
-                    <span class="nav-text ml-3 text-sm font-bold tracking-widest uppercase text-nowrap">Log out</span>
-                </button>
+               <button onclick="confirmLogout(event)" 
+    class="btn-logout nav-item w-full flex items-center justify-center py-4 px-6 rounded-2xl 
+    bg-gradient-to-br from-emerald-800 to-emerald-600 
+    hover:from-emerald-700 hover:to-emerald-500 
+    hover:shadow-[0_8px_20px_rgba(16,185,129,0.3)] 
+    text-emerald-50 transition-all border border-emerald-500/20 group">
+    
+    <i class="fas fa-power-off w-6 text-center group-hover:scale-110 transition-transform"></i>
+    <span class="nav-text ml-3 text-sm font-bold tracking-widest uppercase text-nowrap">Log out</span>
+</button>
             </div>
         </aside>
 

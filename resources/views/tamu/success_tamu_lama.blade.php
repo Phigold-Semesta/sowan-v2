@@ -26,14 +26,8 @@
         }
 
         @keyframes cardEntrance {
-            from { 
-                opacity: 0; 
-                transform: scale(0.9) translateY(40px); 
-            }
-            to { 
-                opacity: 1; 
-                transform: scale(1) translateY(0); 
-            }
+            from { opacity: 0; transform: scale(0.9) translateY(40px); }
+            to { opacity: 1; transform: scale(1) translateY(0); }
         }
 
         .welcome-back-badge {
@@ -116,9 +110,14 @@
                 </div>
             </div>
 
-            <h2 class="text-2xl md:text-4xl font-black text-emerald-950 uppercase tracking-tighter mb-3 leading-tight">
+            <h2 class="text-2xl md:text-4xl font-black text-emerald-950 uppercase tracking-tighter mb-1 leading-tight">
                 Kunjungan <br><span class="text-emerald-500 italic font-medium">Tercatat!</span>
             </h2>
+
+            <div class="my-6 p-4 bg-emerald-50 rounded-2xl border border-emerald-100">
+                <p class="text-[9px] md:text-xs font-bold text-emerald-600 uppercase tracking-[0.2em] mb-1">Nomor Antrean Anda</p>
+                <h3 class="text-5xl md:text-6xl font-black text-emerald-900 tracking-tight">{{ session('antrean', '-') }}</h3>
+            </div>
             
             <p class="text-gray-500 text-[10px] md:text-sm font-bold max-w-[200px] md:max-w-xs mx-auto leading-relaxed mb-8 md:mb-10 uppercase tracking-wide">
                 Senang melihat Anda kembali, <span class="text-emerald-700 italic">{{ $nama_tamu ?? 'User' }}</span>. Kunjungan Anda hari ini telah diverifikasi.
@@ -147,7 +146,6 @@
 
     <script>
         window.onload = function() {
-            // Confetti effect yang lebih elegan (warna emerald)
             const count = 200;
             const defaults = {
                 origin: { y: 0.7 },

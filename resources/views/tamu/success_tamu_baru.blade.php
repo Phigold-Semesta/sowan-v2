@@ -10,7 +10,6 @@
     <style>
         body { 
             font-family: 'Plus Jakarta Sans', sans-serif; 
-            /* Perbaikan Background: Menggunakan Linear Gradient agar warna rata dan tidak patah di mobile */
             background: linear-gradient(135deg, #064e3b 0%, #022c22 100%);
             background-attachment: fixed;
             overflow-x: hidden;
@@ -21,44 +20,28 @@
             justify-content: center;
         }
 
-        /* Animasi Kartu Muncul */
         .success-card {
             animation: cardEntrance 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
             backdrop-filter: blur(20px);
         }
 
         @keyframes cardEntrance {
-            from { 
-                opacity: 0; 
-                transform: scale(0.9) translateY(40px); 
-            }
-            to { 
-                opacity: 1; 
-                transform: scale(1) translateY(0); 
-            }
+            from { opacity: 0; transform: scale(0.9) translateY(40px); }
+            to { opacity: 1; transform: scale(1) translateY(0); }
         }
 
-        /* Efek Muncul Pertama Kali Ikon */
-        .check-wrapper {
-            animation: checkPop 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) 0.4s both;
-        }
-
+        .check-wrapper { animation: checkPop 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) 0.4s both; }
         @keyframes checkPop {
             0% { transform: scale(0); rotate: -45deg; }
             100% { transform: scale(1); rotate: 0deg; }
         }
 
-        /* Animasi Ikon Floating (Smooth Naik Turun) */
-        .floating-icon {
-            animation: floatingIcon 3s ease-in-out infinite;
-        }
-
+        .floating-icon { animation: floatingIcon 3s ease-in-out infinite; }
         @keyframes floatingIcon {
             0%, 100% { transform: translateY(0); }
             50% { transform: translateY(-12px); }
         }
 
-        /* Animasi Background Blobs */
         .blob {
             position: absolute;
             width: 300px;
@@ -115,16 +98,21 @@
                 </div>
             </div>
 
-            <h2 class="text-2xl md:text-4xl font-black text-emerald-950 uppercase tracking-tighter mb-3 leading-tight">
-                Registrasi <br><span class="text-emerald-500 italic font-medium">Berhasil!</span>
+            <h2 class="text-2xl md:text-4xl font-black text-emerald-950 uppercase tracking-tighter mb-1 leading-tight">
+                Kunjungan <br><span class="text-emerald-500 italic font-medium">Tercatat!</span>
             </h2>
+
+            <div class="my-6 p-4 bg-emerald-50 rounded-2xl border border-emerald-100">
+                <p class="text-[9px] md:text-xs font-bold text-emerald-600 uppercase tracking-[0.2em] mb-1">Nomor Antrean Anda</p>
+                <h3 class="text-5xl md:text-6xl font-black text-emerald-900 tracking-tight">{{ session('antrean', '-') }}</h3>
+            </div>
             
             <p class="text-gray-500 text-[10px] md:text-sm font-bold max-w-[200px] md:max-w-xs mx-auto leading-relaxed mb-8 md:mb-10 uppercase tracking-wide">
-                Terima kasih, <span class="text-emerald-700 italic">{{ $nama_tamu ?? 'Tamu Terhormat' }}</span>. Data Anda telah diamankan dalam sistem SOWAN.
+                Terima kasih, <span class="text-emerald-700 italic">{{ $nama_tamu ?? 'Tamu Terhormat' }}</span>. Data Anda telah tersimpan dalam sistem SOWAN.
             </p>
 
             <div class="space-y-4">
-                <a href="https://www.google.com" class="inline-flex items-center justify-center w-full py-4 md:py-6 bg-emerald-900 hover:bg-black text-white font-black text-[9px] md:text-xs uppercase tracking-[0.3em] rounded-xl md:rounded-3xl transition-all shadow-xl hover:shadow-emerald-950/20 group active:scale-95">
+                <a href="{{ url('/') }}" class="inline-flex items-center justify-center w-full py-4 md:py-6 bg-emerald-900 hover:bg-black text-white font-black text-[9px] md:text-xs uppercase tracking-[0.3em] rounded-xl md:rounded-3xl transition-all shadow-xl hover:shadow-emerald-950/20 group active:scale-95">
                     <svg class="w-4 h-4 mr-3 transform group-hover:-translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
                     </svg>
