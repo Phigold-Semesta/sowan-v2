@@ -35,9 +35,6 @@ use Illuminate\Support\Facades\Auth;
 |--------------------------------------------------------------------------
 
 */
-
-
-
 // --- 1. JALUR PUBLIK & AUTENTIKASI 🚪 ---
 
 Route::get('/', function () {
@@ -45,32 +42,42 @@ Route::get('/', function () {
 });
 
 /**
- * PENYESUAIAN ALUR TAMU (SESUAI USE CASE REVISI 4):
- * Alur: Scan QR -> Validasi Gmail -> Tampil Form (Baru/Lama) -> Simpan -> Sukses.
+ * PENYESUAIAN ALUR TAMU (SESUAI USE CASE REVISI 4)
  */
 Route::controller(TamuController::class)->group(function () {
-    // 1. Halaman Awal scan QR
-    Route::get('/hadir', 'index')->name('tamu.index'); 
+    // 1. Validasi/Cek Email
+    Route::post('/tamu/check-email', 'checkEmail')->name('tamu.check-email');
+    Route::get('/tamu/check-email', function() { return redirect()->route('login'); });
     
-    // 2. Validasi Gmail
-    Route::post('/tamu/cek', 'check')->name('tamu.login');
-    
-    // Penanganan Error 405 (Jika user refresh halaman hasil cek)
-    Route::get('/tamu/cek', function() {
-        return redirect()->route('tamu.index');
-    });
+    // 2. Halaman Form Tamu Baru
+    Route::get('/tamu/hadir', 'index')->name('tamu.index'); 
     
     // 3. Proses simpan data kunjungan
     Route::post('/tamu/simpan', 'store')->name('tamu.store');
+    Route::get('/tamu/simpan', function() { return redirect()->route('tamu.index'); });
     
-    // 4. VIEW SUKSES (Menggunakan parameter wajib untuk nama tamu)
-    // Penambahan 'where' agar parameter nama bisa menerima karakter spasi/karakter khusus jika diperlukan
-    Route::get('/tamu/sukses/baru/{nama}', 'successBaru')->name('tamu.success_baru')->where('nama', '.*');
-    Route::get('/tamu/sukses/lama/{nama}', 'successLama')->name('tamu.success_lama')->where('nama', '.*');
-    
-    // 5. Fitur Tamu: Unduh Dokumen Panduan
+    // 4. Fitur Tamu: Unduh Dokumen Panduan
     Route::get('/panduan/{id}', 'downloadPanduan')->name('tamu.panduan.download');
 });
+
+// --- RUTE SUKSES (DIPERBAIKI: Menggunakan Closure untuk menghindari error Method Not Found) ---
+// Rute ini dipisah agar tidak mencari method di TamuController yang memang belum dibuat
+Route::get('/tamu/sukses/baru/{nama_tamu}', function ($nama_tamu) {
+    return view('tamu.success_tamu_baru', ['nama_tamu' => urldecode($nama_tamu)]);
+})->name('tamu.success_baru')->where('nama_tamu', '.*');
+
+Route::get('/tamu/sukses/lama/{nama_tamu}', function ($nama_tamu) {
+    return view('tamu.success_tamu_lama', ['nama_tamu' => urldecode($nama_tamu)]);
+})->name('tamu.success_lama')->where('nama_tamu', '.*');
+
+// Logic Login & Logout Dasar (Petugas)
+Route::middleware('guest')->group(function () {
+    Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
+    Route::post('/login', [AuthController::class, 'authenticate'])->name('login.proses');
+});
+
+// --- Area Terproteksi (Lanjutkan dengan route dashboard Anda...) ---
+
 
 // Logic Login & Logout Dasar
 Route::middleware('guest')->group(function () {

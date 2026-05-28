@@ -4,17 +4,25 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\HasMany; // Import HasMany
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Tamu extends Model
 {
     use HasFactory;
 
+    /**
+     * Konfigurasi tabel dan primary key.
+     * Menggunakan gmail sebagai primary key string dan menonaktifkan auto-increment.
+     */
     protected $table = 'tamu';
     protected $primaryKey = 'gmail';
     public $incrementing = false;
     protected $keyType = 'string';
 
+    /**
+     * Properti fillable untuk mass assignment.
+     * Pastikan semua kolom yang diinputkan dari form ada di sini.
+     */
     protected $fillable = [
         'gmail', 
         'no_wa', 
@@ -26,6 +34,13 @@ class Tamu extends Model
     ];
 
     /**
+     * Casting tipe data untuk keamanan data.
+     */
+    protected $casts = [
+        'gmail' => 'string',
+    ];
+
+    /**
      * RELASI: Satu tamu memiliki banyak riwayat kunjungan.
      */
     public function kunjungan(): HasMany
@@ -34,8 +49,7 @@ class Tamu extends Model
     }
 
     /**
-     * RELASI: Satu tamu dapat memberikan rating berkali-kali (banyak)
-     * seiring dengan jumlah kunjungan mereka.
+     * RELASI: Satu tamu dapat memberikan rating berkali-kali.
      */
     public function ratings(): HasMany
     {

@@ -13,47 +13,54 @@ use Illuminate\Support\Facades\Log;
 class TamuController extends Controller
 {
     /**
-     * Tampilan awal saat tamu pertama kali datang (Scan QR).
+     * LOGIKA IMPLICIT REGISTRATION
+     */
+    public function checkEmail(Request $request)
+    {
+        $request->validate(['gmail' => 'required|email|max:255']);
+        $gmail = $request->gmail;
+
+        session(['gmail' => $gmail]);
+
+        $tamu = Tamu::where('gmail', $gmail)->first();
+
+        if ($tamu) {
+            $layanan = Layanan::with('dokumens')->orderBy('nama_layanan', 'asc')->get();
+            $petugas = PetugasTujuan::orderBy('nama_petugas', 'asc')->get();
+            return view('tamu.form_tamu_lama', compact('tamu', 'layanan', 'petugas', 'gmail'));
+        }
+
+        return redirect()->route('tamu.index');
+    }
+
+    /**
+     * Tampilan form tamu baru.
      */
     public function index()
     {
-        $gmail = null;
-        $layanan = Layanan::with('dokumens')->orderBy('nama_layanan', 'asc')->get();
+        $gmail = session('gmail'); 
+        
+        if (!$gmail) {
+            return redirect()->route('tamu.index'); 
+        }
+
+        $layanan = Layanan::with('dokumens')
+            ->orderBy('nama_layanan', 'asc')
+            ->get();
+            
         $petugas = PetugasTujuan::orderBy('nama_petugas', 'asc')->get();
 
         return view('tamu.form_tamu_baru', compact('gmail', 'layanan', 'petugas'));
     }
 
     /**
-     * Validasi Gmail: Membedakan tamu baru dan tamu lama.
-     */
-    public function check(Request $request)
-    {
-        $request->validate(['gmail' => 'required|email|max:255']);
-        $gmail = $request->gmail;
-
-        $layanan = Layanan::with('dokumens')->orderBy('nama_layanan', 'asc')->get();
-        $petugas = PetugasTujuan::orderBy('nama_petugas', 'asc')->get();
-
-        $tamu = Tamu::where('gmail', $gmail)->first();
-
-        if ($tamu) {
-            return view('tamu.form_tamu_lama', compact('tamu', 'layanan', 'petugas', 'gmail'));
-        }
-
-        return view('tamu.form_tamu_baru', compact('layanan', 'petugas', 'gmail'));
-    }
-
-    /**
-     * Simpan Data Kunjungan & Rating secara dinamis.
+     * Simpan Data Kunjungan & Rating.
      */
     public function store(Request $request)
     {
-        Log::info('Proses store tamu dimulai:', $request->all());
-
         $validated = $request->validate([
             'gmail'         => 'required|email|max:255',
-            'nama_tamu'     => 'required_if:tipe_tamu,baru|nullable|string|max:255',
+            'nama_tamu'     => 'required|string|max:255',
             'no_wa'         => 'nullable|string|max:15',
             'jenis_tamu'    => 'nullable|string',
             'nama_instansi' => 'nullable|string|max:255',
@@ -63,66 +70,64 @@ class TamuController extends Controller
             'id_petugas'    => 'required|exists:petugas_tujuan,id_petugas',
             'skor'          => 'nullable|integer|min:0|max:5', 
             'komentar'      => 'nullable|string',
-            'tipe_tamu'     => 'required|string|in:baru,lama'
+            'is_lama'       => 'nullable|boolean', 
         ]);
 
         try {
-            $tamuModel = DB::transaction(function () use ($validated) {
-                if ($validated['tipe_tamu'] === 'baru') {
-                    return Tamu::updateOrCreate(
-                        ['gmail' => $validated['gmail']],
-                        [
-                            'nama_tamu'     => $validated['nama_tamu'],
-                            'no_wa'         => $validated['no_wa'],
-                            'jenis_tamu'    => $validated['jenis_tamu'],
-                            'nama_instansi' => $validated['nama_instansi'],
-                            'alamat_kantor' => $validated['alamat_kantor'],
-                            'hadir_sebagai' => $validated['hadir_sebagai'],
-                        ]
-                    );
-                }
-                return Tamu::where('gmail', $validated['gmail'])->firstOrFail();
+            $result = DB::transaction(function () use ($validated) {
+                // 1. Update/Create Profil Tamu
+                $tamuModel = Tamu::updateOrCreate(
+                    ['gmail' => $validated['gmail']],
+                    [
+                        'nama_tamu'     => $validated['nama_tamu'],
+                        'no_wa'         => $validated['no_wa'],
+                        'jenis_tamu'    => $validated['jenis_tamu'],
+                        'nama_instansi' => $validated['nama_instansi'],
+                        'alamat_kantor' => $validated['alamat_kantor'],
+                        'hadir_sebagai' => $validated['hadir_sebagai'],
+                    ]
+                );
+
+                // 2. Simpan Kunjungan
+                $kunjungan = Kunjungan::create([
+                    'gmail'       => $tamuModel->gmail,
+                    'id_layanan'  => $validated['id_layanan'],
+                    'id_petugas'  => $validated['id_petugas'],
+                    'waktu_masuk' => now(),
+                    'status'      => 'belum dilayani',
+                ]);
+
+                // 3. Simpan Rating
+                // PENTING: Jika error 1364 masih muncul, pastikan di phpMyAdmin 
+                // tabel 'rating_layanan' kolom 'id_rating' sudah dicentang A_I (Auto Increment).
+                DB::table('rating_layanan')->insert([
+                    'id_kunjungan' => $kunjungan->id_kunjungan,
+                    'skor'         => $validated['skor'] ?? 0,
+                    'komentar'     => $validated['komentar'] ?? null,
+                    'created_at'   => now(),
+                    'updated_at'   => now(),
+                ]);
+
+                return ['tamu' => $tamuModel, 'is_lama' => $validated['is_lama'] ?? false];
             });
 
-            $kunjungan = Kunjungan::create([
-                'gmail'       => $tamuModel->gmail,
-                'id_layanan'  => $validated['id_layanan'],
-                'id_petugas'  => $validated['id_petugas'],
-                'waktu_masuk' => now(),
-                'status'      => 'belum dilayani', 
-            ]);
+            // Bersihkan session
+            session()->forget('gmail');
 
-            DB::table('rating_layanan')->insert([
-                'id_kunjungan' => $kunjungan->id_kunjungan,
-                'skor'         => $validated['skor'] ?? 0,
-                'komentar'     => $validated['komentar'] ?? null,
-                'created_at'   => now(),
-                'updated_at'   => now(),
-            ]);
-
-            $targetRoute = ($validated['tipe_tamu'] === 'lama') ? 'tamu.success_lama' : 'tamu.success_baru';
+            // Redirect ke route sukses
+            $routeName = $result['is_lama'] ? 'tamu.success_lama' : 'tamu.success_baru';
             
-            // Redirect langsung ke rute sukses dengan nama sebagai parameter
-            return redirect()->route($targetRoute, ['nama' => $tamuModel->nama_tamu]);
+            return redirect()->route($routeName, [
+                'nama_tamu' => urlencode($result['tamu']->nama_tamu)
+            ]);
 
         } catch (\Exception $e) {
-            Log::error('Error Fatal Store Tamu: ' . $e->getMessage());
+            // Logging untuk pelacakan jika error di masa depan
+            Log::error("Error saat simpan tamu: " . $e->getMessage());
+            
             return redirect()->back()
                 ->withInput()
-                ->withErrors(['error' => 'Data tidak dapat diproses: ' . $e->getMessage()]);
+                ->with('error', 'Gagal mencatat data: ' . $e->getMessage());
         }
-    }
-
-    /**
-     * Menerima parameter nama dan menampilkan view sukses
-     */
-    public function successBaru(string $nama)
-    {
-        return view('tamu.success_tamu_baru', ['nama_tamu' => $nama]);
-    }
-
-    public function successLama(string $nama)
-    {
-        return view('tamu.success_tamu_lama', ['nama_tamu' => $nama]);
     }
 }

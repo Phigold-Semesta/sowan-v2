@@ -11,10 +11,14 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
-        // Mendaftarkan alias middleware agar bisa digunakan di routes/web.php
+        // 1. Mendaftarkan alias middleware agar bisa digunakan dengan penamaan 'role'
         $middleware->alias([
             'role' => \App\Http\Middleware\CheckRole::class,
         ]);
+
+        // 2. PENTING: Jangan masukkan 'role' ke dalam 'web' group secara default.
+        // Biarkan 'web' group tetap standar Laravel agar session dan cookies 
+        // untuk tamu tetap berfungsi normal tanpa dipaksa login.
     })
     ->withExceptions(function (Exceptions $exceptions) {
         //

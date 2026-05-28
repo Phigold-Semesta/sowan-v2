@@ -121,8 +121,8 @@
                     <button type="submit" class="w-full bg-emerald-400 hover:bg-emerald-300 text-emerald-950 font-black py-3 sm:py-4 rounded-full shadow-[0_15px_40px_rgba(52,211,153,0.3)] transition-all mt-6 sm:mt-8 text-[10px] sm:text-xs tracking-[0.2em] uppercase">LOG IN</button>
                 </form>
 
-                {{-- Form Tamu --}}
-                <form id="tamu-form" action="{{ route('tamu.login') }}" method="POST" class="space-y-4 sm:space-y-6 hidden">
+                {{-- Form Tamu (DISESUAIKAN: Mengarah ke route check-email) --}}
+                <form id="tamu-form" action="{{ route('tamu.check-email') }}" method="POST" class="space-y-4 sm:space-y-6 hidden">
                     @csrf
                     <div class="group">
                         <label for="gmail" class="block text-emerald-200 text-[9px] sm:text-[10px] uppercase font-black tracking-[0.3em] mb-2 ml-4 sm:ml-6 opacity-80">Email Tamu</label>
