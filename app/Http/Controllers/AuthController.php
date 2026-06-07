@@ -10,81 +10,94 @@ use Illuminate\Support\Facades\Session;
 class AuthController extends Controller
 {
     /**
-     * Menampilkan halaman login untuk User (Petugas/Admin/Pimpinan)
+     * Menampilkan halaman login untuk Internal (Petugas/Admin/Pimpinan)
      */
     public function showLogin()
     {
+        if (Auth::check()) {
+            return redirect()->route('dashboard');
+        }
         return view('auth.login');
     }
 
     /**
-     * Proses validasi login menggunakan Username untuk Petugas
+     * Menampilkan halaman Portal Publik (Tamu)
+     */
+    public function showPublik()
+    {
+        if (Auth::check()) {
+            return redirect()->route('dashboard');
+        }
+        return view('auth.publik');
+    }
+
+    /**
+     * Proses validasi login untuk Internal
      */
     public function authenticate(Request $request)
     {
-        // 1. Validasi input
         $credentials = $request->validate([
             'username' => ['required', 'string'],
             'password' => ['required'],
         ]);
 
-        // 2. Auth::attempt untuk Petugas
         if (Auth::attempt($credentials)) {
             $request->session()->regenerate();
             return redirect()->intended('/dashboard');
         }
 
-        // 3. Jika gagal
         return back()->withErrors([
             'username' => 'Username atau password yang Anda masukkan salah.',
         ])->onlyInput('username');
     }
 
     /**
-     * Proses Implicit Registration / Login untuk Tamu
-     * Menyesuaikan dengan logika tamu baru vs tamu lama
+     * Proses Implicit Registration / Login untuk Tamu (Portal Publik)
+     * Disempurnakan untuk menangani error field database agar tidak crash
      */
-    public function handleGuest(Request $request)
+    public function checkEmail(Request $request)
     {
-        // 1. Validasi input email
         $request->validate([
-            'email' => ['required', 'email'],
+            'gmail' => ['required', 'email'],
         ]);
 
-        // 2. Cari tamu berdasarkan email (Implicit Check)
-        $tamu = Tamu::where('email', $request->email)->first();
+        $tamu = Tamu::where('gmail', $request->gmail)->first();
 
         if (!$tamu) {
-            // Jika tamu baru: Lakukan registrasi otomatis
+            // Jika tamu baru, isi dengan default agar tidak melanggar aturan database
             $tamu = Tamu::create([
-                'email' => $request->email,
-                // Tambahkan field default lainnya jika perlu
+                'gmail'         => $request->gmail,
+                'nama_tamu'     => 'Tamu Baru',
+                'no_wa'         => '-',
+                'nama_instansi' => '-',
+                'alamat_kantor' => '-',
+                'hadir_sebagai' => '-',
             ]);
             Session::put('is_new_guest', true);
         } else {
-            // Jika tamu lama: Cukup tandai sebagai tamu kembali
             Session::put('is_new_guest', false);
         }
 
-        // 3. Simpan ID tamu ke session untuk alur selanjutnya
+        // --- SINKRONISASI ---
+        // Simpan ke session agar TamuController bisa mendeteksi status & email
+        Session::put('gmail', $request->gmail); 
         Session::put('tamu_id', $tamu->id);
 
-        // 4. Redirect ke halaman pengisian data kunjungan
-        return redirect()->route('tamu.kunjungan.form');
+        return redirect()->route('tamu.index')->with('success', 'Silakan isi data kunjungan Anda.');
     }
 
     /**
-     * Proses logout untuk menghancurkan session
+     * Proses logout
      */
     public function logout(Request $request)
     {
-        // Logout Petugas
-        Auth::logout();
+        if (Auth::check()) {
+            Auth::logout();
+        }
         
-        // Menghapus data session, token CSRF, dan data tamu (jika ada)
-        $request->session()->invalidate();
+        $request->session()->flush();
         $request->session()->regenerateToken();
 
-        return redirect('/login');
+        return redirect('/');
     }
 }

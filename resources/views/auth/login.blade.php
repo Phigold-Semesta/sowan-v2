@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Login | SOWAN v2 LPSE Karawang</title>
+    <title>Internal Login | SOWAN v2 LPSE Karawang</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;700;800&display=swap" rel="stylesheet">
     <style>
@@ -51,32 +51,6 @@
             box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
         }
     </style>
-    <script>
-        function switchTab(tab) {
-            const pForm = document.getElementById('petugas-form');
-            const tForm = document.getElementById('tamu-form');
-            const btnP = document.getElementById('btn-petugas');
-            const btnT = document.getElementById('btn-tamu');
-            const pTitle = document.getElementById('portal-title');
-            const pSub = document.getElementById('portal-subtitle');
-
-            if(tab === 'petugas') {
-                pForm.classList.remove('hidden');
-                tForm.classList.add('hidden');
-                pTitle.innerText = "Portal Petugas";
-                pSub.innerText = "Authentication Required";
-                btnP.className = "flex-1 py-3 text-[10px] font-black uppercase tracking-[0.2em] bg-emerald-400 text-emerald-950 rounded-full shadow-lg transition-all";
-                btnT.className = "flex-1 py-3 text-[10px] font-black uppercase tracking-[0.2em] text-white/30 hover:text-white transition-all";
-            } else {
-                pForm.classList.add('hidden');
-                tForm.classList.remove('hidden');
-                pTitle.innerText = "Portal Tamu";
-                pSub.innerText = "Guest Access Portal";
-                btnT.className = "flex-1 py-3 text-[10px] font-black uppercase tracking-[0.2em] bg-emerald-400 text-emerald-950 rounded-full shadow-lg transition-all";
-                btnP.className = "flex-1 py-3 text-[10px] font-black uppercase tracking-[0.2em] text-white/30 hover:text-white transition-all";
-            }
-        }
-    </script>
 </head>
 <body class="p-4 sm:p-6">
     <div class="luxury-overlay"></div>
@@ -90,15 +64,10 @@
         </div>
 
         <div class="glass-card p-6 sm:p-10 rounded-[2rem] sm:rounded-[3rem] relative overflow-hidden">
-            <div class="flex bg-black/20 p-1 rounded-full mb-6 sm:mb-8 border border-white/5 relative z-10">
-                <button id="btn-petugas" onclick="switchTab('petugas')" class="flex-1 py-3 text-[10px] font-black uppercase tracking-[0.2em] bg-emerald-400 text-emerald-950 rounded-full shadow-lg transition-all">Petugas</button>
-                <button id="btn-tamu" onclick="switchTab('tamu')" class="flex-1 py-3 text-[10px] font-black uppercase tracking-[0.2em] text-white/30 hover:text-white transition-all">Tamu</button>
-            </div>
-
             <div class="relative z-10">
-                <div class="flex flex-col items-center justify-center text-center">
-                    <h2 id="portal-title" class="text-white text-xl sm:text-2xl font-extrabold mb-1 tracking-tight">Portal Petugas</h2>
-                    <p id="portal-subtitle" class="text-emerald-100/50 text-[9px] sm:text-[10px] mb-6 sm:mb-8 tracking-[0.3em] uppercase font-black">Authentication Required</p>
+                <div class="flex flex-col items-center justify-center text-center mb-8">
+                    <h2 class="text-white text-xl sm:text-2xl font-extrabold mb-1 tracking-tight">Portal Internal</h2>
+                    <p class="text-emerald-100/50 text-[9px] sm:text-[10px] tracking-[0.3em] uppercase font-black">Admin, Petugas & Pimpinan</p>
                 </div>
 
                 @if ($errors->any())
@@ -107,28 +76,18 @@
                     </div>
                 @endif
 
-                {{-- Form Petugas --}}
-                <form id="petugas-form" action="{{ route('login.proses') }}" method="POST" class="space-y-4 sm:space-y-6">
+                {{-- Form Internal --}}
+                <form action="{{ route('login.proses') }}" method="POST" class="space-y-4 sm:space-y-6">
                     @csrf
                     <div class="group">
                         <label class="block text-emerald-200 text-[9px] sm:text-[10px] uppercase font-black tracking-[0.3em] mb-2 ml-4 sm:ml-6 opacity-80">Username</label>
-                        <input type="text" name="username" value="{{ old('username') }}" class="w-full px-6 sm:px-8 py-3 sm:py-4 bg-white border border-white/10 rounded-full focus:outline-none focus:ring-2 focus:ring-emerald-400 text-gray-800 text-sm font-semibold" placeholder="Ketik username" required>
+                        <input type="text" name="username" value="{{ old('username') }}" class="w-full px-6 sm:px-8 py-3 sm:py-4 bg-white border border-white/10 rounded-full focus:outline-none focus:ring-2 focus:ring-emerald-400 text-gray-800 text-sm font-semibold" placeholder="Username internal" required>
                     </div>
                     <div class="group">
                         <label class="block text-emerald-200 text-[9px] sm:text-[10px] uppercase font-black tracking-[0.3em] mb-2 ml-4 sm:ml-6 opacity-80">Password</label>
                         <input type="password" name="password" class="w-full px-6 sm:px-8 py-3 sm:py-4 bg-white border border-white/10 rounded-full focus:outline-none focus:ring-2 focus:ring-emerald-400 text-gray-800 text-sm font-semibold" placeholder="••••••••" required>
                     </div>
-                    <button type="submit" class="w-full bg-emerald-400 hover:bg-emerald-300 text-emerald-950 font-black py-3 sm:py-4 rounded-full shadow-[0_15px_40px_rgba(52,211,153,0.3)] transition-all mt-6 sm:mt-8 text-[10px] sm:text-xs tracking-[0.2em] uppercase">LOG IN</button>
-                </form>
-
-                {{-- Form Tamu (DISESUAIKAN: Mengarah ke route check-email) --}}
-                <form id="tamu-form" action="{{ route('tamu.check-email') }}" method="POST" class="space-y-4 sm:space-y-6 hidden">
-                    @csrf
-                    <div class="group">
-                        <label for="gmail" class="block text-emerald-200 text-[9px] sm:text-[10px] uppercase font-black tracking-[0.3em] mb-2 ml-4 sm:ml-6 opacity-80">Email Tamu</label>
-                        <input type="email" name="gmail" id="gmail" class="w-full px-6 sm:px-8 py-3 sm:py-4 bg-white border border-white/10 rounded-full focus:outline-none focus:ring-2 focus:ring-emerald-400 text-gray-800 text-sm font-semibold" placeholder="Contoh: user@gmail.com" required>
-                    </div>
-                    <button type="submit" class="w-full bg-emerald-400 hover:bg-emerald-300 text-emerald-950 font-black py-3 sm:py-4 rounded-full shadow-[0_15px_40px_rgba(52,211,153,0.3)] transition-all mt-6 sm:mt-8 text-[10px] sm:text-xs tracking-[0.2em] uppercase">LANJUTKAN</button>
+                    <button type="submit" class="w-full bg-emerald-400 hover:bg-emerald-300 text-emerald-950 font-black py-3 sm:py-4 rounded-full shadow-[0_15px_40px_rgba(52,211,153,0.3)] transition-all mt-6 sm:mt-8 text-[10px] sm:text-xs tracking-[0.2em] uppercase">MASUK PORTAL</button>
                 </form>
             </div>
         </div>

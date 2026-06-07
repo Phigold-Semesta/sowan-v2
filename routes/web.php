@@ -41,24 +41,23 @@ use Illuminate\Support\Facades\Auth;
 |--------------------------------------------------------------------------
 */
 
-// 1. JALUR PUBLIK (Tamu & Login)
-Route::get('/', function () { return redirect()->route('login'); });
+/// --- 1. JALUR PUBLIK (Tamu & Rute Sukses) ---
+Route::get('/', [AuthController::class, 'showPublik'])->name('tamu.login');
+Route::post('/tamu/check-email', [AuthController::class, 'checkEmail'])->name('tamu.check-email');
 
 Route::controller(TamuController::class)->group(function () {
-    // Penanganan rute check-email (POST untuk aksi, GET untuk redirect agar tidak 405)
-    Route::post('/tamu/check-email', 'checkEmail')->name('tamu.check-email');
-    Route::get('/tamu/check-email', function() { return redirect()->route('tamu.index'); });
+    // Redirect agar tidak bisa diakses langsung via browser
+    Route::get('/tamu/check-email', function() { return redirect()->route('tamu.login'); });
     
+    // Pastikan fungsi index() di TamuController TIDAK memiliki pengecekan middleware 'auth'
     Route::get('/tamu/hadir', 'index')->name('tamu.index'); 
     
-    // Penanganan rute simpan (POST untuk aksi, GET untuk redirect agar tidak 405)
     Route::post('/tamu/simpan', 'store')->name('tamu.store');
     Route::get('/tamu/simpan', function() { return redirect()->route('tamu.index'); });
-    
     Route::get('/panduan/{id}', 'downloadPanduan')->name('tamu.panduan.download');
 });
 
-// RUTE SUKSES (DIPINDAHKAN KELUAR DARI MIDDLEWARE 'auth')
+// Rute sukses tetap di luar middleware 'auth'
 Route::get('/tamu/sukses/baru/{nama_tamu}', function ($nama_tamu) {
     return view('tamu.success_tamu_baru', ['nama_tamu' => urldecode($nama_tamu)]);
 })->name('tamu.success_baru')->where('nama_tamu', '.*');
@@ -67,16 +66,17 @@ Route::get('/tamu/sukses/lama/{nama_tamu}', function ($nama_tamu) {
     return view('tamu.success_tamu_lama', ['nama_tamu' => urldecode($nama_tamu)]);
 })->name('tamu.success_lama')->where('nama_tamu', '.*');
 
-// Logic Login & Logout Dasar
+// --- 2. JALUR AUTENTIKASI (Khusus Internal) ---
 Route::middleware('guest')->group(function () {
     Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
     Route::post('/login', [AuthController::class, 'authenticate'])->name('login.proses');
 });
 
-// --- 2. AREA TERPROTEKSI (WAJIB LOGIN) 🔐 ---
+// --- 3. AREA TERPROTEKSI (WAJIB LOGIN INTERNAL) ---
 Route::middleware('auth')->group(function () {
-
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
+
+    // Dashboard & rute internal lainnya...
 
     /**
 
