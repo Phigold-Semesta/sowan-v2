@@ -41,9 +41,32 @@ use Illuminate\Support\Facades\Auth;
 |--------------------------------------------------------------------------
 */
 
-/// --- 1. JALUR PUBLIK (Tamu & Rute Sukses) ---
-Route::get('/', [AuthController::class, 'showPublik'])->name('tamu.login');
-Route::post('/tamu/check-email', [AuthController::class, 'checkEmail'])->name('tamu.check-email');
+
+// 1. PORTAL PUBLIK (Tamu Online - Frontend untuk Registrasi & Login)
+
+// 1. PORTAL PUBLIK (Tamu Online - Frontend untuk Registrasi & Login)
+// --- 1. RUTE ROOT (Halaman Utama diarahkan ke Tamu Onsite) ---
+// Ketika user mengakses http://127.0.0.1:8000/, sistem langsung menampilkan Tamu Onsite
+Route::get('/', [AuthController::class, 'showTamuOnsite'])->name('auth.tamu_onsite');
+
+// --- 2. PORTAL PUBLIK (Tamu Online - Akses manual lewat /portal) ---
+Route::prefix('portal')->name('tamu.')->group(function () {
+    Route::get('/', [AuthController::class, 'showPublik'])->name('login'); 
+    Route::get('/register', [AuthController::class, 'showSignup'])->name('register.view');
+    Route::post('/check-email', [AuthController::class, 'checkEmail'])->name('check-email');
+    Route::post('/register/store', [AuthController::class, 'registerOnline'])->name('register.store');
+    Route::post('/login', [AuthController::class, 'loginOnline'])->name('login.online');
+    
+    Route::middleware('tamu.auth')->group(function () {
+        Route::get('/dashboard', [TamuController::class, 'dashboard'])->name('dashboard');
+    });
+});
+
+/// --- 3. JALUR TAMU ONSITE (Scan QR Code di Lokasi) ---
+Route::prefix('tamu-onsite')->name('tamu.onsite.')->group(function () {
+    Route::get('/portal', [AuthController::class, 'showTamuOnsite'])->name('view');
+    Route::post('/check-email', [AuthController::class, 'checkEmailOnsite'])->name('check-email');
+});
 
 Route::controller(TamuController::class)->group(function () {
     // Redirect agar tidak bisa diakses langsung via browser

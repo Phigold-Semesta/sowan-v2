@@ -3,37 +3,23 @@
 namespace App\Http\Controllers;
 
 use App\Models\Tamu;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Session;
 
 class AuthController extends Controller
 {
-    /**
-     * Menampilkan halaman login untuk Internal (Petugas/Admin/Pimpinan)
-     */
+    // =========================================================================
+    // 1. PORTAL INTERNAL (Admin, Petugas, Pimpinan)
+    // =========================================================================
     public function showLogin()
     {
-        if (Auth::check()) {
-            return redirect()->route('dashboard');
-        }
+        if (Auth::check()) return redirect()->route('dashboard');
         return view('auth.login');
     }
 
-    /**
-     * Menampilkan halaman Portal Publik (Tamu)
-     */
-    public function showPublik()
-    {
-        if (Auth::check()) {
-            return redirect()->route('dashboard');
-        }
-        return view('auth.publik');
-    }
-
-    /**
-     * Proses validasi login untuk Internal
-     */
     public function authenticate(Request $request)
     {
         $credentials = $request->validate([
@@ -46,25 +32,28 @@ class AuthController extends Controller
             return redirect()->intended('/dashboard');
         }
 
-        return back()->withErrors([
-            'username' => 'Username atau password yang Anda masukkan salah.',
-        ])->onlyInput('username');
+        return back()->withErrors(['username' => 'Username atau password salah.']);
     }
 
-    /**
-     * Proses Implicit Registration / Login untuk Tamu (Portal Publik)
-     * Disempurnakan untuk menangani error field database agar tidak crash
-     */
-    public function checkEmail(Request $request)
+    // =========================================================================
+    // 2. PORTAL TAMU ONSITE (Scan QR - Implicit Registration)
+    // =========================================================================
+    public function showTamuOnsite()
     {
-        $request->validate([
-            'gmail' => ['required', 'email'],
-        ]);
+        return view('auth.tamu_onsite');
+    }
+
+    public function checkEmailOnsite(Request $request)
+    {
+        $request->validate(['gmail' => ['required', 'email']]);
 
         $tamu = Tamu::where('gmail', $request->gmail)->first();
 
+        // Simpan email ke session untuk digunakan di form selanjutnya
+        Session::put('gmail', $request->gmail);
+
         if (!$tamu) {
-            // Jika tamu baru, isi dengan default agar tidak melanggar aturan database
+            // JIKA TAMU BARU: Buat data dan arahkan ke form_tamu_baru
             $tamu = Tamu::create([
                 'gmail'         => $request->gmail,
                 'nama_tamu'     => 'Tamu Baru',
@@ -72,32 +61,79 @@ class AuthController extends Controller
                 'nama_instansi' => '-',
                 'alamat_kantor' => '-',
                 'hadir_sebagai' => '-',
+                'jenis_tamu'    => 'Non-Penyedia',
             ]);
-            Session::put('is_new_guest', true);
+            
+            Session::put(['tamu_id' => $tamu->id, 'is_new_guest' => true]);
+            return redirect()->route('tamu.form_baru')->with('success', 'Silakan lengkapi data kunjungan.');
         } else {
-            Session::put('is_new_guest', false);
+            // JIKA TAMU LAMA: Arahkan ke form_tamu_lama
+            Session::put(['tamu_id' => $tamu->id, 'is_new_guest' => false]);
+            return redirect()->route('tamu.form_lama')->with('success', 'Selamat datang kembali, silakan isi data kunjungan.');
         }
-
-        // --- SINKRONISASI ---
-        // Simpan ke session agar TamuController bisa mendeteksi status & email
-        Session::put('gmail', $request->gmail); 
-        Session::put('tamu_id', $tamu->id);
-
-        return redirect()->route('tamu.index')->with('success', 'Silakan isi data kunjungan Anda.');
     }
 
-    /**
-     * Proses logout
-     */
+    // =========================================================================
+    // 3. PORTAL PUBLIK/ONLINE (Frontend Tamu - Manual Register/Login)
+    // =========================================================================
+    
+    public function showPublik()
+    {
+        return view('auth.tamu.publik');
+    }
+
+    public function showSignup()
+    {
+        return view('auth.tamu.signup');
+    }
+
+    public function registerOnline(Request $request)
+    {
+        $validated = $request->validate([
+            'nama_tamu'     => 'required|string|max:100',
+            'gmail'         => 'required|email|unique:tamu,gmail',
+            'password'      => 'required|min:8',
+            'no_wa'         => 'required|string|max:25',
+            'nama_instansi' => 'required|string|max:100',
+            'alamat_kantor' => 'required|string',
+            'hadir_sebagai' => 'required|string|max:50',
+            'jenis_tamu'    => 'required|in:Penyedia,Non-Penyedia',
+        ]);
+
+        Tamu::create([
+            'nama_tamu'     => $validated['nama_tamu'],
+            'gmail'         => $validated['gmail'],
+            'password'      => Hash::make($validated['password']),
+            'no_wa'         => $validated['no_wa'],
+            'nama_instansi' => $validated['nama_instansi'],
+            'alamat_kantor' => $validated['alamat_kantor'],
+            'hadir_sebagai' => $validated['hadir_sebagai'],
+            'jenis_tamu'    => $validated['jenis_tamu'],
+        ]);
+
+        return redirect()->route('tamu.publik')->with('success', 'Akun berhasil dibuat! Silakan login menggunakan email Anda.');
+    }
+
+    public function loginOnline(Request $request)
+    {
+        $tamu = Tamu::where('gmail', $request->gmail)->first();
+
+        if ($tamu && Hash::check($request->password, $tamu->password)) {
+            Session::put('tamu_id', $tamu->id);
+            return redirect()->route('tamu.dashboard');
+        }
+
+        return back()->withErrors(['gmail' => 'Email atau password salah.']);
+    }
+
+    // =========================================================================
+    // LOGOUT TERPUSAT
+    // =========================================================================
     public function logout(Request $request)
     {
-        if (Auth::check()) {
-            Auth::logout();
-        }
-        
+        if (Auth::check()) Auth::logout();
         $request->session()->flush();
         $request->session()->regenerateToken();
-
         return redirect('/');
     }
 }

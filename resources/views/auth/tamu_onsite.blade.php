@@ -44,7 +44,7 @@
 
         <div class="glass-card p-8 sm:p-10 rounded-[2rem] relative overflow-hidden">
             <div class="text-center mb-8">
-                <h2 class="text-white text-xl sm:text-2xl font-extrabold mb-1">Portal Publik</h2>
+                <h2 class="text-white text-xl sm:text-2xl font-extrabold mb-1">Portal Tamu</h2>
                 <p class="text-emerald-100/60 text-[10px] uppercase font-black tracking-[0.2em]">Silakan masukkan email untuk akses layanan</p>
             </div>
 

@@ -11,14 +11,15 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
-        // 1. Mendaftarkan alias middleware agar bisa digunakan dengan penamaan 'role'
+        // 1. Mendaftarkan alias middleware agar bisa digunakan dengan penamaan yang tepat
         $middleware->alias([
-            'role' => \App\Http\Middleware\CheckRole::class,
+            'role'      => \App\Http\Middleware\CheckRole::class,
+            'tamu.auth' => \App\Http\Middleware\TamuMiddleware::class, // Alias untuk portal tamu
         ]);
 
-        // 2. PENTING: Jangan masukkan 'role' ke dalam 'web' group secara default.
+        // 2. PENTING: Jangan masukkan middleware ke dalam 'web' group secara default.
         // Biarkan 'web' group tetap standar Laravel agar session dan cookies 
-        // untuk tamu tetap berfungsi normal tanpa dipaksa login.
+        // untuk tamu tetap berfungsi normal tanpa dipaksa login secara paksa.
     })
     ->withExceptions(function (Exceptions $exceptions) {
         //

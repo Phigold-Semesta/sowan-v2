@@ -19,18 +19,18 @@ class TamuController extends Controller
      */
     public function index()
     {
-        $gmail = session('gmail'); 
+        $gmail = Session::get('gmail'); 
         
         // 1. Keamanan: Jika session gmail tidak ada, kembali ke portal login
         if (!$gmail) {
-            return redirect()->route('tamu.login'); 
+            return redirect()->route('tamu.publik')->with('error', 'Sesi Anda telah berakhir.'); 
         }
 
         $layanan = Layanan::with('dokumens')->orderBy('nama_layanan', 'asc')->get();
         $petugas = PetugasTujuan::orderBy('nama_petugas', 'asc')->get();
         
         // 2. PENENTUAN VIEW: Berdasarkan status yang diset di AuthController
-        $isNewGuest = session('is_new_guest', true);
+        $isNewGuest = Session::get('is_new_guest', true);
 
         if ($isNewGuest) {
             // Arahkan ke Form Tamu Baru
@@ -59,7 +59,7 @@ class TamuController extends Controller
         ]);
 
         try {
-            $result = DB::transaction(function () use ($validated, $request) {
+            $result = DB::transaction(function () use ($validated) {
                 // 2. Update atau Create Tamu
                 $tamu = Tamu::where('gmail', $validated['gmail'])->first();
 
@@ -97,24 +97,26 @@ class TamuController extends Controller
                     'status'        => 'belum dilayani',
                 ]);
 
-                // 5. Simpan Rating
-                DB::table('rating_layanan')->insert([
-                    'id_kunjungan' => $kunjungan->id_kunjungan,
-                    'skor'         => $validated['skor'] ?? 0,
-                    'komentar'     => $validated['komentar'] ?? null,
-                    'created_at'   => now(),
-                    'updated_at'   => now(),
-                ]);
+                // 5. Simpan Rating (Opsional)
+                if (isset($validated['skor']) && !empty($validated['skor'])) {
+                    DB::table('rating_layanan')->insert([
+                        'id_kunjungan' => $kunjungan->id_kunjungan,
+                        'skor'         => $validated['skor'],
+                        'komentar'     => $validated['komentar'] ?? null,
+                        'created_at'   => now(),
+                        'updated_at'   => now(),
+                    ]);
+                }
 
                 return ['tamu' => $tamu, 'kunjungan' => $kunjungan];
             });
 
             // 6. Redirect Berdasarkan Status Tamu (Lama/Baru)
-            $isNew = session('is_new_guest');
+            $isNew = Session::get('is_new_guest');
             $routeName = $isNew ? 'tamu.success_baru' : 'tamu.success_lama';
             
             // Hapus session setelah proses selesai
-            session()->forget(['gmail', 'is_new_guest', 'tamu_id']);
+            Session::forget(['gmail', 'is_new_guest', 'tamu_id']);
 
             return redirect()->route($routeName, [
                 'nama_tamu' => urlencode($result['tamu']->nama_tamu)
@@ -122,7 +124,7 @@ class TamuController extends Controller
 
         } catch (\Exception $e) {
             Log::error("Error saat simpan tamu: " . $e->getMessage());
-            return redirect()->back()->withInput()->with('error', 'Gagal: ' . $e->getMessage());
+            return redirect()->back()->withInput()->with('error', 'Terjadi kesalahan sistem, silakan coba lagi.');
         }
     }
 }
