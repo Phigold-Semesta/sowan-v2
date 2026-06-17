@@ -47,13 +47,18 @@ use Illuminate\Support\Facades\Auth;
 // 1. PORTAL PUBLIK (Tamu Online - Frontend untuk Registrasi & Login)
 // --- 1. RUTE ROOT (Halaman Utama diarahkan ke Tamu Onsite) ---
 // Ketika user mengakses http://127.0.0.1:8000/, sistem langsung menampilkan Tamu Onsite
+// --- 1. RUTE ROOT ---
 Route::get('/', [AuthController::class, 'showTamuOnsite'])->name('auth.tamu_onsite');
 
-// --- 2. PORTAL PUBLIK (Tamu Online - Akses manual lewat /portal) ---
+// --- 2. PORTAL PUBLIK (Tamu Online) ---
 Route::prefix('portal')->name('tamu.')->group(function () {
     Route::get('/', [AuthController::class, 'showPublik'])->name('login'); 
     Route::get('/register', [AuthController::class, 'showSignup'])->name('register.view');
+    
+    // Perbaikan: Tambahkan route GET untuk menangani akses manual/refresh
+    Route::get('/check-email', function() { return redirect()->route('tamu.login'); });
     Route::post('/check-email', [AuthController::class, 'checkEmail'])->name('check-email');
+    
     Route::post('/register/store', [AuthController::class, 'registerOnline'])->name('register.store');
     Route::post('/login', [AuthController::class, 'loginOnline'])->name('login.online');
     
@@ -62,25 +67,30 @@ Route::prefix('portal')->name('tamu.')->group(function () {
     });
 });
 
-/// --- 3. JALUR TAMU ONSITE (Scan QR Code di Lokasi) ---
+/// --- 3. JALUR TAMU ONSITE ---
 Route::prefix('tamu-onsite')->name('tamu.onsite.')->group(function () {
     Route::get('/portal', [AuthController::class, 'showTamuOnsite'])->name('view');
+    
+    // Perbaikan: Tambahkan route GET untuk menangani akses manual/refresh
+    Route::get('/check-email', function() { return redirect()->route('auth.tamu_onsite'); });
     Route::post('/check-email', [AuthController::class, 'checkEmailOnsite'])->name('check-email');
 });
 
-Route::controller(TamuController::class)->group(function () {
-    // Redirect agar tidak bisa diakses langsung via browser
-    Route::get('/tamu/check-email', function() { return redirect()->route('tamu.login'); });
-    
-    // Pastikan fungsi index() di TamuController TIDAK memiliki pengecekan middleware 'auth'
-    Route::get('/tamu/hadir', 'index')->name('tamu.index'); 
-    
-    Route::post('/tamu/simpan', 'store')->name('tamu.store');
-    Route::get('/tamu/simpan', function() { return redirect()->route('tamu.index'); });
-    Route::get('/panduan/{id}', 'downloadPanduan')->name('tamu.panduan.download');
-});
+// --- 4. PROSES KUNJUNGAN ---
+Route::controller(TamuController::class)->prefix('tamu')->name('tamu.')->group(function () {
+    // PERBAIKAN: Hapus prefix 'tamu.' dari dalam name(), 
+    // karena sudah otomatis ditambahkan oleh ->name('tamu.') di atas.
+    Route::get('/form-baru', 'showFormBaru')->name('form_tamu_baru');
+    Route::get('/form-lama', 'showFormLama')->name('form_tamu_lama');
 
-// Rute sukses tetap di luar middleware 'auth'
+    Route::get('/check-email', function() { return redirect()->route('tamu.login'); });
+    
+    Route::get('/hadir', 'index')->name('index'); 
+    Route::post('/simpan', 'store')->name('store');
+    Route::get('/simpan', function() { return redirect()->route('tamu.index'); });
+    Route::get('/panduan/{id}', 'downloadPanduan')->name('panduan.download');
+});
+// Rute sukses
 Route::get('/tamu/sukses/baru/{nama_tamu}', function ($nama_tamu) {
     return view('tamu.success_tamu_baru', ['nama_tamu' => urldecode($nama_tamu)]);
 })->name('tamu.success_baru')->where('nama_tamu', '.*');
@@ -89,13 +99,13 @@ Route::get('/tamu/sukses/lama/{nama_tamu}', function ($nama_tamu) {
     return view('tamu.success_tamu_lama', ['nama_tamu' => urldecode($nama_tamu)]);
 })->name('tamu.success_lama')->where('nama_tamu', '.*');
 
-// --- 2. JALUR AUTENTIKASI (Khusus Internal) ---
+// --- 5. JALUR AUTENTIKASI (Internal) ---
 Route::middleware('guest')->group(function () {
     Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
     Route::post('/login', [AuthController::class, 'authenticate'])->name('login.proses');
 });
 
-// --- 3. AREA TERPROTEKSI (WAJIB LOGIN INTERNAL) ---
+// --- 6. AREA TERPROTEKSI (WAJIB LOGIN INTERNAL) ---
 Route::middleware('auth')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 

@@ -49,11 +49,9 @@ class AuthController extends Controller
 
         $tamu = Tamu::where('gmail', $request->gmail)->first();
 
-        // Simpan email ke session untuk digunakan di form selanjutnya
         Session::put('gmail', $request->gmail);
 
         if (!$tamu) {
-            // JIKA TAMU BARU: Buat data dan arahkan ke form_tamu_baru
             $tamu = Tamu::create([
                 'gmail'         => $request->gmail,
                 'nama_tamu'     => 'Tamu Baru',
@@ -65,11 +63,12 @@ class AuthController extends Controller
             ]);
             
             Session::put(['tamu_id' => $tamu->id, 'is_new_guest' => true]);
-            return redirect()->route('tamu.form_baru')->with('success', 'Silakan lengkapi data kunjungan.');
+            // DISESUAIKAN: Nama rute di web.php harus 'tamu.form_tamu_baru'
+            return redirect()->route('tamu.form_tamu_baru')->with('success', 'Silakan lengkapi data kunjungan.');
         } else {
-            // JIKA TAMU LAMA: Arahkan ke form_tamu_lama
             Session::put(['tamu_id' => $tamu->id, 'is_new_guest' => false]);
-            return redirect()->route('tamu.form_lama')->with('success', 'Selamat datang kembali, silakan isi data kunjungan.');
+            // DISESUAIKAN: Nama rute di web.php harus 'tamu.form_tamu_lama'
+            return redirect()->route('tamu.form_tamu_lama')->with('success', 'Selamat datang kembali, silakan isi data kunjungan.');
         }
     }
 
@@ -80,6 +79,19 @@ class AuthController extends Controller
     public function showPublik()
     {
         return view('auth.tamu.publik');
+    }
+
+    public function checkEmail(Request $request)
+    {
+        $request->validate(['email' => 'required|email']);
+        
+        $tamu = Tamu::where('gmail', $request->email)->first();
+
+        if ($tamu) {
+            return view('tamu.form_tamu_lama', ['tamu' => $tamu]);
+        } else {
+            return view('tamu.form_tamu_baru', ['email' => $request->email]);
+        }
     }
 
     public function showSignup()
@@ -111,7 +123,7 @@ class AuthController extends Controller
             'jenis_tamu'    => $validated['jenis_tamu'],
         ]);
 
-        return redirect()->route('tamu.publik')->with('success', 'Akun berhasil dibuat! Silakan login menggunakan email Anda.');
+        return redirect()->route('tamu.login')->with('success', 'Akun berhasil dibuat! Silakan login menggunakan email Anda.');
     }
 
     public function loginOnline(Request $request)
@@ -126,9 +138,6 @@ class AuthController extends Controller
         return back()->withErrors(['gmail' => 'Email atau password salah.']);
     }
 
-    // =========================================================================
-    // LOGOUT TERPUSAT
-    // =========================================================================
     public function logout(Request $request)
     {
         if (Auth::check()) Auth::logout();

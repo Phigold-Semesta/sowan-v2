@@ -54,11 +54,11 @@
                 </div>
             @endif
 
-            <form action="{{ route('tamu.check-email') }}" method="POST" class="space-y-6">
+            <form action="{{ route('tamu.onsite.check-email') }}" method="POST" class="space-y-6">
                 @csrf
                 <div class="group">
                     <label class="block text-emerald-200 text-[10px] uppercase font-black tracking-[0.3em] mb-2 ml-6 opacity-80">Alamat Email</label>
-                    <input type="email" name="gmail" class="w-full px-8 py-4 bg-white border border-white/10 rounded-full focus:outline-none focus:ring-2 focus:ring-emerald-400 text-gray-800 text-sm font-semibold" placeholder="contoh@gmail.com" required>
+                    <input type="email" name="gmail" id="gmail" value="{{ old('gmail') }}" class="w-full px-8 py-4 bg-white border border-white/10 rounded-full focus:outline-none focus:ring-2 focus:ring-emerald-400 text-gray-800 text-sm font-semibold" placeholder="contoh@gmail.com" required>
                 </div>
                 <button type="submit" class="w-full bg-emerald-400 hover:bg-emerald-300 text-emerald-950 font-black py-4 rounded-full shadow-[0_15px_40px_rgba(52,211,153,0.3)] transition-all mt-8 text-xs tracking-[0.2em] uppercase">Mulai Layanan</button>
             </form>
