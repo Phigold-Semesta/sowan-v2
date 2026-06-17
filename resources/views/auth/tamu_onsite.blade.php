@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Portal Publik | SOWAN v2 LPSE Karawang</title>
+    <title>Portal Tamu Onsite | SOWAN v2 LPSE Karawang</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;700;800&display=swap" rel="stylesheet">
     <style>
@@ -48,19 +48,21 @@
                 <p class="text-emerald-100/60 text-[10px] uppercase font-black tracking-[0.2em]">Silakan masukkan email untuk akses layanan</p>
             </div>
 
+            {{-- Menampilkan error validasi jika ada --}}
             @if ($errors->any())
                 <div class="mb-6 p-4 rounded-2xl bg-red-500/20 border border-red-500/30 text-white text-xs text-center">
                     {{ $errors->first() }}
                 </div>
             @endif
 
+            {{-- Form Onsite Mengarah ke Rute Onsite yang benar --}}
             <form action="{{ route('tamu.onsite.check-email') }}" method="POST" class="space-y-6">
                 @csrf
                 <div class="group">
-                    <label class="block text-emerald-200 text-[10px] uppercase font-black tracking-[0.3em] mb-2 ml-6 opacity-80">Alamat Email</label>
-                    <input type="email" name="gmail" id="gmail" value="{{ old('gmail') }}" class="w-full px-8 py-4 bg-white border border-white/10 rounded-full focus:outline-none focus:ring-2 focus:ring-emerald-400 text-gray-800 text-sm font-semibold" placeholder="contoh@gmail.com" required>
+                    <label for="gmail" class="block text-emerald-200 text-[10px] uppercase font-black tracking-[0.3em] mb-2 ml-6 opacity-80">Alamat Email</label>
+                    <input type="email" name="gmail" id="gmail" value="{{ old('gmail') }}" class="w-full px-8 py-4 bg-white/90 border border-white/10 rounded-full focus:outline-none focus:ring-4 focus:ring-emerald-400/50 text-gray-800 text-sm font-semibold transition-all" placeholder="contoh@gmail.com" required autocomplete="email">
                 </div>
-                <button type="submit" class="w-full bg-emerald-400 hover:bg-emerald-300 text-emerald-950 font-black py-4 rounded-full shadow-[0_15px_40px_rgba(52,211,153,0.3)] transition-all mt-8 text-xs tracking-[0.2em] uppercase">Mulai Layanan</button>
+                <button type="submit" class="w-full bg-emerald-400 hover:bg-emerald-300 active:bg-emerald-500 text-emerald-950 font-black py-4 rounded-full shadow-[0_15px_40px_rgba(52,211,153,0.3)] transition-all mt-8 text-xs tracking-[0.2em] uppercase">Mulai Layanan</button>
             </form>
 
             <div class="mt-8 text-center">

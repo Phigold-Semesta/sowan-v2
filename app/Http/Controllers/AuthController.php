@@ -61,11 +61,9 @@ class AuthController extends Controller
                 'password'      => Hash::make('default123'),
             ]);
             
-            // Menggunakan guard login otomatis saat onsite
             Auth::guard('tamu')->login($tamu);
             return redirect()->route('tamu.form_tamu_baru')->with('success', 'Silakan lengkapi data kunjungan.');
         } else {
-            // Menggunakan guard login otomatis saat onsite
             Auth::guard('tamu')->login($tamu);
             return redirect()->route('tamu.form_tamu_lama')->with('success', 'Selamat datang kembali, silakan isi data kunjungan.');
         }
@@ -142,16 +140,21 @@ class AuthController extends Controller
 
     public function logout(Request $request)
     {
+        // Logout guard tamu
         if (Auth::guard('tamu')->check()) {
             Auth::guard('tamu')->logout();
         }
         
+        // Logout guard internal
         if (Auth::check()) {
             Auth::logout();
         }
 
         $request->session()->flush();
         $request->session()->regenerateToken();
-        return redirect('/portal');
+        
+        // PERBAIKAN: Menggunakan named route untuk menghindari error 404
+        // Jika user adalah tamu, arahkan ke login publik
+        return redirect()->route('tamu.login.view');
     }
 }
