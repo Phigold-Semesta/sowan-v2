@@ -107,7 +107,12 @@
             </nav>
 
             <div class="p-4 mb-4">
-                <button onclick="confirmLogout(event)" class="w-full flex items-center justify-center py-4 rounded-2xl bg-gradient-to-br from-emerald-800 to-emerald-600 hover:shadow-lg transition-all">
+                {{-- Form Logout menggunakan rute custom tamu.logout.tamu --}}
+                <form id="logout-form" action="{{ route('tamu.logout.tamu') }}" method="POST" style="display: none;">
+                    @csrf
+                </form>
+                
+                <button type="button" onclick="confirmLogout()" class="w-full flex items-center justify-center py-4 rounded-2xl bg-gradient-to-br from-emerald-800 to-emerald-600 hover:shadow-lg transition-all">
                     <i class="fas fa-power-off"></i><span class="nav-text ml-3 text-sm font-bold">LOG OUT</span>
                 </button>
             </div>
@@ -127,7 +132,22 @@
 
     <script>
         function toggleMobileSidebar() { const sidebar = document.getElementById('main-sidebar'); sidebar.classList.toggle('show-sidebar'); document.getElementById('sidebar-overlay').classList.toggle('hidden'); }
-        function confirmLogout(e) { e.preventDefault(); Swal.fire({ title: 'Keluar?', icon: 'warning', showCancelButton: true, confirmButtonColor: '#008f5d', confirmButtonText: 'YA, LOG OUT' }); }
+        
+        function confirmLogout() { 
+            Swal.fire({ 
+                title: 'Keluar dari SOWAN?', 
+                text: "Anda akan diarahkan kembali ke halaman utama.",
+                icon: 'warning', 
+                showCancelButton: true, 
+                confirmButtonColor: '#008f5d', 
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'YA, LOG OUT' 
+            }).then((result) => { 
+                if(result.isConfirmed) {
+                    document.getElementById('logout-form').submit();
+                }
+            }); 
+        }
     </script>
 </body>
 </html>

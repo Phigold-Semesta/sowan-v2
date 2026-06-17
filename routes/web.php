@@ -41,13 +41,12 @@ use Illuminate\Support\Facades\Auth;
 |--------------------------------------------------------------------------
 */
 
-
 // --- 2. PORTAL PUBLIK (Tamu Online) ---
 Route::prefix('portal')->name('tamu.')->group(function () {
     // Halaman Login Publik
     Route::get('/', [AuthController::class, 'showPublik'])->name('login.view'); 
     
-    // Proses Login & Register (Diletakkan di luar middleware auth)
+    // Proses Login & Register
     Route::post('/login', [AuthController::class, 'loginOnline'])->name('login.online');
     Route::get('/register', [AuthController::class, 'showSignup'])->name('register.view');
     Route::post('/register/store', [AuthController::class, 'registerOnline'])->name('register.store');
@@ -62,7 +61,9 @@ Route::prefix('portal')->name('tamu.')->group(function () {
         Route::get('/riwayat', [TamuController::class, 'riwayat'])->name('riwayat');
         Route::get('/kunjungan-baru', [TamuController::class, 'kunjunganBaru'])->name('kunjungan.baru');
         Route::post('/kunjungan-simpan', [TamuController::class, 'simpanKunjungan'])->name('kunjungan.simpan');
-        Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
+        
+        // DIPERBAIKI: Menggunakan nama rute yang sangat spesifik untuk menghindari konflik
+        Route::post('/logout', [AuthController::class, 'logout'])->name('logout.tamu');
     });
 });
 
