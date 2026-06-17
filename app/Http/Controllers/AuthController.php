@@ -140,21 +140,19 @@ class AuthController extends Controller
 
     public function logout(Request $request)
     {
-        // Logout guard tamu
+        // 1. Identifikasi siapa yang logout untuk menghindari logout paksa pada guard yang berbeda
         if (Auth::guard('tamu')->check()) {
             Auth::guard('tamu')->logout();
-        }
-        
-        // Logout guard internal
-        if (Auth::check()) {
+            $request->session()->forget('tamu'); // Hanya hapus session tamu
+        } elseif (Auth::check()) {
             Auth::logout();
+            $request->session()->forget('user'); // Hanya hapus session admin
         }
 
-        $request->session()->flush();
+        // 2. Regenerate token keamanan agar tidak ada sisa session lama
         $request->session()->regenerateToken();
         
-        // PERBAIKAN: Menggunakan named route untuk menghindari error 404
-        // Jika user adalah tamu, arahkan ke login publik
-        return redirect()->route('tamu.login.view');
+        // 3. Redirect ke root untuk memastikan user mendarat di halaman yang benar
+        return redirect('/');
     }
 }
