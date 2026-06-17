@@ -65,23 +65,25 @@ Route::prefix('portal')->name('tamu.')->group(function () {
     });
 });
 
-/// --- 3. JALUR TAMU ONSITE ---
+// --- 3. JALUR TAMU ONSITE ---
 Route::prefix('tamu-onsite')->name('tamu.onsite.')->group(function () {
     Route::get('/', [AuthController::class, 'showTamuOnsite'])->name('view');
     Route::post('/check-email', [AuthController::class, 'checkEmailOnsite'])->name('check-email');
 });
 
 // --- 4. PROSES KUNJUNGAN ---
-// Disempurnakan dengan menambahkan middleware 'tamu.auth' (atau guard yang sesuai) 
-// agar Laravel tahu rute ini hanya untuk tamu yang sudah teridentifikasi via login QR
+// Grup A: Hanya bisa diakses saat tamu masih login (Form & Store)
 Route::prefix('tamu')->name('tamu.')->middleware('tamu.auth')->group(function () {
     Route::get('/form-baru', [TamuController::class, 'showFormBaru'])->name('form_tamu_baru');
     Route::get('/form-lama', [TamuController::class, 'showFormLama'])->name('form_tamu_lama');
     Route::get('/hadir', [TamuController::class, 'index'])->name('index'); 
     Route::post('/simpan', [TamuController::class, 'store'])->name('store');
     Route::get('/panduan/{id}', [TamuController::class, 'downloadPanduan'])->name('panduan.download');
-    
-    // Rute sukses tetap terbuka karena tamu sudah berhasil melewati proses login di atas
+});
+
+// Grup B: Terbuka (Tidak pakai middleware tamu.auth) 
+// Agar bisa diakses tepat setelah tamu logout di TamuController@store
+Route::prefix('tamu')->name('tamu.')->group(function () {
     Route::get('/sukses/baru/{nama_tamu}', function ($nama_tamu) {
         return view('tamu.success_tamu_baru', ['nama_tamu' => urldecode($nama_tamu)]);
     })->name('success_baru')->where('nama_tamu', '.*');
