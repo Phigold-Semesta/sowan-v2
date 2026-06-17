@@ -10,9 +10,30 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Session;
+use Illuminate\Support\Facades\Auth;
 
 class TamuController extends Controller
 {
+    /**
+     * Tampilan Dashboard Utama Tamu Online
+     */
+    public function dashboard()
+    {
+        // Perbaikan: Menggunakan Auth Guard 'tamu' yang sudah disinkronkan
+        if (!Auth::guard('tamu')->check()) {
+            return redirect()->route('tamu.login.view')->with('error', 'Silakan login terlebih dahulu.');
+        }
+
+        $tamu = Auth::guard('tamu')->user();
+        
+        // Mengambil riwayat kunjungan tamu ini berdasarkan gmail
+        $riwayatKunjungan = Kunjungan::where('gmail', $tamu->gmail)
+                                      ->orderBy('waktu_masuk', 'desc')
+                                      ->paginate(5);
+
+        return view('tamu.dashboard', compact('tamu', 'riwayatKunjungan'));
+    }
+
     /**
      * Tampilan form tamu (Resepsionis Utama)
      */
@@ -21,7 +42,7 @@ class TamuController extends Controller
         $gmail = Session::get('gmail'); 
         
         if (!$gmail) {
-            return redirect()->route('tamu.login')->with('error', 'Sesi Anda telah berakhir.'); 
+            return redirect()->route('tamu.login.view')->with('error', 'Sesi Anda telah berakhir.'); 
         }
 
         $layanan = Layanan::with('dokumens')->orderBy('nama_layanan', 'asc')->get();

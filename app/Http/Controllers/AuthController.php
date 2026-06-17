@@ -49,8 +49,6 @@ class AuthController extends Controller
 
         $tamu = Tamu::where('gmail', $request->gmail)->first();
 
-        Session::put('gmail', $request->gmail);
-
         if (!$tamu) {
             $tamu = Tamu::create([
                 'gmail'         => $request->gmail,
@@ -60,14 +58,15 @@ class AuthController extends Controller
                 'alamat_kantor' => '-',
                 'hadir_sebagai' => '-',
                 'jenis_tamu'    => 'Non-Penyedia',
+                'password'      => Hash::make('default123'),
             ]);
             
-            Session::put(['tamu_id' => $tamu->id, 'is_new_guest' => true]);
-            // DISESUAIKAN: Nama rute di web.php harus 'tamu.form_tamu_baru'
+            // Menggunakan guard login otomatis saat onsite
+            Auth::guard('tamu')->login($tamu);
             return redirect()->route('tamu.form_tamu_baru')->with('success', 'Silakan lengkapi data kunjungan.');
         } else {
-            Session::put(['tamu_id' => $tamu->id, 'is_new_guest' => false]);
-            // DISESUAIKAN: Nama rute di web.php harus 'tamu.form_tamu_lama'
+            // Menggunakan guard login otomatis saat onsite
+            Auth::guard('tamu')->login($tamu);
             return redirect()->route('tamu.form_tamu_lama')->with('success', 'Selamat datang kembali, silakan isi data kunjungan.');
         }
     }
@@ -123,16 +122,19 @@ class AuthController extends Controller
             'jenis_tamu'    => $validated['jenis_tamu'],
         ]);
 
-        return redirect()->route('tamu.login')->with('success', 'Akun berhasil dibuat! Silakan login menggunakan email Anda.');
+        return redirect()->route('tamu.login.view')->with('success', 'Akun berhasil dibuat! Silakan login menggunakan email Anda.');
     }
 
     public function loginOnline(Request $request)
     {
-        $tamu = Tamu::where('gmail', $request->gmail)->first();
+        $credentials = $request->validate([
+            'gmail'    => 'required|email',
+            'password' => 'required',
+        ]);
 
-        if ($tamu && Hash::check($request->password, $tamu->password)) {
-            Session::put('tamu_id', $tamu->id);
-            return redirect()->route('tamu.dashboard');
+        if (Auth::guard('tamu')->attempt($credentials)) {
+            $request->session()->regenerate();
+            return redirect()->intended(route('tamu.dashboard'));
         }
 
         return back()->withErrors(['gmail' => 'Email atau password salah.']);
@@ -140,7 +142,14 @@ class AuthController extends Controller
 
     public function logout(Request $request)
     {
-        if (Auth::check()) Auth::logout();
+        if (Auth::guard('tamu')->check()) {
+            Auth::guard('tamu')->logout();
+        }
+        
+        if (Auth::check()) {
+            Auth::logout();
+        }
+
         $request->session()->flush();
         $request->session()->regenerateToken();
         return redirect('/');

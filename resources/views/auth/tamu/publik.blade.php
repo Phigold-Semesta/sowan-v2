@@ -70,27 +70,32 @@
                     <p class="text-emerald-100/50 text-[9px] sm:text-[10px] tracking-[0.3em] uppercase font-black">Login Akun Terdaftar</p>
                 </div>
 
+                @if (session('success'))
+                    <div class="mb-6 p-4 rounded-2xl bg-emerald-500/20 border border-emerald-500/30 text-emerald-100 text-xs text-center">
+                        {{ session('success') }}
+                    </div>
+                @endif
+
                 @if ($errors->any())
                     <div class="mb-6 p-3 sm:p-4 rounded-2xl bg-red-500/20 border border-red-500/30 text-white text-[10px] sm:text-xs text-center animate-pulse">
                         <ul class="list-none">@foreach ($errors->all() as $error) <li>{{ $error }}</li> @endforeach</ul>
                     </div>
                 @endif
 
-                {{-- Form Login Tamu Resmi - Nama route diperbaiki --}}
-                <form action="{{ route('tamu.login.online') }}" method="POST" class="space-y-4 sm:space-y-6">
+                {{-- FORM DENGAN EVENT LISTENER UNTUK MENGHINDARI DOUBLE SUBMIT --}}
+                <form action="{{ route('tamu.login.online') }}" method="POST" class="space-y-4 sm:space-y-6" onsubmit="this.querySelector('button').disabled=true; this.querySelector('button').innerText='MEMPROSES...';">
                     @csrf
                     <div class="group">
                         <label class="block text-emerald-200 text-[9px] sm:text-[10px] uppercase font-black tracking-[0.3em] mb-2 ml-4 sm:ml-6 opacity-80">Alamat Gmail</label>
-                        <input type="email" name="gmail" value="{{ old('gmail') }}" class="w-full px-6 sm:px-8 py-3 sm:py-4 bg-white border border-white/10 rounded-full focus:outline-none focus:ring-2 focus:ring-emerald-400 text-gray-800 text-sm font-semibold" placeholder="nama@gmail.com" required>
+                        <input type="email" name="gmail" value="{{ old('gmail') }}" class="w-full px-6 sm:px-8 py-3 sm:py-4 bg-white border border-white/10 rounded-full focus:outline-none focus:ring-2 focus:ring-emerald-400 text-gray-800 text-sm font-semibold" placeholder="nama@gmail.com" required autocomplete="email">
                     </div>
                     <div class="group">
                         <label class="block text-emerald-200 text-[9px] sm:text-[10px] uppercase font-black tracking-[0.3em] mb-2 ml-4 sm:ml-6 opacity-80">Password</label>
-                        <input type="password" name="password" class="w-full px-6 sm:px-8 py-3 sm:py-4 bg-white border border-white/10 rounded-full focus:outline-none focus:ring-2 focus:ring-emerald-400 text-gray-800 text-sm font-semibold" placeholder="••••••••" required>
+                        <input type="password" name="password" class="w-full px-6 sm:px-8 py-3 sm:py-4 bg-white border border-white/10 rounded-full focus:outline-none focus:ring-2 focus:ring-emerald-400 text-gray-800 text-sm font-semibold" placeholder="••••••••" required autocomplete="current-password">
                     </div>
                     <button type="submit" class="w-full bg-emerald-400 hover:bg-emerald-300 text-emerald-950 font-black py-3 sm:py-4 rounded-full shadow-[0_15px_40px_rgba(52,211,153,0.3)] transition-all mt-6 sm:mt-8 text-[10px] sm:text-xs tracking-[0.2em] uppercase">MASUK PORTAL TAMU</button>
                     
                     <div class="text-center mt-4">
-                        {{-- Nama route pendaftaran diperbaiki --}}
                         <a href="{{ route('tamu.register.view') }}" class="text-emerald-300 text-[10px] sm:text-xs font-bold uppercase tracking-[0.1em] hover:text-white transition-colors">Belum punya akun? Daftar Sekarang</a>
                     </div>
                 </form>

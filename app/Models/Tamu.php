@@ -2,13 +2,15 @@
 
 namespace App\Models;
 
+// PENTING: Menambahkan trait ini agar model bisa digunakan untuk autentikasi (login)
+use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-class Tamu extends Model
+class Tamu extends Authenticatable
 {
-    use HasFactory;
+    use HasFactory, Notifiable;
 
     /**
      * Konfigurasi tabel dan primary key.
@@ -21,10 +23,10 @@ class Tamu extends Model
 
     /**
      * Properti fillable untuk mass assignment.
-     * Pastikan semua kolom yang diinputkan dari form ada di sini.
      */
     protected $fillable = [
         'gmail', 
+        'password', 
         'no_wa', 
         'nama_tamu', 
         'jenis_tamu', 
@@ -34,11 +36,44 @@ class Tamu extends Model
     ];
 
     /**
+     * Sembunyikan password agar tidak terekspos saat model diubah ke array/JSON.
+     */
+    protected $hidden = [
+        'password',
+        'remember_token',
+    ];
+
+    /**
      * Casting tipe data untuk keamanan data.
      */
     protected $casts = [
-        'gmail' => 'string',
+        'gmail'    => 'string',
+        'password' => 'hashed',
     ];
+
+    /**
+     * PENTING: Memberitahu Laravel bahwa Primary Key untuk autentikasi adalah 'gmail'.
+     */
+    public function getAuthIdentifierName()
+    {
+        return 'gmail';
+    }
+
+    /**
+     * Mengembalikan nilai identifier (gmail) untuk autentikasi.
+     */
+    public function getAuthIdentifier()
+    {
+        return $this->gmail;
+    }
+
+    /**
+     * Pastikan Laravel mengambil kolom password yang benar untuk verifikasi.
+     */
+    public function getAuthPassword(): string
+    {
+        return $this->password;
+    }
 
     /**
      * RELASI: Satu tamu memiliki banyak riwayat kunjungan.

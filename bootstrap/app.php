@@ -14,12 +14,14 @@ return Application::configure(basePath: dirname(__DIR__))
         // 1. Mendaftarkan alias middleware agar bisa digunakan dengan penamaan yang tepat
         $middleware->alias([
             'role'      => \App\Http\Middleware\CheckRole::class,
-            'tamu.auth' => \App\Http\Middleware\TamuMiddleware::class, // Alias untuk portal tamu
+            'tamu.auth' => \App\Http\Middleware\TamuMiddleware::class,
         ]);
 
-        // 2. PENTING: Jangan masukkan middleware ke dalam 'web' group secara default.
-        // Biarkan 'web' group tetap standar Laravel agar session dan cookies 
-        // untuk tamu tetap berfungsi normal tanpa dipaksa login secara paksa.
+        // 2. Memastikan Session terkelola dengan baik untuk semua grup route
+        // Menambahkan middleware session agar Auth Guard dapat mengenali sesi login tamu
+        $middleware->web(append: [
+            \Illuminate\Session\Middleware\StartSession::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
         //

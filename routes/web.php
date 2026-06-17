@@ -42,28 +42,27 @@ use Illuminate\Support\Facades\Auth;
 */
 
 
-// 1. PORTAL PUBLIK (Tamu Online - Frontend untuk Registrasi & Login)
-
-// 1. PORTAL PUBLIK (Tamu Online - Frontend untuk Registrasi & Login)
-// --- 1. RUTE ROOT (Halaman Utama diarahkan ke Tamu Onsite) ---
-// Ketika user mengakses http://127.0.0.1:8000/, sistem langsung menampilkan Tamu Onsite
-// --- 1. RUTE ROOT ---
-Route::get('/', [AuthController::class, 'showTamuOnsite'])->name('auth.tamu_onsite');
-
 // --- 2. PORTAL PUBLIK (Tamu Online) ---
 Route::prefix('portal')->name('tamu.')->group(function () {
-    Route::get('/', [AuthController::class, 'showPublik'])->name('login'); 
-    Route::get('/register', [AuthController::class, 'showSignup'])->name('register.view');
+    // Halaman Login Publik
+    Route::get('/', [AuthController::class, 'showPublik'])->name('login.view'); 
     
-    // Perbaikan: Tambahkan route GET untuk menangani akses manual/refresh
-    Route::get('/check-email', function() { return redirect()->route('tamu.login'); });
+    // Proses Login & Register (Diletakkan di luar middleware auth)
+    Route::post('/login', [AuthController::class, 'loginOnline'])->name('login.online');
+    Route::get('/register', [AuthController::class, 'showSignup'])->name('register.view');
+    Route::post('/register/store', [AuthController::class, 'registerOnline'])->name('register.store');
+    
+    // Check email
     Route::post('/check-email', [AuthController::class, 'checkEmail'])->name('check-email');
     
-    Route::post('/register/store', [AuthController::class, 'registerOnline'])->name('register.store');
-    Route::post('/login', [AuthController::class, 'loginOnline'])->name('login.online');
-    
+    // Rute yang WAJIB Login Tamu
     Route::middleware('tamu.auth')->group(function () {
         Route::get('/dashboard', [TamuController::class, 'dashboard'])->name('dashboard');
+        Route::get('/profil', [TamuController::class, 'profil'])->name('profil');
+        Route::get('/riwayat', [TamuController::class, 'riwayat'])->name('riwayat');
+        Route::get('/kunjungan-baru', [TamuController::class, 'kunjunganBaru'])->name('kunjungan.baru');
+        Route::post('/kunjungan-simpan', [TamuController::class, 'simpanKunjungan'])->name('kunjungan.simpan');
+        Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
     });
 });
 

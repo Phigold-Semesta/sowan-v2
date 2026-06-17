@@ -40,6 +40,12 @@ return [
             'driver' => 'session',
             'provider' => 'users',
         ],
+
+        // TAMBAHAN: Guard untuk tamu agar sinkron dengan sistem autentikasi
+        'tamu' => [
+            'driver' => 'session',
+            'provider' => 'tamu',
+        ],
     ],
 
     /*
@@ -65,10 +71,11 @@ return [
             'model' => env('AUTH_MODEL', App\Models\User::class),
         ],
 
-        // 'users' => [
-        //     'driver' => 'database',
-        //     'table' => 'users',
-        // ],
+        // TAMBAHAN: Provider untuk model Tamu
+        'tamu' => [
+            'driver' => 'eloquent',
+            'model' => App\Models\Tamu::class,
+        ],
     ],
 
     /*
