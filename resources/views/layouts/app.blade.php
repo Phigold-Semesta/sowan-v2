@@ -42,7 +42,6 @@
     </script>
 
     <style>
-        /* INTEGRASI VARIABEL WARNA MEWAH */
         :root {
             --emerald-primary: #008f5d;
             --emerald-light: #ecfdf5;
@@ -50,8 +49,6 @@
             --gold-light: #fffbeb;
             --gray-soft: #6b7280;
             --gray-bg: #f3f4f6;
-            
-            /* Dark Mode Variants */
             --dark-emerald: #064e3b;
         }
 
@@ -78,7 +75,6 @@
             transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
-        /* PENYEMPURNAAN BADGE STATUS */
         .status-badge {
             padding: 0.4rem 1rem;
             border-radius: 9999px;
@@ -164,95 +160,120 @@
                 </div>
             </div>
 
-           <nav class="flex-1 px-4 mt-6 overflow-y-auto custom-scrollbar space-y-2">
-    <div class="menu-header px-4 py-3 text-[10px] font-black text-emerald-200/50 uppercase tracking-[0.2em]">Navigasi Utama</div>
+            <nav class="flex-1 px-4 mt-6 overflow-y-auto custom-scrollbar space-y-2">
+                <div class="menu-header px-4 py-3 text-[10px] font-black text-emerald-200/50 uppercase tracking-[0.2em]">Navigasi Utama</div>
     
-    {{-- Dashboard (Berubah label jika Pimpinan) --}}
-    <a href="{{ route('dashboard') }}" class="nav-item flex items-center py-4 px-5 rounded-2xl transition-all {{ Route::is('dashboard') ? 'sidebar-active' : 'hover:bg-white/10' }}">
-        <i class="fas fa-chart-line w-6 text-center text-sm"></i>
-        <span class="nav-text ml-3 text-sm font-bold tracking-wide text-nowrap">
-            {{ auth()->user()->role === 'pimpinan' ? 'Dashboard Eksekutif' : 'Dashboard' }}
-        </span>
-    </a>
+                <a href="{{ route('dashboard') }}" class="nav-item flex items-center py-4 px-5 rounded-2xl transition-all {{ Route::is('dashboard') ? 'sidebar-active' : 'hover:bg-white/10' }}">
+                    <i class="fas fa-chart-line w-6 text-center text-sm"></i>
+                    <span class="nav-text ml-3 text-sm font-bold tracking-wide text-nowrap">
+                        {{ auth()->user()->role === 'pimpinan' ? 'Dashboard Eksekutif' : 'Dashboard' }}
+                    </span>
+                </a>
 
-    {{-- Menu Khusus Pimpinan --}}
-    @if(auth()->user()->role === 'pimpinan')
-        <a href="{{ route('pimpinan.laporan.index') }}" class="nav-item flex items-center py-4 px-5 rounded-2xl transition-all {{ Route::is('pimpinan.laporan.*') ? 'sidebar-active' : 'hover:bg-white/10' }}">
-            <i class="fas fa-file-export w-6 text-center text-sm"></i>
-            <span class="nav-text ml-3 text-sm font-bold tracking-wide text-nowrap">Rekapitulasi Laporan</span>
-        </a>
-        <a href="{{ route('pimpinan.aktivitas.index') }}" class="nav-item flex items-center py-4 px-5 rounded-2xl transition-all {{ Route::is('pimpinan.aktivitas.*') ? 'sidebar-active' : 'hover:bg-white/10' }}">
-            <i class="fas fa-fingerprint w-6 text-center text-sm"></i>
-            <span class="nav-text ml-3 text-sm font-bold tracking-wide text-nowrap">Aktivitas Global</span>
-        </a>
-        <a href="{{ route('pimpinan.rating.index') }}" class="nav-item flex items-center py-4 px-5 rounded-2xl transition-all {{ Route::is('pimpinan.rating.*') ? 'sidebar-active' : 'hover:bg-white/10' }}">
-            <i class="fas fa-star-half-stroke w-6 text-center text-sm"></i>
-            <span class="nav-text ml-3 text-sm font-bold tracking-wide text-nowrap">Rating Layanan</span>
-        </a>
-    @endif
+                {{-- Menu Khusus Pimpinan --}}
+                @if(auth()->user()->role === 'pimpinan')
+                    <a href="{{ route('pimpinan.laporan.index') }}" class="nav-item flex items-center py-4 px-5 rounded-2xl transition-all {{ Route::is('pimpinan.laporan.*') ? 'sidebar-active' : 'hover:bg-white/10' }}">
+                        <i class="fas fa-file-export w-6 text-center text-sm"></i>
+                        <span class="nav-text ml-3 text-sm font-bold tracking-wide text-nowrap">Rekapitulasi Laporan</span>
+                    </a>
+                    <a href="{{ route('pimpinan.aktivitas.index') }}" class="nav-item flex items-center py-4 px-5 rounded-2xl transition-all {{ Route::is('pimpinan.aktivitas.*') ? 'sidebar-active' : 'hover:bg-white/10' }}">
+                        <i class="fas fa-fingerprint w-6 text-center text-sm"></i>
+                        <span class="nav-text ml-3 text-sm font-bold tracking-wide text-nowrap">Aktivitas Global</span>
+                    </a>
+                    <a href="{{ route('pimpinan.rating.index') }}" class="nav-item flex items-center py-4 px-5 rounded-2xl transition-all {{ Route::is('pimpinan.rating.*') ? 'sidebar-active' : 'hover:bg-white/10' }}">
+                        <i class="fas fa-star-half-stroke w-6 text-center text-sm"></i>
+                        <span class="nav-text ml-3 text-sm font-bold tracking-wide text-nowrap">Rating Layanan</span>
+                    </a>
+                    <a href="{{ route('pimpinan.konsultasi.index') }}" class="nav-item flex items-center py-4 px-5 rounded-2xl transition-all {{ Route::is('pimpinan.konsultasi.*') ? 'sidebar-active' : 'hover:bg-white/10' }}">
+                        <div class="relative w-6 text-center">
+                            <i class="fas fa-video text-sm"></i>
+                            {{-- Notif Badge Melekat pada Ikon --}}
+                            @php $jumlahNotif = 0; @endphp
+                            <span class="absolute -top-2 -right-2 bg-red-500 text-white text-[9px] font-black h-4 w-4 flex items-center justify-center rounded-full border-2 border-[#008f5d]">
+                                {{ $jumlahNotif }}
+                            </span>
+                        </div>
+                        <span class="nav-text ml-3 text-sm font-bold tracking-wide text-nowrap">Konsultasi Online</span>
+                    </a>
+                @endif
 
-    {{-- Menu Khusus Petugas --}}
-    @if(auth()->user()->role === 'petugas')
-        <a href="{{ route('petugas.manajemen_tamu.index') }}" class="nav-item flex items-center py-4 px-5 rounded-2xl transition-all {{ Route::is('petugas.manajemen_tamu.*') ? 'sidebar-active' : 'hover:bg-white/10' }}">
-            <i class="fas fa-user-check w-6 text-center text-sm"></i>
-            <span class="nav-text ml-3 text-sm font-bold tracking-wide text-nowrap">Data Tamu</span>
-        </a>
-    @endif
+                {{-- Menu Khusus Petugas --}}
+                @if(auth()->user()->role === 'petugas')
+                    <a href="{{ route('petugas.manajemen_tamu.index') }}" class="nav-item flex items-center py-4 px-5 rounded-2xl transition-all {{ Route::is('petugas.manajemen_tamu.*') ? 'sidebar-active' : 'hover:bg-white/10' }}">
+                        <i class="fas fa-user-check w-6 text-center text-sm"></i>
+                        <span class="nav-text ml-3 text-sm font-bold tracking-wide text-nowrap">Data Tamu</span>
+                    </a>
+                    <a href="{{ route('petugas.konsultasi.index') }}" class="nav-item flex items-center py-4 px-5 rounded-2xl transition-all {{ Route::is('petugas.konsultasi.*') ? 'sidebar-active' : 'hover:bg-white/10' }}">
+                        <div class="relative w-6 text-center">
+                            <i class="fas fa-video text-sm"></i>
+                            @php $jumlahNotif = 0; @endphp
+                            <span class="absolute -top-2 -right-2 bg-red-500 text-white text-[9px] font-black h-4 w-4 flex items-center justify-center rounded-full border-2 border-[#008f5d]">
+                                {{ $jumlahNotif }}
+                            </span>
+                        </div>
+                        <span class="nav-text ml-3 text-sm font-bold tracking-wide text-nowrap">Konsultasi Online</span>
+                    </a>
+                @endif
 
-    {{-- Menu Khusus Administrator --}}
-    @if(auth()->user()->role === 'administrator')
-        <div class="menu-header px-4 py-3 text-[10px] font-black text-emerald-200/50 uppercase tracking-[0.2em] mt-4">Manajemen Sistem</div>
-        <a href="{{ route('admin.users.index') }}" class="nav-item flex items-center py-4 px-5 rounded-2xl transition-all {{ Route::is('admin.users.*') ? 'sidebar-active' : 'hover:bg-white/10' }}">
-            <i class="fas fa-users-gear w-6 text-center text-sm"></i>
-            <span class="nav-text ml-3 text-sm font-bold tracking-wide text-nowrap">Manajemen Pengguna</span>
-        </a>
-        <a href="{{ route('admin.master.index') }}" class="nav-item flex items-center py-4 px-5 rounded-2xl transition-all {{ Route::is('admin.master.*') ? 'sidebar-active' : 'hover:bg-white/10' }}">
-            <i class="fas fa-database w-6 text-center text-sm"></i>
-            <span class="nav-text ml-3 text-sm font-bold tracking-wide text-nowrap">Data Master</span>
-        </a>
-        <a href="{{ route('admin.aktivitas.index') }}" class="nav-item flex items-center py-4 px-5 rounded-2xl transition-all {{ Route::is('admin.aktivitas.*') ? 'sidebar-active' : 'hover:bg-white/10' }}">
-            <i class="fas fa-fingerprint w-6 text-center text-sm"></i>
-            <span class="nav-text ml-3 text-sm font-bold tracking-wide text-nowrap">Aktivitas Global</span>
-        </a>
-        
-        <div class="menu-header px-4 py-3 text-[10px] font-black text-emerald-200/50 uppercase tracking-[0.2em] mt-4">Monitoring & Output</div>
-        <a href="{{ route('admin.rating.index') }}" class="nav-item flex items-center py-4 px-5 rounded-2xl transition-all {{ Route::is('admin.rating.*') ? 'sidebar-active' : 'hover:bg-white/10' }}">
-            <i class="fas fa-star-half-stroke w-6 text-center text-sm"></i>
-            <span class="nav-text ml-3 text-sm font-bold tracking-wide text-nowrap">Rating Layanan</span>
-        </a>
-        <a href="{{ route('admin.laporan.index') }}" class="nav-item flex items-center py-4 px-5 rounded-2xl transition-all {{ Route::is('admin.laporan.*') ? 'sidebar-active' : 'hover:bg-white/10' }}">
-            <i class="fas fa-file-export w-6 text-center text-sm"></i>
-            <span class="nav-text ml-3 text-sm font-bold tracking-wide text-nowrap">Laporan Global</span>
-        </a>
-    @endif
-    
-    {{-- Menu Monitoring (Petugas) --}}
-    @if(auth()->user()->role === 'petugas')
-        <div class="menu-header px-4 py-3 text-[10px] font-black text-emerald-200/50 uppercase tracking-[0.2em] mt-4">Monitoring & Output</div>
-        <a href="{{ route('petugas.rating.index') }}" class="nav-item flex items-center py-4 px-5 rounded-2xl transition-all {{ Route::is('petugas.rating.*') ? 'sidebar-active' : 'hover:bg-white/10' }}">
-            <i class="fas fa-star-half-stroke w-6 text-center text-sm"></i>
-            <span class="nav-text ml-3 text-sm font-bold tracking-wide text-nowrap">Rating Layanan</span>
-        </a>
-        <a href="{{ route('petugas.laporan.index') }}" class="nav-item flex items-center py-4 px-5 rounded-2xl transition-all {{ Route::is('petugas.laporan.*') ? 'sidebar-active' : 'hover:bg-white/10' }}">
-            <i class="fas fa-file-export w-6 text-center text-sm"></i>
-            <span class="nav-text ml-3 text-sm font-bold tracking-wide text-nowrap">Laporan Kunjungan</span>
-        </a>
-    @endif
-</nav>
+                {{-- Menu Khusus Administrator --}}
+                @if(auth()->user()->role === 'administrator')
+                    <div class="menu-header px-4 py-3 text-[10px] font-black text-emerald-200/50 uppercase tracking-[0.2em] mt-4">Manajemen Sistem</div>
+                    <a href="{{ route('admin.users.index') }}" class="nav-item flex items-center py-4 px-5 rounded-2xl transition-all {{ Route::is('admin.users.*') ? 'sidebar-active' : 'hover:bg-white/10' }}">
+                        <i class="fas fa-users-gear w-6 text-center text-sm"></i>
+                        <span class="nav-text ml-3 text-sm font-bold tracking-wide text-nowrap">Manajemen Pengguna</span>
+                    </a>
+                    <a href="{{ route('admin.master.index') }}" class="nav-item flex items-center py-4 px-5 rounded-2xl transition-all {{ Route::is('admin.master.*') ? 'sidebar-active' : 'hover:bg-white/10' }}">
+                        <i class="fas fa-database w-6 text-center text-sm"></i>
+                        <span class="nav-text ml-3 text-sm font-bold tracking-wide text-nowrap">Data Master</span>
+                    </a>
+                    <a href="{{ route('admin.aktivitas.index') }}" class="nav-item flex items-center py-4 px-5 rounded-2xl transition-all {{ Route::is('admin.aktivitas.*') ? 'sidebar-active' : 'hover:bg-white/10' }}">
+                        <i class="fas fa-fingerprint w-6 text-center text-sm"></i>
+                        <span class="nav-text ml-3 text-sm font-bold tracking-wide text-nowrap">Aktivitas Global</span>
+                    </a>
+                    
+                    <div class="menu-header px-4 py-3 text-[10px] font-black text-emerald-200/50 uppercase tracking-[0.2em] mt-4">Monitoring & Output</div>
+                    <a href="{{ route('admin.rating.index') }}" class="nav-item flex items-center py-4 px-5 rounded-2xl transition-all {{ Route::is('admin.rating.*') ? 'sidebar-active' : 'hover:bg-white/10' }}">
+                        <i class="fas fa-star-half-stroke w-6 text-center text-sm"></i>
+                        <span class="nav-text ml-3 text-sm font-bold tracking-wide text-nowrap">Rating Layanan</span>
+                    </a>
+                    <a href="{{ route('admin.laporan.index') }}" class="nav-item flex items-center py-4 px-5 rounded-2xl transition-all {{ Route::is('admin.laporan.*') ? 'sidebar-active' : 'hover:bg-white/10' }}">
+                        <i class="fas fa-file-export w-6 text-center text-sm"></i>
+                        <span class="nav-text ml-3 text-sm font-bold tracking-wide text-nowrap">Laporan Global</span>
+                    </a>
+                    <a href="{{ route('admin.konsultasi.index') }}" class="nav-item flex items-center py-4 px-5 rounded-2xl transition-all {{ Route::is('admin.konsultasi.*') ? 'sidebar-active' : 'hover:bg-white/10' }}">
+                        <div class="relative w-6 text-center">
+                            <i class="fas fa-video text-sm"></i>
+                            @php $jumlahNotif = 0; @endphp
+                            <span class="absolute -top-2 -right-2 bg-red-500 text-white text-[9px] font-black h-4 w-4 flex items-center justify-center rounded-full border-2 border-[#008f5d]">
+                                {{ $jumlahNotif }}
+                            </span>
+                        </div>
+                        <span class="nav-text ml-3 text-sm font-bold tracking-wide text-nowrap">Konsultasi Online</span>
+                    </a>
+                @endif
+                
+                {{-- Menu Monitoring (Petugas) --}}
+                @if(auth()->user()->role === 'petugas')
+                    <div class="menu-header px-4 py-3 text-[10px] font-black text-emerald-200/50 uppercase tracking-[0.2em] mt-4">Monitoring & Output</div>
+                    <a href="{{ route('petugas.rating.index') }}" class="nav-item flex items-center py-4 px-5 rounded-2xl transition-all {{ Route::is('petugas.rating.*') ? 'sidebar-active' : 'hover:bg-white/10' }}">
+                        <i class="fas fa-star-half-stroke w-6 text-center text-sm"></i>
+                        <span class="nav-text ml-3 text-sm font-bold tracking-wide text-nowrap">Rating Layanan</span>
+                    </a>
+                    <a href="{{ route('petugas.laporan.index') }}" class="nav-item flex items-center py-4 px-5 rounded-2xl transition-all {{ Route::is('petugas.laporan.*') ? 'sidebar-active' : 'hover:bg-white/10' }}">
+                        <i class="fas fa-file-export w-6 text-center text-sm"></i>
+                        <span class="nav-text ml-3 text-sm font-bold tracking-wide text-nowrap">Laporan Kunjungan</span>
+                    </a>
+                @endif
+            </nav>
+
             <div class="p-4 mb-4">
                 <form id="logout-form" action="{{ route('logout') }}" method="POST" class="hidden">
                     @csrf
                 </form>
-               <button onclick="confirmLogout(event)" 
-    class="btn-logout nav-item w-full flex items-center justify-center py-4 px-6 rounded-2xl 
-    bg-gradient-to-br from-emerald-800 to-emerald-600 
-    hover:from-emerald-700 hover:to-emerald-500 
-    hover:shadow-[0_8px_20px_rgba(16,185,129,0.3)] 
-    text-emerald-50 transition-all border border-emerald-500/20 group">
-    
-    <i class="fas fa-power-off w-6 text-center group-hover:scale-110 transition-transform"></i>
-    <span class="nav-text ml-3 text-sm font-bold tracking-widest uppercase text-nowrap">Log out</span>
-</button>
+                <button onclick="confirmLogout(event)" class="btn-logout nav-item w-full flex items-center justify-center py-4 px-6 rounded-2xl bg-gradient-to-br from-emerald-800 to-emerald-600 hover:from-emerald-700 hover:to-emerald-500 hover:shadow-[0_8px_20px_rgba(16,185,129,0.3)] text-emerald-50 transition-all border border-emerald-500/20 group">
+                    <i class="fas fa-power-off w-6 text-center group-hover:scale-110 transition-transform"></i>
+                    <span class="nav-text ml-3 text-sm font-bold tracking-widest uppercase text-nowrap">Log out</span>
+                </button>
             </div>
         </aside>
 

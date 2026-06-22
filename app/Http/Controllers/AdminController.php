@@ -583,6 +583,45 @@ class AdminController extends Controller
         }
     }
     
+// =========================================================================
+    // --- MANAJEMEN KONSULTASI ONLINE ---
+    // =========================================================================
+
+    public function konsultasi_index(Request $request)
+    {
+        // Admin bisa memantau semua sesi konsultasi
+        $query = \App\Models\Konsultasi::with(['user', 'layanan', 'kunjungan.tamu']);
+
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->whereHas('kunjungan.tamu', function($q) use ($search) {
+                $q->where('nama_tamu', 'like', "%{$search}%");
+            });
+        }
+
+        $konsultasi = $query->latest('waktu_konsultasi')->paginate(15)->withQueryString();
+
+        return view('admin.konsultasi.index', compact('konsultasi'));
+    }
+
+    public function konsultasi_destroy($id)
+    {
+        try {
+            $konsultasi = \App\Models\Konsultasi::findOrFail($id);
+            $konsultasi->delete();
+
+            $this->logActivity("Admin menghapus sesi konsultasi ID: #$id");
+
+            return redirect()->route('admin.konsultasi.index')->with('success', 'Sesi konsultasi berhasil dihapus.');
+        } catch (\Exception $e) {
+            return back()->with('error', 'Gagal menghapus konsultasi: ' . $e->getMessage());
+        }
+    }
+
     private function logActivity($aktivitas)
     {
         AuditLog::create([

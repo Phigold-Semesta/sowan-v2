@@ -315,4 +315,68 @@ class PetugasController extends Controller
         return redirect()->route('petugas.manajemen_tamu.index')
             ->with('success', 'Data kunjungan telah berhasil dihapus.');
     }
+
+    // --- FITUR KONSULTASI ONLINE (TAMBAHKAN INI) ---
+
+    public function konsultasiIndex()
+    {
+        // Petugas melihat daftar konsultasi yang ditujukan ke layanannya atau global
+        $konsultasi = \App\Models\Konsultasi::with(['user', 'layanan', 'kunjungan.tamu'])
+            ->latest('waktu_konsultasi')
+            ->paginate(15);
+            
+        return view('petugas.konsultasi.index', compact('konsultasi'));
+    }
+
+  public function toggleStatusLayanan(Request $request)
+    {
+        // 1. Ambil ID yang sedang login
+        $userId = \Illuminate\Support\Facades\Auth::id();
+        
+        if (!$userId) {
+            return response()->json(['message' => 'Unauthorized'], 401);
+        }
+
+        // 2. Ambil data User secara "Fresh" dari database
+        // Menggunakan find() memastikan model dimuat dengan Primary Key yang benar (id_user)
+        $user = \App\Models\User::find($userId);
+        
+        if (!$user) {
+            return response()->json(['message' => 'User tidak ditemukan'], 404);
+        }
+
+        // 3. Tentukan status baru
+        $statusBaru = ($user->status_konsultasi === 'online') ? 'offline' : 'online';
+        
+        // 4. Gunakan update() yang lebih stabil untuk mengubah data ke database
+        $user->update(['status_konsultasi' => $statusBaru]);
+
+        return response()->json([
+            'status'  => $statusBaru,
+            'message' => 'Status berhasil diperbarui'
+        ]);
+    }
+
+    public function konfirmasiKonsultasi(Request $request, $id)
+    {
+        // Validasi input link Google Meet
+        $request->validate(['link_google_meet' => 'required|url']);
+
+        $konsultasi = \App\Models\Konsultasi::findOrFail($id);
+        $konsultasi->update([
+            'status'           => 'confirmed',
+            'link_google_meet' => $request->link_google_meet
+        ]);
+
+        // Catat ke AuditLog
+        \App\Models\AuditLog::create([
+            'id_user'    => \Illuminate\Support\Facades\Auth::id(),
+            'aktivitas'  => "Mengonfirmasi konsultasi online ID #{$id}",
+            'waktu'      => now(),
+            'ip_address' => $request->ip(),
+            'user_agent' => $request->userAgent(),
+        ]);
+
+        return redirect()->back()->with('success', 'Konsultasi berhasil dikonfirmasi dan link dikirim ke tamu.');
+    }
 }

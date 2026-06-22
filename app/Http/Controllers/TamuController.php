@@ -33,7 +33,6 @@ class TamuController extends Controller
 
     /**
      * Tampilan form tamu (Resepsionis Utama)
-     * Sekarang menggunakan data dari Guard Tamu, bukan Session yang rentan hilang
      */
     public function index()
     {
@@ -46,9 +45,8 @@ class TamuController extends Controller
         $layanan = Layanan::with('dokumens')->orderBy('nama_layanan', 'asc')->get();
         $petugas = PetugasTujuan::orderBy('nama_petugas', 'asc')->get();
         
-        // Membedakan apakah tamu baru atau lama berdasarkan field created_at vs updated_at
-        // Atau bisa menggunakan flag is_new_guest jika Anda masih ingin mempertahankannya
-        $isNewGuest = $tamu->wasRecentlyCreated || ($tamu->nama_tamu === 'Tamu Baru');
+        // Membedakan tamu baru atau lama
+        $isNewGuest = ($tamu->nama_tamu === 'Tamu Baru' || is_null($tamu->no_wa));
 
         if ($isNewGuest) {
             return view('tamu.form_tamu_baru', ['gmail' => $tamu->gmail, 'layanan' => $layanan, 'petugas' => $petugas]);
@@ -60,78 +58,79 @@ class TamuController extends Controller
     public function showFormBaru() { return $this->index(); }
     public function showFormLama() { return $this->index(); }
 
-   public function store(Request $request)
-{
-    $validated = $request->validate([
-        'gmail'         => 'required|email',
-        'nama_tamu'     => 'required|string',
-        'id_layanan'    => 'required|exists:layanan,id_layanan',
-        'id_petugas'    => 'required|exists:petugas_tujuan,id_petugas',
-        'skor'          => 'nullable|integer',
-        'komentar'      => 'nullable|string',
-        'no_wa'         => 'nullable|string',
-        'nama_instansi' => 'nullable|string',
-        'alamat_kantor' => 'nullable|string',
-        'hadir_sebagai' => 'nullable|string',
-    ]);
+    public function store(Request $request)
+    {
+        $validated = $request->validate([
+            'gmail'         => 'required|email',
+            'nama_tamu'     => 'required|string',
+            'id_layanan'    => 'required|exists:layanan,id_layanan',
+            'id_petugas'    => 'required|exists:petugas_tujuan,id_petugas',
+            'skor'          => 'nullable|integer',
+            'komentar'      => 'nullable|string',
+            'no_wa'         => 'nullable|string',
+            'nama_instansi' => 'nullable|string',
+            'alamat_kantor' => 'nullable|string',
+            'hadir_sebagai' => 'nullable|string',
+        ]);
 
-    try {
-        // 1. Identifikasi status tamu SEBELUM transaksi
-        $tamuExist = Tamu::where('gmail', $validated['gmail'])->exists();
-        
-        $result = DB::transaction(function () use ($validated, $tamuExist) {
-            $tamu = Tamu::where('gmail', $validated['gmail'])->firstOrFail();
+        try {
+            // Identifikasi apakah tamu sudah ada di database sebelum transaksi
+            $tamuRecord = Tamu::where('gmail', $validated['gmail'])->first();
+            $isNew = !$tamuRecord;
             
-            $tamu->update([
-                'nama_tamu'     => $validated['nama_tamu'],
-                'no_wa'         => $validated['no_wa'] ?? $tamu->no_wa,
-                'nama_instansi' => $validated['nama_instansi'] ?? $tamu->nama_instansi,
-                'alamat_kantor' => $validated['alamat_kantor'] ?? $tamu->alamat_kantor,
-                'hadir_sebagai' => $validated['hadir_sebagai'] ?? $tamu->hadir_sebagai,
-            ]);
-
-            $tanggalHariIni = now()->format('Y-m-d');
-            $antreanTerakhir = Kunjungan::whereDate('waktu_masuk', $tanggalHariIni)->max('nomor_antrean') ?? 0;
-            
-            $kunjungan = Kunjungan::create([
-                'gmail'         => $tamu->gmail,
-                'id_layanan'    => $validated['id_layanan'],
-                'id_petugas'    => $validated['id_petugas'],
-                'waktu_masuk'   => now(),
-                'nomor_antrean' => $antreanTerakhir + 1,
-                'status'        => 'belum dilayani',
-            ]);
-
-            if (!empty($validated['skor'])) {
-                DB::table('rating_layanan')->insert([
-                    'id_kunjungan' => $kunjungan->id_kunjungan,
-                    'skor'         => $validated['skor'],
-                    'komentar'     => $validated['komentar'] ?? null,
-                    'created_at'   => now(),
-                    'updated_at'   => now(),
+            $result = DB::transaction(function () use ($validated, $tamuRecord, $isNew) {
+                // Gunakan record yang ada atau buat baru jika tidak ada
+                $tamu = $tamuRecord ?? new Tamu(['gmail' => $validated['gmail']]);
+                
+                $tamu->fill([
+                    'nama_tamu'     => $validated['nama_tamu'],
+                    'no_wa'         => $validated['no_wa'] ?? $tamu->no_wa,
+                    'nama_instansi' => $validated['nama_instansi'] ?? $tamu->nama_instansi,
+                    'alamat_kantor' => $validated['alamat_kantor'] ?? $tamu->alamat_kantor,
+                    'hadir_sebagai' => $validated['hadir_sebagai'] ?? $tamu->hadir_sebagai,
                 ]);
-            }
+                $tamu->save();
 
-            // 2. Kirim status apakah tamu ini baru atau tidak ke luar transaksi
-            return [
-                'tamu'      => $tamu, 
-                'kunjungan' => $kunjungan, 
-                'isNew'     => !$tamuExist // Jika sebelumnya tidak ada, maka ini tamu baru
-            ];
-        });
+                $tanggalHariIni = now()->format('Y-m-d');
+                $antreanTerakhir = Kunjungan::whereDate('waktu_masuk', $tanggalHariIni)->max('nomor_antrean') ?? 0;
+                
+                $kunjungan = Kunjungan::create([
+                    'gmail'         => $tamu->gmail,
+                    'id_layanan'    => $validated['id_layanan'],
+                    'id_petugas'    => $validated['id_petugas'],
+                    'waktu_masuk'   => now(),
+                    'nomor_antrean' => $antreanTerakhir + 1,
+                    'status'        => 'belum dilayani',
+                ]);
 
-        // 3. Logout dan gunakan status 'isNew' hasil transaksi
-        Auth::guard('tamu')->logout();
+                if (!empty($validated['skor'])) {
+                    DB::table('rating_layanan')->insert([
+                        'id_kunjungan' => $kunjungan->id_kunjungan,
+                        'skor'         => $validated['skor'],
+                        'komentar'     => $validated['komentar'] ?? null,
+                        'created_at'   => now(),
+                        'updated_at'   => now(),
+                    ]);
+                }
 
-        $routeName = $result['isNew'] ? 'tamu.success_baru' : 'tamu.success_lama';
-        
-        return redirect()->route($routeName, [
-            'nama_tamu' => urlencode($result['tamu']->nama_tamu)
-        ])->with('antrean', $result['kunjungan']->nomor_antrean);
+                return [
+                    'tamu'      => $tamu, 
+                    'kunjungan' => $kunjungan, 
+                    'isNew'     => $isNew
+                ];
+            });
 
-    } catch (\Exception $e) {
-        Log::error("Error saat simpan tamu: " . $e->getMessage());
-        return redirect()->back()->withInput()->with('error', 'Terjadi kesalahan sistem.');
+            Auth::guard('tamu')->logout();
+
+            $routeName = $result['isNew'] ? 'tamu.success_baru' : 'tamu.success_lama';
+            
+            return redirect()->route($routeName, [
+                'nama_tamu' => urlencode($result['tamu']->nama_tamu)
+            ])->with('antrean', $result['kunjungan']->nomor_antrean);
+
+        } catch (\Exception $e) {
+            Log::error("Error saat simpan tamu: " . $e->getMessage());
+            return redirect()->back()->withInput()->with('error', 'Terjadi kesalahan sistem.');
+        }
     }
-}
 }
