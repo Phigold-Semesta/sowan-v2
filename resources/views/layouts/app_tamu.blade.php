@@ -97,7 +97,7 @@
                     </div>
                 </div>
 
-                <a href="#" class="nav-item flex items-center py-4 px-5 rounded-2xl transition-all hover:bg-white/10">
+                <a href="{{ route('tamu.konsultasi_online.index') }}" class="nav-item flex items-center py-4 px-5 rounded-2xl transition-all hover:bg-white/10">
                     <i class="fas fa-video w-6 text-center text-sm"></i><span class="nav-text ml-3 text-sm font-bold tracking-wide">Konsultasi Online</span>
                 </a>
 

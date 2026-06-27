@@ -61,6 +61,13 @@ Route::prefix('portal')->name('tamu.')->group(function () {
         Route::get('/kunjungan-baru', [TamuController::class, 'kunjunganBaru'])->name('kunjungan.baru');
         Route::post('/kunjungan-simpan', [TamuController::class, 'simpanKunjungan'])->name('kunjungan.simpan');
         // Rute logout untuk portal publik (nama: tamu.logout.tamu)
+    // --- TAMBAHAN: Rute Konsultasi Online Tamu ---
+       // Rute untuk menampilkan halaman daftar konsultasi
+    Route::get('/konsultasi-online', [TamuController::class, 'konsultasiOnline'])->name('konsultasi_online.index');
+    
+    // Rute untuk memproses pengajuan janji baru dari modal
+    Route::post('/konsultasi-simpan', [TamuController::class, 'simpanKonsultasi'])->name('konsultasi.simpan');
+
         Route::post('/logout', [AuthController::class, 'logout'])->name('logout.tamu');
     });
 });

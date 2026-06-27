@@ -32,6 +32,61 @@ class TamuController extends Controller
     }
 
     /**
+     * Tampilan Halaman Konsultasi Online
+     */
+    /**
+ * Tampilan Halaman Konsultasi Online (List + Form Dropdown)
+ */
+public function konsultasiOnline()
+{
+    $tamu = Auth::guard('tamu')->user();
+    
+    if (!$tamu) {
+        return redirect()->route('tamu.login.view')->with('error', 'Sesi Anda telah berakhir.');
+    }
+    
+    // 1. Ambil jadwal konsultasi milik tamu
+    $jadwal_konsultasi = DB::table('konsultasi')
+                            ->where('gmail', $tamu->gmail)
+                            ->orderBy('waktu_mulai', 'asc')
+                            ->get();
+
+    // 2. Ambil data layanan & petugas untuk dropdown di form
+    $layanan = Layanan::orderBy('nama_layanan', 'asc')->get();
+    $petugas = PetugasTujuan::orderBy('nama_petugas', 'asc')->get();
+
+    // Kirim semua variabel ke view
+    return view('tamu.konsultasi_online.index', compact('tamu', 'jadwal_konsultasi', 'layanan', 'petugas'));
+}
+
+/**
+ * Menyimpan pengajuan janji konsultasi baru oleh tamu
+ */
+public function simpanKonsultasi(Request $request)
+{
+    $tamu = Auth::guard('tamu')->user();
+
+    $validated = $request->validate([
+        'id_layanan'  => 'required|exists:layanan,id_layanan',
+        'id_petugas'  => 'required|exists:petugas_tujuan,id_petugas',
+        'waktu_mulai' => 'required|date|after:now', // Waktu harus masa depan
+    ]);
+
+    DB::table('konsultasi')->insert([
+        'gmail'            => $tamu->gmail, // Relasi utama
+        'id_layanan'       => $validated['id_layanan'],
+        'id_user'          => $validated['id_petugas'], 
+        'waktu_mulai'      => $validated['waktu_mulai'],
+        'status'           => 'pending', // Default status awal
+        'created_at'       => now(),
+        'updated_at'       => now(),
+    ]);
+
+    return redirect()->route('tamu.konsultasi_online.index')
+                     ->with('success', 'Janji konsultasi berhasil diajukan, silakan tunggu konfirmasi petugas.');
+}
+
+    /**
      * Tampilan form tamu (Resepsionis Utama)
      */
     public function index()
