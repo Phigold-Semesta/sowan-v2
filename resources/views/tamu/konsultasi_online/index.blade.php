@@ -16,9 +16,10 @@
         <table class="w-full text-left border-collapse">
             <thead>
                 <tr class="bg-emerald-800 text-white">
-                    <th class="p-4 font-bold">Topik Konsultasi</th>
+                    <th class="p-4 font-bold">Topik</th>
                     <th class="p-4 font-bold">Petugas</th>
-                    <th class="p-4 font-bold">Waktu Mulai</th>
+                    <th class="p-4 font-bold">Waktu</th>
+                    <th class="p-4 font-bold">Durasi</th>
                     <th class="p-4 font-bold">Status</th>
                     <th class="p-4 font-bold text-center">Aksi</th>
                 </tr>
@@ -28,18 +29,19 @@
                 <tr class="border-b border-emerald-50 hover:bg-emerald-50/50 transition-colors">
                     <td class="p-4 font-semibold text-emerald-900">{{ $item->topik_konsultasi }}</td>
                     <td class="p-4 text-slate-600">{{ $item->nama_petugas ?? 'Petugas LPSE' }}</td>
-                    <td class="p-4 text-slate-600">{{ \Carbon\Carbon::parse($item->waktu_mulai)->format('d M Y, H:i') }} WIB</td>
+                    <td class="p-4 text-slate-600">{{ \Carbon\Carbon::parse($item->waktu_mulai)->format('d M Y, H:i') }}</td>
+                    <td class="p-4 text-emerald-700 font-bold">{{ $item->durasi_menit }} menit</td>
                     <td class="p-4"><span class="px-3 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800">{{ ucfirst($item->status) }}</span></td>
                     <td class="p-4 text-center">
                         @if($item->link_google_meet)
-                            <a href="{{ $item->link_google_meet }}" target="_blank" class="bg-emerald-600 text-white py-2 px-4 rounded-xl font-bold text-sm hover:bg-emerald-700">Gabung Meet</a>
+                            <a href="{{ $item->link_google_meet }}" target="_blank" class="bg-emerald-600 text-white py-2 px-4 rounded-xl font-bold text-sm hover:bg-emerald-700">Gabung</a>
                         @else
-                            <span class="text-slate-400 text-sm italic">Menunggu Link</span>
+                            <span class="text-slate-400 text-sm italic">Menunggu</span>
                         @endif
                     </td>
                 </tr>
                 @empty
-                <tr><td colspan="5" class="p-10 text-center text-slate-500">Belum ada jadwal konsultasi terdaftar.</td></tr>
+                <tr><td colspan="6" class="p-10 text-center text-slate-500">Belum ada jadwal konsultasi terdaftar.</td></tr>
                 @endforelse
             </tbody>
         </table>
@@ -54,37 +56,42 @@
             <div class="space-y-4">
                 <div>
                     <label class="block text-sm font-bold text-emerald-800 mb-1">Layanan</label>
-                    <select name="id_layanan" class="w-full p-3 rounded-xl border border-emerald-200 focus:ring-2 focus:ring-emerald-500">
-                        @foreach($layanan as $l)
-                            <option value="{{ $l->id_layanan }}">{{ $l->nama_layanan }}</option>
-                        @endforeach
+                    <select name="id_layanan" class="w-full p-3 rounded-xl border border-emerald-200 focus:ring-2 focus:ring-emerald-500" required>
+                        @foreach($layanan as $l) <option value="{{ $l->id_layanan }}">{{ $l->nama_layanan }}</option> @endforeach
                     </select>
                 </div>
                 <div>
                     <label class="block text-sm font-bold text-emerald-800 mb-1">Petugas Pemateri</label>
-                    <select name="id_petugas" class="w-full p-3 rounded-xl border border-emerald-200 focus:ring-2 focus:ring-emerald-500">
-                        @foreach($petugas as $p)
-                            <option value="{{ $p->id_petugas }}">{{ $p->nama_petugas }}</option>
-                        @endforeach
-                    </select>
+                    <select name="id_petugas" class="w-full p-3 rounded-xl border border-emerald-200 focus:ring-2 focus:ring-emerald-500" required>
+    <option value="" disabled selected>Pilih Pemateri Konsultasi</option>
+    @foreach($petugas as $p)
+        <option value="{{ $p->id_user }}">
+            {{ $p->nama_lengkap }} ({{ ucfirst($p->role) }})
+        </option>
+    @endforeach
+</select>
                 </div>
-                <div>
-                    <label class="block text-sm font-bold text-emerald-800 mb-1">Waktu Rencana</label>
-                    <input type="datetime-local" name="waktu_mulai" class="w-full p-3 rounded-xl border border-emerald-200" required>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-bold text-emerald-800 mb-1">Waktu Mulai</label>
+                        <input type="datetime-local" name="waktu_mulai" class="w-full p-3 rounded-xl border border-emerald-200 focus:ring-2 focus:ring-emerald-500" required>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-bold text-emerald-800 mb-1">Durasi (Menit)</label>
+                        <input type="number" name="durasi_menit" value="30" min="15" max="90" step="15" class="w-full p-3 rounded-xl border border-emerald-200 focus:ring-2 focus:ring-emerald-500" required>
+                        <small class="text-emerald-600 font-bold">Maksimal 90 menit</small>
+                    </div>
                 </div>
             </div>
             <div class="mt-8 flex gap-3">
-                <button type="button" onclick="toggleModal('modal-konsultasi')" class="flex-1 py-3 bg-slate-200 rounded-xl font-bold">Batal</button>
-                <button type="submit" class="flex-1 py-3 bg-emerald-600 text-white rounded-xl font-bold">Simpan Janji</button>
+                <button type="button" onclick="toggleModal('modal-konsultasi')" class="flex-1 py-3 bg-slate-200 rounded-xl font-bold hover:bg-slate-300 transition-all">Batal</button>
+                <button type="submit" class="flex-1 py-3 bg-emerald-600 text-white rounded-xl font-bold hover:bg-emerald-700 transition-all">Simpan Janji</button>
             </div>
         </form>
     </div>
 </div>
 
 <script>
-function toggleModal(id) {
-    const modal = document.getElementById(id);
-    modal.classList.toggle('hidden');
-}
+function toggleModal(id) { document.getElementById(id).classList.toggle('hidden'); }
 </script>
 @endsection

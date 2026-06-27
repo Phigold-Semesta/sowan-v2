@@ -53,7 +53,10 @@ public function konsultasiOnline()
 
     // 2. Ambil data layanan & petugas untuk dropdown di form
     $layanan = Layanan::orderBy('nama_layanan', 'asc')->get();
-    $petugas = PetugasTujuan::orderBy('nama_petugas', 'asc')->get();
+    // Kita ambil semua user internal agar muncul di dropdown
+$petugas = \App\Models\User::whereIn('role', ['admin', 'petugas', 'pimpinan'])
+                            ->orderBy('nama_lengkap', 'asc')
+                            ->get();
 
     // Kirim semua variabel ke view
     return view('tamu.konsultasi_online.index', compact('tamu', 'jadwal_konsultasi', 'layanan', 'petugas'));
@@ -72,15 +75,16 @@ public function simpanKonsultasi(Request $request)
         'waktu_mulai' => 'required|date|after:now', // Waktu harus masa depan
     ]);
 
-    DB::table('konsultasi')->insert([
-        'gmail'            => $tamu->gmail, // Relasi utama
-        'id_layanan'       => $validated['id_layanan'],
-        'id_user'          => $validated['id_petugas'], 
-        'waktu_mulai'      => $validated['waktu_mulai'],
-        'status'           => 'pending', // Default status awal
-        'created_at'       => now(),
-        'updated_at'       => now(),
-    ]);
+   // Di dalam fungsi simpanKonsultasi()
+DB::table('konsultasi')->insert([
+    'gmail'         => $tamu->gmail,
+    'id_layanan'    => $validated['id_layanan'],
+    'id_user'       => $request->id_petugas, // Ini sudah menangkap id_user dari form
+    'waktu_mulai'   => $validated['waktu_mulai'],
+    'durasi_menit'  => $request->durasi_menit, 
+    'status'        => 'pending',
+    'created_at'    => now(),
+]);
 
     return redirect()->route('tamu.konsultasi_online.index')
                      ->with('success', 'Janji konsultasi berhasil diajukan, silakan tunggu konfirmasi petugas.');
