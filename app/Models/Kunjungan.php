@@ -13,7 +13,7 @@ class Kunjungan extends Model
 
     /**
      * Nama tabel sesuai skema SOWAN V2.
-     * Tabel ini berfungsi sebagai Tabel Transaksi (Weak Entity) [cite: 2026-03-23].
+     * Tabel ini berfungsi sebagai Tabel Transaksi (Weak Entity).
      */
     protected $table = 'kunjungan';
 
@@ -21,6 +21,12 @@ class Kunjungan extends Model
      * Primary Key tabel kunjungan.
      */
     protected $primaryKey = 'id_kunjungan';
+
+    /**
+     * PERBAIKAN VITAL: Menambahkan guarded agar Mass Assignment bekerja.
+     * Ini memungkinkan Kunjungan::create() mengisi semua field di dalam testing.
+     */
+    protected $guarded = [];
 
     /**
      * PERBAIKAN: Casting tipe data.
@@ -47,7 +53,7 @@ class Kunjungan extends Model
 
     /**
      * RELASI: Ke RatingLayanan (Satu kunjungan punya satu rating).
-     * Sesuai rencana, rating_layanan menjadi Weak Entity murni [cite: 2026-03-23].
+     * Sesuai rencana, rating_layanan menjadi Weak Entity murni.
      * Digunakan untuk menghitung avg_rating di Dashboard melalui tabel relasi.
      */
     public function ratingLayanan(): HasOne
@@ -57,7 +63,7 @@ class Kunjungan extends Model
 
     /**
      * RELASI: Balik ke Tamu (Banyak kunjungan dilakukan oleh satu tamu).
-     * Menggunakan gmail sebagai foreign key sesuai skema fillable [cite: 2026-03-23].
+     * Menggunakan gmail sebagai foreign key sesuai skema fillable.
      */
     public function tamu(): BelongsTo
     {

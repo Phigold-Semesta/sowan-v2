@@ -32,63 +32,55 @@ class TamuController extends Controller
     }
 
     /**
-     * Tampilan Halaman Konsultasi Online
+     * Tampilan Halaman Konsultasi Online (List + Form Dropdown)
      */
-    /**
- * Tampilan Halaman Konsultasi Online (List + Form Dropdown)
- */
-public function konsultasiOnline()
-{
-    $tamu = Auth::guard('tamu')->user();
-    
-    if (!$tamu) {
-        return redirect()->route('tamu.login.view')->with('error', 'Sesi Anda telah berakhir.');
+    public function konsultasiOnline()
+    {
+        $tamu = Auth::guard('tamu')->user();
+        
+        if (!$tamu) {
+            return redirect()->route('tamu.login.view')->with('error', 'Sesi Anda telah berakhir.');
+        }
+        
+        $jadwal_konsultasi = DB::table('konsultasi')
+                                ->where('gmail', $tamu->gmail)
+                                ->orderBy('waktu_mulai', 'asc')
+                                ->get();
+
+        $layanan = Layanan::orderBy('nama_layanan', 'asc')->get();
+        $petugas = \App\Models\User::whereIn('role', ['admin', 'petugas', 'pimpinan'])
+                                    ->orderBy('nama_lengkap', 'asc')
+                                    ->get();
+
+        return view('tamu.konsultasi_online.index', compact('tamu', 'jadwal_konsultasi', 'layanan', 'petugas'));
     }
-    
-    // 1. Ambil jadwal konsultasi milik tamu
-    $jadwal_konsultasi = DB::table('konsultasi')
-                            ->where('gmail', $tamu->gmail)
-                            ->orderBy('waktu_mulai', 'asc')
-                            ->get();
 
-    // 2. Ambil data layanan & petugas untuk dropdown di form
-    $layanan = Layanan::orderBy('nama_layanan', 'asc')->get();
-    // Kita ambil semua user internal agar muncul di dropdown
-$petugas = \App\Models\User::whereIn('role', ['admin', 'petugas', 'pimpinan'])
-                            ->orderBy('nama_lengkap', 'asc')
-                            ->get();
+    /**
+     * Menyimpan pengajuan janji konsultasi baru oleh tamu
+     */
+    public function simpanKonsultasi(Request $request)
+    {
+        $tamu = Auth::guard('tamu')->user();
 
-    // Kirim semua variabel ke view
-    return view('tamu.konsultasi_online.index', compact('tamu', 'jadwal_konsultasi', 'layanan', 'petugas'));
-}
+        $validated = $request->validate([
+            'id_layanan'  => 'required|exists:layanan,id_layanan',
+            'id_petugas'  => 'required|exists:petugas_tujuan,id_petugas',
+            'waktu_mulai' => 'required|date|after:now',
+        ]);
 
-/**
- * Menyimpan pengajuan janji konsultasi baru oleh tamu
- */
-public function simpanKonsultasi(Request $request)
-{
-    $tamu = Auth::guard('tamu')->user();
+        DB::table('konsultasi')->insert([
+            'gmail'         => $tamu->gmail,
+            'id_layanan'    => $validated['id_layanan'],
+            'id_user'       => $request->id_petugas,
+            'waktu_mulai'   => $validated['waktu_mulai'],
+            'durasi_menit'  => $request->durasi_menit, 
+            'status'        => 'pending',
+            'created_at'    => now(),
+        ]);
 
-    $validated = $request->validate([
-        'id_layanan'  => 'required|exists:layanan,id_layanan',
-        'id_petugas'  => 'required|exists:petugas_tujuan,id_petugas',
-        'waktu_mulai' => 'required|date|after:now', // Waktu harus masa depan
-    ]);
-
-   // Di dalam fungsi simpanKonsultasi()
-DB::table('konsultasi')->insert([
-    'gmail'         => $tamu->gmail,
-    'id_layanan'    => $validated['id_layanan'],
-    'id_user'       => $request->id_petugas, // Ini sudah menangkap id_user dari form
-    'waktu_mulai'   => $validated['waktu_mulai'],
-    'durasi_menit'  => $request->durasi_menit, 
-    'status'        => 'pending',
-    'created_at'    => now(),
-]);
-
-    return redirect()->route('tamu.konsultasi_online.index')
-                     ->with('success', 'Janji konsultasi berhasil diajukan, silakan tunggu konfirmasi petugas.');
-}
+        return redirect()->route('tamu.konsultasi_online.index')
+                         ->with('success', 'Janji konsultasi berhasil diajukan, silakan tunggu konfirmasi petugas.');
+    }
 
     /**
      * Tampilan form tamu (Resepsionis Utama)
@@ -104,7 +96,6 @@ DB::table('konsultasi')->insert([
         $layanan = Layanan::with('dokumens')->orderBy('nama_layanan', 'asc')->get();
         $petugas = PetugasTujuan::orderBy('nama_petugas', 'asc')->get();
         
-        // Membedakan tamu baru atau lama
         $isNewGuest = ($tamu->nama_tamu === 'Tamu Baru' || is_null($tamu->no_wa));
 
         if ($isNewGuest) {
@@ -133,12 +124,10 @@ DB::table('konsultasi')->insert([
         ]);
 
         try {
-            // Identifikasi apakah tamu sudah ada di database sebelum transaksi
             $tamuRecord = Tamu::where('gmail', $validated['gmail'])->first();
             $isNew = !$tamuRecord;
             
             $result = DB::transaction(function () use ($validated, $tamuRecord, $isNew) {
-                // Gunakan record yang ada atau buat baru jika tidak ada
                 $tamu = $tamuRecord ?? new Tamu(['gmail' => $validated['gmail']]);
                 
                 $tamu->fill([
@@ -159,7 +148,7 @@ DB::table('konsultasi')->insert([
                     'id_petugas'    => $validated['id_petugas'],
                     'waktu_masuk'   => now(),
                     'nomor_antrean' => $antreanTerakhir + 1,
-                    'status'        => 'belum dilayani',
+                    'status'        => 'Belum Dilayani',
                 ]);
 
                 if (!empty($validated['skor'])) {
@@ -189,7 +178,7 @@ DB::table('konsultasi')->insert([
 
         } catch (\Exception $e) {
             Log::error("Error saat simpan tamu: " . $e->getMessage());
-            return redirect()->back()->withInput()->with('error', 'Terjadi kesalahan sistem.');
+            return redirect()->back()->withInput()->with('error', 'Terjadi kesalahan sistem: ' . $e->getMessage());
         }
     }
 }

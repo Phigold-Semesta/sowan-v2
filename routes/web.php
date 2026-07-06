@@ -227,6 +227,17 @@ Route::middleware('auth')->group(function () {
         Route::prefix('aktivitas')->name('aktivitas.')->group(function() {
             Route::get('/', [AdminController::class, 'aktivitas_global'])->name('index');
         });
+
+        // ... (kode aktivitas sebelumnya)
+        Route::prefix('aktivitas')->name('aktivitas.')->group(function() {
+            Route::get('/', [AdminController::class, 'aktivitas_global'])->name('index');
+        });
+
+        // --- TAMBAHAN: MONITORING SISTEM (Laravel Pulse) ---
+        Route::get('/pulse', function () {
+            return view('pulse::dashboard');
+        })->name('pulse');
+
     });
 
 

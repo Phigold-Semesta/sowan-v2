@@ -41,15 +41,15 @@ class Layanan extends Model
     ];
 
     /**
+     * Tambahan untuk kebutuhan Testing: Membuka proteksi mass assignment.
+     */
+    protected $guarded = [];
+
+    /**
      * PERBAIKAN RELASI: Satu layanan bisa memiliki banyak dokumen panduan.
-     * Saya menyediakan dua nama fungsi agar sinkron dengan Controller manapun.
      */
     public function dokumen(): HasMany
     {
-        /**
-         * Mengacu pada Model Dokumen. 
-         * Parameter: ModelTujuan, ForeignKeyDiTabelTujuan, LocalKeyDiTabelIni.
-         */
         return $this->hasMany(Dokumen::class, 'id_layanan', 'id_layanan');
     }
 
@@ -63,7 +63,6 @@ class Layanan extends Model
 
     /**
      * RELASI: Satu layanan bisa memiliki banyak kunjungan tamu.
-     * Tabel Kunjungan adalah Weak Entity yang bergantung pada Layanan ini.
      */
     public function kunjungans(): HasMany
     {
