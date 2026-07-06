@@ -181,4 +181,48 @@ class TamuController extends Controller
             return redirect()->back()->withInput()->with('error', 'Terjadi kesalahan sistem: ' . $e->getMessage());
         }
     }
+
+    /**
+     * Tampilan halaman Rating dan Saran
+     */
+    public function ratingIndex()
+    {
+        $tamu = Auth::guard('tamu')->user();
+
+        if (!$tamu) {
+            return redirect()->route('tamu.login.view')->with('error', 'Sesi Anda telah berakhir.');
+        }
+
+        // Ambil data rating yang pernah diberikan oleh tamu ini
+        $rating = DB::table('rating_layanan')
+                    ->join('kunjungan', 'rating_layanan.id_kunjungan', '=', 'kunjungan.id_kunjungan')
+                    ->where('kunjungan.gmail', $tamu->gmail)
+                    ->orderBy('rating_layanan.created_at', 'desc')
+                    ->get();
+
+        return view('tamu.rating.index', compact('tamu', 'rating'));
+    }
+
+    /**
+     * Menyimpan Rating dan Saran baru
+     */
+    public function simpanRating(Request $request)
+    {
+        $validated = $request->validate([
+            'id_kunjungan' => 'required|exists:kunjungan,id_kunjungan',
+            'skor'         => 'required|integer|min:1|max:5',
+            'komentar'     => 'nullable|string',
+        ]);
+
+        DB::table('rating_layanan')->insert([
+            'id_kunjungan' => $validated['id_kunjungan'],
+            'skor'         => $validated['skor'],
+            'komentar'     => $validated['komentar'] ?? null,
+            'created_at'   => now(),
+            'updated_at'   => now(),
+        ]);
+
+        return redirect()->route('tamu.rating.index')
+                         ->with('success', 'Terima kasih atas rating dan saran Anda!');
+    }
 }

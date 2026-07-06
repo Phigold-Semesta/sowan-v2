@@ -68,6 +68,10 @@ Route::prefix('portal')->name('tamu.')->group(function () {
     // Rute untuk memproses pengajuan janji baru dari modal
     Route::post('/konsultasi-simpan', [TamuController::class, 'simpanKonsultasi'])->name('konsultasi.simpan');
 
+    // --- TAMBAHAN: Rute Rating & Saran Tamu ---
+        Route::get('/rating', [TamuController::class, 'ratingIndex'])->name('rating.index');
+        Route::post('/rating-simpan', [TamuController::class, 'simpanRating'])->name('rating.simpan');
+
         Route::post('/logout', [AuthController::class, 'logout'])->name('logout.tamu');
     });
 });
