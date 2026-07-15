@@ -30,12 +30,6 @@
             transition: all 0.3s ease;
         }
 
-        .star-active {
-            color: #10b981 !important;
-            filter: drop-shadow(0 0 12px rgba(16, 185, 129, 0.6));
-            transform: scale(1.1);
-        }
-
         .blob {
             position: absolute;
             width: 400px;
@@ -86,7 +80,6 @@
             <form action="{{ route('tamu.store') }}" method="POST" class="p-8 md:p-12">
                 @csrf
                 
-                {{-- Perbaikan: Input hidden untuk identifikasi tamu lama --}}
                 <input type="hidden" name="gmail" value="{{ $tamu->gmail }}">
                 <input type="hidden" name="nama_tamu" value="{{ $tamu->nama_tamu }}">
                 <input type="hidden" name="is_lama" value="1">
@@ -137,35 +130,6 @@
                     </div>
 
                     <div id="file-guide-container" class="space-y-3"></div>
-
-                    <div class="py-4 flex items-center">
-                        <div class="flex-grow h-[1px] bg-emerald-100"></div>
-                        <span class="px-4 text-[9px] font-black text-emerald-300 uppercase tracking-widest text-center">Feedback Anda</span>
-                        <div class="flex-grow h-[1px] bg-emerald-100"></div>
-                    </div>
-
-                    <div class="p-6 md:p-8 border-2 border-dashed border-emerald-100 rounded-[2.5rem] bg-emerald-50/20">
-                        <div class="text-center mb-6">
-                            <p class="text-[10px] font-black text-emerald-900 uppercase tracking-widest mb-4">Berikan Rating Layanan ✨</p>
-                            <div class="flex justify-center space-x-2 md:space-x-4" id="star-rating">
-                                @for($i=1; $i<=5; $i++)
-                                    <button type="button" data-value="{{ $i }}" class="star-btn transition-all duration-300 hover:scale-125 active:scale-90 outline-none">
-                                        <svg class="w-8 h-8 md:w-10 md:h-10 text-gray-200 transition-all pointer-events-none" fill="currentColor" viewBox="0 0 20 20">
-                                            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
-                                        </svg>
-                                    </button>
-                                @endfor
-                            </div>
-                            <input type="hidden" name="skor" id="rating-value" value="0">
-                        </div>
-
-                        <div class="group space-y-2">
-                            <label class="block text-[10px] font-black uppercase tracking-widest text-emerald-900 ml-4">Kritik & Saran (Opsional)</label>
-                            <textarea name="komentar" rows="3" 
-                                class="w-full px-6 py-4 rounded-[1.5rem] bg-white border-2 border-emerald-50 focus:border-emerald-500 outline-none transition-all placeholder-gray-300 font-bold text-sm text-emerald-950 shadow-sm resize-none"
-                                placeholder="Tuliskan masukan Anda di sini...">{{ old('komentar') }}</textarea>
-                        </div>
-                    </div>
                 </div>
 
                 <div class="mt-10">
@@ -187,7 +151,6 @@
     </div>
 
     <script>
-        // Script untuk menampilkan panduan layanan
         document.getElementById('select-layanan').addEventListener('change', function() {
             const container = document.getElementById('file-guide-container');
             const selectedOption = this.options[this.selectedIndex];
@@ -223,33 +186,6 @@
                 }
             }
         });
-
-        // Script untuk Rating Bintang
-        const starBtns = document.querySelectorAll('.star-btn');
-        const ratingInput = document.getElementById('rating-value');
-        starBtns.forEach(btn => {
-            btn.addEventListener('click', function() {
-                const val = parseInt(this.getAttribute('data-value'));
-                ratingInput.value = val;
-                updateStars(val);
-            });
-            btn.addEventListener('mouseenter', function() { updateStars(parseInt(this.getAttribute('data-value'))); });
-            btn.addEventListener('mouseleave', function() { updateStars(parseInt(ratingInput.value)); });
-        });
-
-        function updateStars(value) {
-            starBtns.forEach(btn => {
-                const btnVal = parseInt(btn.getAttribute('data-value'));
-                const svg = btn.querySelector('svg');
-                if (btnVal <= value) {
-                    svg.classList.add('star-active');
-                    svg.classList.remove('text-gray-200');
-                } else {
-                    svg.classList.remove('star-active');
-                    svg.classList.add('text-gray-200');
-                }
-            });
-        }
     </script>
 </body>
 </html>

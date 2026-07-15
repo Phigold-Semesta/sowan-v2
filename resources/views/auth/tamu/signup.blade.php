@@ -76,7 +76,6 @@
                     </div>
                 @endif
 
-                {{-- Form action diperbaiki ke route('tamu.register.store') --}}
                 <form action="{{ route('tamu.register.store') }}" method="POST" class="space-y-3 sm:space-y-4">
                     @csrf
                     <div class="grid grid-cols-1 gap-3">
@@ -122,8 +121,8 @@
                     <button type="submit" class="w-full bg-emerald-400 hover:bg-emerald-300 text-emerald-950 font-black py-3 sm:py-4 rounded-full shadow-[0_15px_40px_rgba(52,211,153,0.3)] transition-all mt-4 text-[10px] sm:text-xs tracking-[0.2em] uppercase">DAFTAR AKUN</button>
                     
                     <div class="text-center mt-2">
-                        {{-- Link diperbaiki ke route('tamu.login') --}}
-                        <a href="{{ route('tamu.login') }}" class="text-emerald-300 text-[9px] font-bold uppercase tracking-[0.1em] hover:text-white transition-colors">Sudah punya akun? Masuk</a>
+                        {{-- Rute telah diperbaiki menjadi tamu.login.view --}}
+                        <a href="{{ route('tamu.login.view') }}" class="text-emerald-300 text-[9px] font-bold uppercase tracking-[0.1em] hover:text-white transition-colors">Sudah punya akun? Masuk</a>
                     </div>
                 </form>
             </div>

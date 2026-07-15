@@ -29,12 +29,6 @@
             to { opacity: 1; transform: translateY(0); }
         }
 
-        .star-active {
-            color: #10b981 !important;
-            filter: drop-shadow(0 0 12px rgba(16, 185, 129, 0.6));
-            transform: scale(1.1);
-        }
-
         input:focus, select:focus, textarea:focus {
             transform: translateY(-2px);
             box-shadow: 0 10px 20px -5px rgba(16, 185, 129, 0.15);
@@ -96,7 +90,7 @@
                     </div>
                 </div>
 
-                {{-- Grid Form (Disesuaikan seperti permintaan) --}}
+                {{-- Grid Form --}}
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-10">
                     <div class="space-y-6">
                         <div class="group space-y-2">
@@ -168,26 +162,13 @@
                     </div>
                 </div>
 
-                <div class="mt-12 p-8 border-2 border-dashed border-emerald-100 rounded-[2.5rem] bg-emerald-50/20">
-                    <div class="text-center mb-6">
-                        <p class="text-[11px] font-black text-emerald-900 uppercase tracking-[0.3em] mb-4">Bagaimana Pengalaman Anda? (Opsional) ✨</p>
-                        <div class="flex justify-center space-x-3" id="star-rating">
-                            @for($i=1; $i<=5; $i++)
-                                <button type="button" data-value="{{ $i }}" class="star-btn transition-all duration-300 hover:scale-150 active:scale-90 outline-none">
-                                    <svg class="w-10 h-10 text-gray-200 transition-all pointer-events-none" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></path></svg>
-                                </button>
-                            @endfor
-                        </div>
-                        <input type="hidden" name="skor" id="rating-value" value="0">
-                    </div>
-                    <textarea name="komentar" rows="3" placeholder="Berikan masukan berharga Anda untuk layanan kami..." class="w-full px-6 py-4 rounded-2xl bg-white border-2 border-emerald-50 focus:border-emerald-500 outline-none transition-all placeholder-gray-300 font-bold text-sm text-emerald-950 shadow-sm resize-none"></textarea>
-                </div>
-
                 <div class="mt-12">
                     <button type="submit" class="w-full py-6 bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xl rounded-3xl transition-all shadow-xl uppercase tracking-[0.2em] active:scale-95">
                         Simpan Data
                     </button>
-                    <p class="text-center text-[10px] text-emerald-900/40 mt-8 uppercase font-black tracking-[0.4em]">SOWAN Ecosystem • LPSE Karawang Digital</p>
+                    <a href="{{ route('tamu.index') }}" class="block text-center mt-6 text-[9px] font-black uppercase tracking-widest text-emerald-900/40 hover:text-emerald-900 transition-colors">
+                        Batal & Kembali
+                    </a>
                 </div>
             </div>
         </form>
@@ -198,7 +179,6 @@
     </div>
 
     <script>
-        // Logika Dropdown Layanan & Dokumen
         document.getElementById('select-layanan').addEventListener('change', function() {
             const container = document.getElementById('file-guide-container');
             const selectedOption = this.options[this.selectedIndex];
@@ -216,17 +196,6 @@
                         </div>`);
                 });
             }
-        });
-
-        // Star Rating
-        const starBtns = document.querySelectorAll('.star-btn');
-        const ratingInput = document.getElementById('rating-value');
-        starBtns.forEach(btn => {
-            btn.addEventListener('click', () => {
-                const val = parseInt(btn.getAttribute('data-value'));
-                ratingInput.value = val;
-                starBtns.forEach((b, i) => b.querySelector('svg').classList.toggle('star-active', i < val));
-            });
         });
     </script>
 </body>
