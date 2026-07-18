@@ -105,6 +105,57 @@ public function konsultasiOnline()
                          ->with('success', 'Janji konsultasi berhasil diajukan, silakan tunggu konfirmasi petugas.');
     }
 
+/**
+ * Memperbarui pengajuan janji konsultasi oleh tamu
+ */
+public function updateKonsultasi(Request $request, $id)
+{
+    $tamu = Auth::guard('tamu')->user();
+    
+    // Validasi input
+    $validated = $request->validate([
+        'id_layanan'       => 'required|exists:layanan,id_layanan',
+        'id_petugas'       => 'required|exists:user,id_user',
+        'waktu_mulai'      => 'required|date|after:now',
+        'topik_konsultasi' => 'required|string|max:255',
+        'durasi_menit'     => 'required|integer|min:15|max:90',
+    ]);
+
+    $konsultasi = \App\Models\Konsultasi::where('id_konsultasi', $id)
+                                        ->where('gmail', $tamu->gmail)
+                                        ->where('status', 'pending') // Hanya bisa edit jika masih pending
+                                        ->firstOrFail();
+
+    $konsultasi->update([
+        'id_layanan'       => $validated['id_layanan'],
+        'id_user'          => $validated['id_petugas'],
+        'topik_konsultasi' => $validated['topik_konsultasi'],
+        'waktu_mulai'      => $validated['waktu_mulai'],
+        'durasi_menit'     => $validated['durasi_menit'],
+    ]);
+
+    return redirect()->route('tamu.konsultasi_online.index')
+                     ->with('success', 'Janji konsultasi berhasil diperbarui.');
+}
+
+/**
+ * Menghapus pengajuan janji konsultasi oleh tamu
+ */
+public function hapusKonsultasi($id)
+{
+    $tamu = Auth::guard('tamu')->user();
+
+    $konsultasi = \App\Models\Konsultasi::where('id_konsultasi', $id)
+                                        ->where('gmail', $tamu->gmail)
+                                        ->where('status', 'pending') // Hanya bisa hapus jika masih pending
+                                        ->firstOrFail();
+
+    $konsultasi->delete();
+
+    return redirect()->route('tamu.konsultasi_online.index')
+                     ->with('success', 'Janji konsultasi berhasil dihapus.');
+}
+
     /**
      * Tampilan form tamu (Resepsionis Utama)
      */

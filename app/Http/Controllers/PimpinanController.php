@@ -29,32 +29,28 @@ class PimpinanController extends Controller
         return view('pimpinan.dashboard', compact('stats'));
     }
 
-    // --- METHOD KONSULTASI ONLINE ---
+  // --- METHOD KONSULTASI ONLINE (DISESUAIKAN DENGAN AKTOR LOGIN) ---
     public function konsultasiIndex()
-    {
-        $konsultasi = Konsultasi::with(['user', 'layanan', 'kunjungan.tamu'])
-            ->latest('waktu_konsultasi')
-            ->paginate(15);
+{
+    // Pastikan relasi sudah benar sampai ke tamu
+    $konsultasi = Konsultasi::with(['user', 'layanan', 'kunjungan.tamu'])
+        ->where('id_user', Auth::id())
+        ->latest('created_at')
+        ->paginate(15);
             
-        return view('pimpinan.konsultasi.index', compact('konsultasi'));
-    }
+    return view('pimpinan.konsultasi_online.index', compact('konsultasi'));
+}
 
     public function toggleStatusLayanan(Request $request)
     {
-        // Ambil ID user yang login
-        $userId = Auth::id();
+        $user = Auth::user();
         
-        if (!$userId) {
+        if (!$user) {
             return response()->json(['message' => 'Unauthorized'], 401);
         }
-
-        // Ambil data user secara fresh dari database untuk menghindari stale object
-        $user = User::find($userId);
         
-        // Tentukan status baru
         $statusBaru = ($user->status_konsultasi === 'online') ? 'offline' : 'online';
         
-        // Gunakan update() yang lebih aman
         $user->update(['status_konsultasi' => $statusBaru]);
 
         return response()->json([
@@ -65,15 +61,22 @@ class PimpinanController extends Controller
 
     public function konfirmasiKonsultasi(Request $request, $id)
     {
-        $konsultasi = Konsultasi::findOrFail($id);
+        $request->validate([
+            'link_google_meet' => 'required|url'
+        ]);
+
+        // Memastikan yang dikonfirmasi adalah milik pimpinan yang sedang login
+        $konsultasi = Konsultasi::where('id_konsultasi', $id)
+                                ->where('id_user', Auth::id())
+                                ->firstOrFail();
+        
         $konsultasi->update([
-            'status'           => 'confirmed',
+            'status'           => 'dikonfirmasi',
             'link_google_meet' => $request->link_google_meet
         ]);
 
         return redirect()->back()->with('success', 'Konsultasi berhasil dikonfirmasi.');
     }
-
     // --- METHOD EXISTING (TETAP) ---
     public function laporanIndex(Request $request)
     {

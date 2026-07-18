@@ -125,4 +125,17 @@ class UserController extends Controller
         $user->delete();
         return redirect()->route('admin.users.index')->with('success', 'Pengguna telah berhasil dihapus.');
     }
+
+    public function toggleStatus(Request $request)
+{
+    $user = auth()->user();
+    // Gunakan update agar langsung tersimpan di database
+    $user->status_konsultasi = ($user->status_konsultasi === 'online') ? 'offline' : 'online';
+    $user->save();
+
+    return response()->json([
+        'status' => 'success',
+        'new_status' => $user->status_konsultasi
+    ]);
+}
 }

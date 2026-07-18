@@ -68,6 +68,10 @@ Route::prefix('portal')->name('tamu.')->group(function () {
     // Rute untuk memproses pengajuan janji baru dari modal
     Route::post('/konsultasi-simpan', [TamuController::class, 'simpanKonsultasi'])->name('konsultasi.simpan');
 
+Route::put('/konsultasi/{id}/update', [TamuController::class, 'updateKonsultasi'])->name('konsultasi_online.update');
+Route::delete('/konsultasi/{id}/hapus', [TamuController::class, 'hapusKonsultasi'])->name('konsultasi_online.hapus');
+
+
     // --- TAMBAHAN: Rute Rating & Saran Tamu ---
         Route::get('/rating', [TamuController::class, 'ratingIndex'])->name('rating.index');
         Route::post('/rating-simpan', [TamuController::class, 'simpanRating'])->name('rating.simpan');
@@ -115,6 +119,9 @@ Route::middleware('auth')->group(function () {
     // Logout internal
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
+    // --- RUTE GLOBAL UNTUK SEMUA ROLE (Admin, Petugas, Pimpinan) ---
+    // Pindahkan ke sini agar semua aktor yang login bisa akses
+    Route::post('/user/toggle-status', [App\Http\Controllers\UserController::class, 'toggleStatus'])->name('user.toggle-status');
     /**
      * Dashboard Redirector (Otomatis sesuai Role)
      * Sudah di dalam grup middleware('auth'), jadi $user tidak akan null
@@ -173,6 +180,9 @@ Route::post('/{id}/proses', [PetugasController::class, 'prosesKeputusan'])->name
 
         Route::resource('users', UserController::class)
              ->parameters(['users' => 'user']);
+
+             // Tambahkan baris ini di dalam file routes/web.php
+
 
         // --- MASTER DATA ---
         Route::prefix('master')->name('master.')->group(function() {

@@ -3,6 +3,9 @@
 @section('title', 'Konsultasi Online')
 
 @section('content')
+<!-- SweetAlert2 -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
 <div class="max-w-7xl mx-auto animate__animated animate__fadeIn">
     <!-- Header Section -->
     <div class="bg-white dark:bg-emerald-900 rounded-[2.5rem] p-8 shadow-sm border border-emerald-100 dark:border-emerald-800 mb-8 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
@@ -49,22 +52,31 @@
                                 {{ ucfirst($item->status) }}
                             </span>
                         </td>
-                        <!-- Keterangan dari kolom keterangan database -->
                         <td class="p-6 text-center">
                             <div class="text-[11px] text-slate-500 italic max-w-[200px] mx-auto">
                                 {{ $item->keterangan ?? '-' }}
                             </div>
                         </td>
                         <td class="p-6 text-center">
-                            @if($item->status == 'dikonfirmasi' && $item->link_google_meet)
-                                <a href="{{ $item->link_google_meet }}" target="_blank" class="inline-block bg-emerald-600 text-white py-2 px-6 rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-emerald-700 transition-all shadow-md">
-                                    <i class="fas fa-video mr-1"></i> Gabung
-                                </a>
-                            @else
-                                <span class="text-[9px] font-black uppercase tracking-widest px-3 py-1.5 rounded-xl bg-slate-50 text-slate-400 border border-slate-200">
-                                    <i class="fas fa-clock mr-1"></i> {{ $item->status == 'ditolak' ? 'Selesai' : 'Menunggu' }}
-                                </span>
-                            @endif
+                            <div class="flex justify-center gap-2">
+                                @if($item->status == 'dikonfirmasi' && $item->link_google_meet)
+                                    <a href="{{ $item->link_google_meet }}" target="_blank" class="bg-emerald-600 text-white py-2 px-3 rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-emerald-700 transition-all shadow-md">
+                                        <i class="fas fa-video"></i>
+                                    </a>
+                                @endif
+                                <button onclick="editKonsultasi({{ $item->id_konsultasi }}, '{{ $item->topik_konsultasi }}', {{ $item->id_layanan }}, {{ $item->id_user }}, '{{ $item->waktu_mulai }}', {{ $item->durasi_menit }})" 
+                                        class="bg-amber-500 text-white py-2 px-3 rounded-xl font-black text-[10px] uppercase hover:bg-amber-600 transition-all shadow-md">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button onclick="konfirmasiHapus({{ $item->id_konsultasi }})" class="bg-red-500 text-white py-2 px-3 rounded-xl font-black text-[10px] uppercase hover:bg-red-600 transition-all shadow-md">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                                <!-- Form ini wajib ada dan menggunakan route yang sesuai -->
+                                <form id="delete-form-{{ $item->id_konsultasi }}" action="{{ route('tamu.konsultasi_online.hapus', $item->id_konsultasi) }}" method="POST" class="hidden">
+                                    @csrf 
+                                    @method('DELETE')
+                                </form>
+                            </div>
                         </td>
                     </tr>
                     @empty
@@ -81,40 +93,34 @@
     </div>
 </div>
 
-<!-- Modal Buat Janji Konsultasi -->
+<!-- Modal -->
 <div id="modal-konsultasi" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center z-50">
     <div class="bg-white dark:bg-slate-800 p-10 rounded-[2.5rem] w-full max-w-lg shadow-xl relative mx-4 border border-slate-100 dark:border-slate-700">
-        <h2 class="text-2xl font-black text-emerald-950 dark:text-white mb-6 uppercase tracking-tighter italic">Buat Janji <span class="text-[#008f5d]">Konsultasi</span></h2>
-        
-        <form action="{{ route('tamu.konsultasi.simpan') }}" method="POST">
+        <h2 id="modal-title" class="text-2xl font-black text-emerald-950 dark:text-white mb-6 uppercase tracking-tighter italic">Buat Janji <span class="text-[#008f5d]">Konsultasi</span></h2>
+        <form id="form-konsultasi" action="{{ route('tamu.konsultasi.simpan') }}" method="POST">
             @csrf
+            <div id="method-field"></div>
             <div class="space-y-5">
+                <!-- Input fields -->
                 <div>
                     <label class="block text-[10px] font-black text-emerald-800 dark:text-emerald-400 uppercase tracking-widest mb-2 ml-2">Topik Konsultasi</label>
-                    <input type="text" name="topik_konsultasi" class="w-full p-4 rounded-2xl bg-slate-50 dark:bg-slate-900 border-2 border-slate-100 dark:border-slate-700 focus:border-emerald-500 font-bold text-sm text-slate-700 dark:text-slate-200 outline-none transition-all" placeholder="Contoh: Masalah E-Katalog" required>
+                    <input type="text" name="topik_konsultasi" class="w-full p-4 rounded-2xl bg-slate-50 dark:bg-slate-900 border-2 border-slate-100 dark:border-slate-700 focus:border-emerald-500 font-bold text-sm text-slate-700 dark:text-slate-200 outline-none transition-all" required>
                 </div>
-                
                 <div>
                     <label class="block text-[10px] font-black text-emerald-800 dark:text-emerald-400 uppercase tracking-widest mb-2 ml-2">Layanan</label>
                     <select name="id_layanan" class="w-full p-4 rounded-2xl bg-slate-50 dark:bg-slate-900 border-2 border-slate-100 dark:border-slate-700 focus:border-emerald-500 font-bold text-sm text-slate-700 dark:text-slate-200 outline-none transition-all" required>
                         <option value="" disabled selected>Pilih Layanan LPSE</option>
-                        @foreach($layanan as $l) 
-                            <option value="{{ $l->id_layanan }}">{{ $l->nama_layanan }}</option> 
-                        @endforeach
+                        @foreach($layanan as $l) <option value="{{ $l->id_layanan }}">{{ $l->nama_layanan }}</option> @endforeach
                     </select>
                 </div>
-                
                 <div>
                     <label class="block text-[10px] font-black text-emerald-800 dark:text-emerald-400 uppercase tracking-widest mb-2 ml-2">Petugas Pemateri</label>
                     <select name="id_petugas" class="w-full p-4 rounded-2xl bg-slate-50 dark:bg-slate-900 border-2 border-slate-100 dark:border-slate-700 focus:border-emerald-500 font-bold text-sm text-slate-700 dark:text-slate-200 outline-none transition-all" required>
                         <option value="" disabled selected>Pilih Pemateri</option>
-                        @foreach($petugas as $p)
-                            <option value="{{ $p->id_user }}">{{ $p->nama_lengkap }} ({{ ucfirst($p->role) }})</option>
-                        @endforeach
+                        @foreach($petugas as $p) <option value="{{ $p->id_user }}">{{ $p->nama_lengkap }} ({{ ucfirst($p->role) }})</option> @endforeach
                     </select>
                 </div>
-
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="grid grid-cols-2 gap-4">
                     <div>
                         <label class="block text-[10px] font-black text-emerald-800 dark:text-emerald-400 uppercase tracking-widest mb-2 ml-2">Waktu Mulai</label>
                         <input type="datetime-local" name="waktu_mulai" class="w-full p-4 rounded-2xl bg-slate-50 dark:bg-slate-900 border-2 border-slate-100 dark:border-slate-700 focus:border-emerald-500 font-bold text-sm text-slate-700 dark:text-slate-200 outline-none transition-all" required>
@@ -125,10 +131,9 @@
                     </div>
                 </div>
             </div>
-            
             <div class="mt-8 flex gap-4">
-                <button type="button" onclick="toggleModal('modal-konsultasi')" class="w-1/3 py-4 bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-slate-200 transition-all active:scale-95">Batal</button>
-                <button type="submit" class="w-2/3 py-4 bg-[#008f5d] text-white rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-emerald-700 transition-all shadow-lg active:scale-95">Simpan Janji</button>
+                <button type="button" onclick="toggleModal('modal-konsultasi')" class="w-1/3 py-4 bg-slate-100 dark:bg-slate-700 text-slate-600 rounded-2xl font-black text-xs uppercase tracking-widest">Batal</button>
+                <button type="submit" class="w-2/3 py-4 bg-[#008f5d] text-white rounded-2xl font-black text-xs uppercase tracking-widest shadow-lg">Simpan Janji</button>
             </div>
         </form>
     </div>
@@ -136,5 +141,44 @@
 
 <script>
     function toggleModal(id) { document.getElementById(id).classList.toggle('hidden'); }
+    
+    function editKonsultasi(id, topik, id_layanan, id_petugas, waktu, durasi) {
+        const modal = document.getElementById('modal-konsultasi');
+        const form = document.getElementById('form-konsultasi');
+        
+        // Gunakan route() helper agar URL sesuai dengan definisi di web.php
+        form.action = "{{ route('tamu.konsultasi_online.update', ':id') }}".replace(':id', id);
+        
+        document.getElementById('method-field').innerHTML = '@method("PUT")';
+        document.getElementById('modal-title').innerHTML = 'Edit Janji <span class="text-[#008f5d]">Konsultasi</span>';
+        
+        modal.querySelector('[name="topik_konsultasi"]').value = topik;
+        modal.querySelector('[name="id_layanan"]').value = id_layanan;
+        modal.querySelector('[name="id_petugas"]').value = id_petugas;
+        modal.querySelector('[name="waktu_mulai"]').value = waktu.replace(' ', 'T').slice(0, 16);
+        modal.querySelector('[name="durasi_menit"]').value = durasi;
+        modal.classList.remove('hidden');
+    }
+
+    function konfirmasiHapus(id) {
+        Swal.fire({
+            title: 'Hapus Janji Temu?',
+            text: "Data yang dihapus tidak dapat dikembalikan!",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#656F77',
+            confirmButtonText: 'Ya, Hapus!'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                // Melakukan submit form tersembunyi yang memiliki @method('DELETE')
+                document.getElementById('delete-form-' + id).submit();
+            }
+        });
+    }
+
+    @if(session('success'))
+        Swal.fire({ icon: 'success', title: 'Berhasil!', text: "{{ session('success') }}", timer: 2000, showConfirmButton: false });
+    @endif
 </script>
 @endsection
