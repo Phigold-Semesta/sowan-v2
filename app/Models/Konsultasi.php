@@ -28,6 +28,7 @@ class Konsultasi extends Model
         'durasi_menit',
         'link_google_meet',
         'status',
+        'keterangan', // Penambahan kolom keterangan (menggantikan alasan_penolakan)
     ];
 
     /**

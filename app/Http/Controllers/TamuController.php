@@ -56,15 +56,14 @@ class TamuController extends Controller
 public function konsultasiOnline()
 {
     $tamu = Auth::guard('tamu')->user();
-    
     if (!$tamu) {
         return redirect()->route('tamu.login.view')->with('error', 'Sesi Anda telah berakhir.');
     }
     
-    // Perbaikan: Mengambil semua data konsultasi agar tamu bisa melihat status (pending, dikonfirmasi, ditolak)
+    // Perbaikan: Pastikan relasi 'user' dimuat agar nama pemateri muncul di sisi tamu
     $jadwal_konsultasi = \App\Models\Konsultasi::with(['user', 'layanan'])
                                             ->where('gmail', $tamu->gmail)
-                                            ->orderBy('created_at', 'desc') // Urutkan dari yang terbaru
+                                            ->orderBy('created_at', 'desc') 
                                             ->get();
 
     $layanan = Layanan::orderBy('nama_layanan', 'asc')->get();

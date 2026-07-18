@@ -24,6 +24,7 @@
                         <th class="p-6">Topik</th>
                         <th class="p-6">Waktu</th>
                         <th class="p-6 text-center">Status</th>
+                        <th class="p-6 text-center">Keterangan</th>
                         <th class="p-6 text-center">Aksi</th>
                     </tr>
                 </thead>
@@ -46,6 +47,10 @@
                                 {{ ucfirst($item->status) }}
                             </span>
                         </td>
+                        <!-- Kolom Keterangan -->
+                        <td class="p-6 text-center text-[11px] text-slate-500 italic">
+                            {{ $item->keterangan ?? '-' }}
+                        </td>
                         <td class="p-6 text-center">
                             @if($item->status == 'pending')
                                 <div class="flex justify-center gap-2">
@@ -53,7 +58,6 @@
                                     <button onclick="bukaModal({{ $item->id_konsultasi }}, 'tolak')" class="bg-red-500 text-white py-2 px-4 rounded-xl font-black text-[10px] uppercase hover:bg-red-600 transition-all shadow-md">Tolak</button>
                                 </div>
                             @elseif($item->status == 'dikonfirmasi' && $item->link_google_meet)
-                                {{-- Tombol Gabung untuk Petugas --}}
                                 <a href="{{ $item->link_google_meet }}" target="_blank" class="inline-block bg-blue-600 text-white py-2 px-6 rounded-xl font-black text-[10px] uppercase hover:bg-blue-700 transition-all shadow-md">
                                     <i class="fas fa-video mr-1"></i> Gabung
                                 </a>
@@ -64,7 +68,7 @@
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="5" class="p-12 text-center text-slate-400 font-bold uppercase tracking-widest text-xs">Tidak ada jadwal konsultasi.</td>
+                        <td colspan="6" class="p-12 text-center text-slate-400 font-bold uppercase tracking-widest text-xs">Tidak ada jadwal konsultasi.</td>
                     </tr>
                     @endforelse
                 </tbody>
@@ -88,8 +92,8 @@
             </div>
 
             <div id="div-alasan" class="hidden mb-6">
-                <label class="block text-[10px] font-black uppercase mb-2">Alasan Penolakan</label>
-                <textarea name="alasan_penolakan" class="w-full p-4 rounded-2xl bg-slate-50 border-2 border-slate-100 font-bold text-sm" placeholder="Mohon maaf, saya sedang ada agenda mendesak..."></textarea>
+                <label class="block text-[10px] font-black uppercase mb-2">Keterangan / Alasan</label>
+                <textarea name="keterangan" class="w-full p-4 rounded-2xl bg-slate-50 border-2 border-slate-100 font-bold text-sm" placeholder="Mohon maaf, saya sedang ada agenda mendesak..."></textarea>
             </div>
 
             <div class="flex gap-4">

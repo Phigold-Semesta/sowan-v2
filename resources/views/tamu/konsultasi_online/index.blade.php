@@ -49,10 +49,10 @@
                                 {{ ucfirst($item->status) }}
                             </span>
                         </td>
-                        <!-- Kolom Catatan/Keterangan Baru -->
+                        <!-- Keterangan dari kolom keterangan database -->
                         <td class="p-6 text-center">
                             <div class="text-[11px] text-slate-500 italic max-w-[200px] mx-auto">
-                                {{ $item->alasan_penolakan ?? '-' }}
+                                {{ $item->keterangan ?? '-' }}
                             </div>
                         </td>
                         <td class="p-6 text-center">
@@ -81,32 +81,40 @@
     </div>
 </div>
 
-<!-- Modal Buat Janji -->
+<!-- Modal Buat Janji Konsultasi -->
 <div id="modal-konsultasi" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center z-50">
     <div class="bg-white dark:bg-slate-800 p-10 rounded-[2.5rem] w-full max-w-lg shadow-xl relative mx-4 border border-slate-100 dark:border-slate-700">
         <h2 class="text-2xl font-black text-emerald-950 dark:text-white mb-6 uppercase tracking-tighter italic">Buat Janji <span class="text-[#008f5d]">Konsultasi</span></h2>
+        
         <form action="{{ route('tamu.konsultasi.simpan') }}" method="POST">
             @csrf
             <div class="space-y-5">
                 <div>
                     <label class="block text-[10px] font-black text-emerald-800 dark:text-emerald-400 uppercase tracking-widest mb-2 ml-2">Topik Konsultasi</label>
-                    <input type="text" name="topik_konsultasi" class="w-full p-4 rounded-2xl bg-slate-50 dark:bg-slate-900 border-2 border-slate-100 dark:border-slate-700 focus:border-emerald-500 font-bold text-sm text-slate-700 dark:text-slate-200 outline-none transition-all" required>
+                    <input type="text" name="topik_konsultasi" class="w-full p-4 rounded-2xl bg-slate-50 dark:bg-slate-900 border-2 border-slate-100 dark:border-slate-700 focus:border-emerald-500 font-bold text-sm text-slate-700 dark:text-slate-200 outline-none transition-all" placeholder="Contoh: Masalah E-Katalog" required>
                 </div>
+                
                 <div>
                     <label class="block text-[10px] font-black text-emerald-800 dark:text-emerald-400 uppercase tracking-widest mb-2 ml-2">Layanan</label>
                     <select name="id_layanan" class="w-full p-4 rounded-2xl bg-slate-50 dark:bg-slate-900 border-2 border-slate-100 dark:border-slate-700 focus:border-emerald-500 font-bold text-sm text-slate-700 dark:text-slate-200 outline-none transition-all" required>
                         <option value="" disabled selected>Pilih Layanan LPSE</option>
-                        @foreach($layanan as $l) <option value="{{ $l->id_layanan }}">{{ $l->nama_layanan }}</option> @endforeach
+                        @foreach($layanan as $l) 
+                            <option value="{{ $l->id_layanan }}">{{ $l->nama_layanan }}</option> 
+                        @endforeach
                     </select>
                 </div>
+                
                 <div>
                     <label class="block text-[10px] font-black text-emerald-800 dark:text-emerald-400 uppercase tracking-widest mb-2 ml-2">Petugas Pemateri</label>
                     <select name="id_petugas" class="w-full p-4 rounded-2xl bg-slate-50 dark:bg-slate-900 border-2 border-slate-100 dark:border-slate-700 focus:border-emerald-500 font-bold text-sm text-slate-700 dark:text-slate-200 outline-none transition-all" required>
                         <option value="" disabled selected>Pilih Pemateri</option>
-                        @foreach($petugas as $p) <option value="{{ $p->id_user }}">{{ $p->nama_lengkap }} ({{ ucfirst($p->role) }})</option> @endforeach
+                        @foreach($petugas as $p)
+                            <option value="{{ $p->id_user }}">{{ $p->nama_lengkap }} ({{ ucfirst($p->role) }})</option>
+                        @endforeach
                     </select>
                 </div>
-                <div class="grid grid-cols-2 gap-4">
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                         <label class="block text-[10px] font-black text-emerald-800 dark:text-emerald-400 uppercase tracking-widest mb-2 ml-2">Waktu Mulai</label>
                         <input type="datetime-local" name="waktu_mulai" class="w-full p-4 rounded-2xl bg-slate-50 dark:bg-slate-900 border-2 border-slate-100 dark:border-slate-700 focus:border-emerald-500 font-bold text-sm text-slate-700 dark:text-slate-200 outline-none transition-all" required>
@@ -117,13 +125,15 @@
                     </div>
                 </div>
             </div>
+            
             <div class="mt-8 flex gap-4">
-                <button type="button" onclick="toggleModal('modal-konsultasi')" class="w-1/3 py-4 bg-slate-100 dark:bg-slate-700 text-slate-600 rounded-2xl font-black text-xs uppercase tracking-widest">Batal</button>
-                <button type="submit" class="w-2/3 py-4 bg-[#008f5d] text-white rounded-2xl font-black text-xs uppercase tracking-widest shadow-lg">Simpan Janji</button>
+                <button type="button" onclick="toggleModal('modal-konsultasi')" class="w-1/3 py-4 bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-slate-200 transition-all active:scale-95">Batal</button>
+                <button type="submit" class="w-2/3 py-4 bg-[#008f5d] text-white rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-emerald-700 transition-all shadow-lg active:scale-95">Simpan Janji</button>
             </div>
         </form>
     </div>
 </div>
+
 <script>
     function toggleModal(id) { document.getElementById(id).classList.toggle('hidden'); }
 </script>
