@@ -17,6 +17,12 @@ class Konsultasi extends Model
     public $incrementing = true;
     protected $keyType = 'int';
 
+    // Definisikan status sebagai konstanta agar sinkron dengan database ENUM
+    const STATUS_PENDING = 'pending';
+    const STATUS_DIKONFIRMASI = 'dikonfirmasi';
+    const STATUS_SELESAI = 'selesai';
+    const STATUS_DITOLAK = 'ditolak';
+
     // Field yang boleh diisi (mass assignable) sesuai kolom database baru
     protected $fillable = [
         'gmail',

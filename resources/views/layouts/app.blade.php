@@ -88,7 +88,7 @@
         }
 
         @media (min-width: 1024px) {
-            #main-sidebar:hover { width: 288px; }
+            #main-sidebar:hover, #main-sidebar.desktop-expanded { width: 288px; }
 
             #main-sidebar .nav-text, 
             #main-sidebar .logo-full, 
@@ -98,20 +98,20 @@
                 display: none;
             }
 
-            #main-sidebar:hover .nav-text, 
-            #main-sidebar:hover .logo-full, 
-            #main-sidebar:hover .menu-header {
+            #main-sidebar:hover .nav-text, #main-sidebar.desktop-expanded .nav-text,
+            #main-sidebar:hover .logo-full, #main-sidebar.desktop-expanded .logo-full, 
+            #main-sidebar:hover .menu-header, #main-sidebar.desktop-expanded .menu-header {
                 opacity: 1;
                 display: flex;
             }
 
             #main-sidebar .icon-buku-collapsed { display: flex; }
-            #main-sidebar:hover .icon-buku-collapsed { display: none; }
+            #main-sidebar:hover .icon-buku-collapsed, #main-sidebar.desktop-expanded .icon-buku-collapsed { display: none; }
             
             #main-sidebar .nav-item { justify-content: center; }
-            #main-sidebar:hover .nav-item { justify-content: flex-start; }
+            #main-sidebar:hover .nav-item, #main-sidebar.desktop-expanded .nav-item { justify-content: flex-start; }
 
-            #main-sidebar:hover .btn-logout { justify-content: center !important; }
+            #main-sidebar:hover .btn-logout, #main-sidebar.desktop-expanded .btn-logout { justify-content: flex-start !important; }
         }
 
         @media (max-width: 1024px) {
@@ -187,11 +187,15 @@
                     <a href="{{ route('pimpinan.konsultasi.index') }}" class="nav-item flex items-center py-4 px-5 rounded-2xl transition-all {{ Route::is('pimpinan.konsultasi.*') ? 'sidebar-active' : 'hover:bg-white/10' }}">
                         <div class="relative w-6 text-center">
                             <i class="fas fa-video text-sm"></i>
-                            {{-- Notif Badge Melekat pada Ikon --}}
-                            @php $jumlahNotif = 0; @endphp
-                            <span class="absolute -top-2 -right-2 bg-red-500 text-white text-[9px] font-black h-4 w-4 flex items-center justify-center rounded-full border-2 border-[#008f5d]">
-                                {{ $jumlahNotif }}
-                            </span>
+                            {{-- Notif Badge Dinamis Khusus Pimpinan --}}
+                            @php 
+                                $jumlahNotif = \App\Models\Konsultasi::where('status', 'pending')->where('id_user', auth()->user()->id_user)->count(); 
+                            @endphp
+                            @if($jumlahNotif >= 0)
+                                <span class="absolute -top-2 -right-2 bg-red-500 text-white text-[9px] font-black h-4 w-4 flex items-center justify-center rounded-full border-2 border-[#008f5d]">
+                                    {{ $jumlahNotif }}
+                                </span>
+                            @endif
                         </div>
                         <span class="nav-text ml-3 text-sm font-bold tracking-wide text-nowrap">Konsultasi Online</span>
                     </a>
@@ -206,10 +210,15 @@
                     <a href="{{ route('petugas.konsultasi.index') }}" class="nav-item flex items-center py-4 px-5 rounded-2xl transition-all {{ Route::is('petugas.konsultasi.*') ? 'sidebar-active' : 'hover:bg-white/10' }}">
                         <div class="relative w-6 text-center">
                             <i class="fas fa-video text-sm"></i>
-                            @php $jumlahNotif = 0; @endphp
-                            <span class="absolute -top-2 -right-2 bg-red-500 text-white text-[9px] font-black h-4 w-4 flex items-center justify-center rounded-full border-2 border-[#008f5d]">
-                                {{ $jumlahNotif }}
-                            </span>
+                            {{-- Notif Badge Dinamis Khusus Petugas --}}
+                            @php 
+                                $jumlahNotif = \App\Models\Konsultasi::where('status', 'pending')->where('id_user', auth()->user()->id_user)->count(); 
+                            @endphp
+                            @if($jumlahNotif >= 0)
+                                <span class="absolute -top-2 -right-2 bg-red-500 text-white text-[9px] font-black h-4 w-4 flex items-center justify-center rounded-full border-2 border-[#008f5d]">
+                                    {{ $jumlahNotif }}
+                                </span>
+                            @endif
                         </div>
                         <span class="nav-text ml-3 text-sm font-bold tracking-wide text-nowrap">Konsultasi Online</span>
                     </a>
@@ -243,10 +252,15 @@
                     <a href="{{ route('admin.konsultasi.index') }}" class="nav-item flex items-center py-4 px-5 rounded-2xl transition-all {{ Route::is('admin.konsultasi.*') ? 'sidebar-active' : 'hover:bg-white/10' }}">
                         <div class="relative w-6 text-center">
                             <i class="fas fa-video text-sm"></i>
-                            @php $jumlahNotif = 0; @endphp
-                            <span class="absolute -top-2 -right-2 bg-red-500 text-white text-[9px] font-black h-4 w-4 flex items-center justify-center rounded-full border-2 border-[#008f5d]">
-                                {{ $jumlahNotif }}
-                            </span>
+                            {{-- Notif Badge Dinamis Khusus Admin (Menghitung Semua) --}}
+                            @php 
+                                $jumlahNotif = \App\Models\Konsultasi::where('status', 'pending')->count(); 
+                            @endphp
+                            @if($jumlahNotif >= 0)
+                                <span class="absolute -top-2 -right-2 bg-red-500 text-white text-[9px] font-black h-4 w-4 flex items-center justify-center rounded-full border-2 border-[#008f5d]">
+                                    {{ $jumlahNotif }}
+                                </span>
+                            @endif
                         </div>
                         <span class="nav-text ml-3 text-sm font-bold tracking-wide text-nowrap">Konsultasi Online</span>
                     </a>
@@ -281,6 +295,10 @@
             <header class="h-20 bg-white dark:bg-emerald-900 border-b border-emerald-50 dark:border-emerald-800 shadow-sm flex justify-between items-center px-8 z-20 shrink-0 transition-colors duration-300">
                 <div class="flex items-center gap-4">
                     <button onclick="toggleMobileSidebar()" class="lg:hidden w-10 h-10 flex items-center justify-center rounded-xl bg-emerald-50 dark:bg-emerald-800 text-[#008f5d] dark:text-emerald-400">
+                        <i class="fas fa-bars"></i>
+                    </button>
+                    {{-- Tombol Burger Desktop Baru --}}
+                    <button onclick="toggleDesktopSidebar()" class="hidden lg:flex w-10 h-10 items-center justify-center rounded-xl bg-emerald-50 dark:bg-emerald-800 text-[#008f5d] dark:text-emerald-400 hover:bg-emerald-100 transition-all">
                         <i class="fas fa-bars"></i>
                     </button>
                     <div class="flex flex-col leading-none">
@@ -322,6 +340,11 @@
             const overlay = document.getElementById('sidebar-overlay');
             sidebar.classList.toggle('show-sidebar');
             overlay.classList.toggle('hidden');
+        }
+
+        // Fungsi toggle untuk Desktop
+        function toggleDesktopSidebar() {
+            document.getElementById('main-sidebar').classList.toggle('desktop-expanded');
         }
 
         function confirmLogout(event) {
