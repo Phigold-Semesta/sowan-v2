@@ -277,10 +277,18 @@ Route::post('/petugas/konsultasi/{id}/selesaikan', [PetugasController::class, 's
         // Log Aktivitas
         Route::get('/aktivitas', [PimpinanController::class, 'aktivitasIndex'])->name('aktivitas.index');
 
-        // Fitur Konsultasi Online
-        Route::get('/konsultasi', [PimpinanController::class, 'konsultasiIndex'])->name('konsultasi.index');
-        Route::post('/konsultasi/toggle-status', [PimpinanController::class, 'toggleStatusLayanan'])->name('konsultasi.toggle');
-        Route::post('/konsultasi/{id}/konfirmasi', [PimpinanController::class, 'konfirmasiKonsultasi'])->name('konsultasi.konfirmasi');
+        // Fitur Konsultasi Online (Disesuaikan agar tidak duplikat prefiks)
+    Route::prefix('konsultasi')->name('konsultasi.')->group(function() {
+        Route::get('/', [PimpinanController::class, 'konsultasiIndex'])->name('index');
+        Route::post('/toggle-status', [PimpinanController::class, 'toggleStatusLayanan'])->name('toggle');
+        Route::post('/{id}/konfirmasi', [PimpinanController::class, 'konfirmasiKonsultasi'])->name('konfirmasi');
+        
+        // Rute Selesaikan (Tanpa prefiks pimpinan lagi, karena sudah di dalam prefix 'konsultasi')
+        Route::post('/{id}/selesaikan', [PimpinanController::class, 'selesaikanKonsultasi'])->name('selesaikan');
+        
+        // Rute Proses (Sesuai dengan yang dipanggil di JavaScript view)
+        Route::post('/{id}/proses', [PimpinanController::class, 'prosesKonsultasi'])->name('proses');
+    });
     });
 
     // --- FITUR STATISTIK & GRAFIK (SHARED) ---

@@ -59,7 +59,7 @@
                         </td>
                         <td class="p-6 text-center">
                             <span class="px-4 py-2 rounded-full text-[10px] uppercase font-black shadow-sm border 
-                                {{ $item->status == 'dikonfirmasi' ? 'bg-emerald-100 text-[#008f5d] border-emerald-200' : ($item->status == 'ditolak' ? 'bg-red-100 text-red-600 border-red-200' : 'bg-slate-100 text-slate-600 border-slate-200') }}">
+                                {{ $item->status == 'selesai' ? 'bg-emerald-100 text-[#008f5d] border-emerald-200' : ($item->status == 'dikonfirmasi' ? 'bg-blue-100 text-blue-600 border-blue-200' : ($item->status == 'pending' ? 'bg-yellow-100 text-yellow-600 border-yellow-200' : 'bg-red-100 text-red-600 border-red-200')) }}">
                                 {{ ucfirst($item->status) }}
                             </span>
                         </td>
@@ -72,10 +72,13 @@
                                     <button onclick="bukaModal({{ $item->id_konsultasi }}, 'konfirmasi')" class="bg-[#008f5d] text-white py-2 px-4 rounded-xl font-black text-[10px] uppercase hover:bg-emerald-700 transition-all shadow-md">Konfirmasi</button>
                                     <button onclick="bukaModal({{ $item->id_konsultasi }}, 'tolak')" class="bg-red-500 text-white py-2 px-4 rounded-xl font-black text-[10px] uppercase hover:bg-red-600 transition-all shadow-md">Tolak</button>
                                 </div>
-                            @elseif($item->status == 'dikonfirmasi' && $item->link_google_meet)
-                                <a href="{{ $item->link_google_meet }}" target="_blank" class="inline-block bg-blue-600 text-white py-2 px-6 rounded-xl font-black text-[10px] uppercase hover:bg-blue-700 transition-all shadow-md">
-                                    <i class="fas fa-video mr-1"></i> Gabung
-                                </a>
+                            @elseif($item->status == 'dikonfirmasi')
+                                <div class="flex justify-center gap-2">
+                                    <a href="{{ $item->link_google_meet }}" target="_blank" class="bg-blue-600 text-white py-2 px-4 rounded-xl font-black text-[10px] uppercase hover:bg-blue-700 transition-all shadow-md"><i class="fas fa-video mr-1"></i> Gabung</a>
+                                    <form action="{{ route('pimpinan.konsultasi.selesaikan', $item->id_konsultasi) }}" method="POST">
+                                        @csrf <button type="submit" class="bg-emerald-600 text-white py-2 px-4 rounded-xl font-black text-[10px] uppercase hover:bg-emerald-700 transition-all shadow-md">Selesai</button>
+                                    </form>
+                                </div>
                             @else
                                 <span class="text-[10px] text-slate-400 italic">{{ ucfirst($item->status) }}</span>
                             @endif

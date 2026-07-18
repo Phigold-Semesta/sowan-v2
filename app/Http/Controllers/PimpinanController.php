@@ -77,6 +77,63 @@ class PimpinanController extends Controller
 
         return redirect()->back()->with('success', 'Konsultasi berhasil dikonfirmasi.');
     }
+
+    /**
+ * Fungsi untuk menyelesaikan konsultasi bagi Pimpinan.
+ * Pastikan Anda sudah menggunakan 'use App\Models\Konsultasi;' di atas Controller.
+ */
+public function selesaikanKonsultasi($id)
+{
+    $konsultasi = Konsultasi::findOrFail($id);
+
+    /** @var \App\Models\User $user */
+    $user = auth()->user();
+
+    // Pastikan pimpinan yang menutup sesi adalah pemateri di sesi tersebut
+    if (!$user || $konsultasi->id_user !== $user->id_user) {
+        return back()->with('error', 'Anda tidak memiliki akses untuk menyelesaikan sesi ini.');
+    }
+
+    // Menggunakan method yang sudah kita buat di model Konsultasi
+    $konsultasi->markAsFinished();
+
+    return back()->with('success', 'Konsultasi telah selesai dan sesi ditutup.');
+}
+
+public function prosesKonsultasi(Request $request, $id)
+{
+    // 1. Validasi input aksi
+    $request->validate([
+        'aksi' => 'required|in:konfirmasi,tolak',
+        'link_google_meet' => 'required_if:aksi,konfirmasi|nullable|url',
+        'keterangan' => 'required_if:aksi,tolak|nullable|string',
+    ]);
+
+    // 2. Ambil data konsultasi dan pastikan milik pimpinan yang sedang login
+    $konsultasi = Konsultasi::where('id_konsultasi', $id)
+                            ->where('id_user', Auth::id())
+                            ->firstOrFail();
+
+    // 3. Logika pembaruan berdasarkan aksi
+    if ($request->aksi === 'konfirmasi') {
+        $konsultasi->update([
+            'status' => Konsultasi::STATUS_DIKONFIRMASI,
+            'link_google_meet' => $request->link_google_meet,
+            'keterangan' => null // Reset keterangan jika konfirmasi
+        ]);
+        $pesan = 'Konsultasi berhasil dikonfirmasi.';
+    } else {
+        $konsultasi->update([
+            'status' => Konsultasi::STATUS_DITOLAK,
+            'keterangan' => $request->keterangan,
+            'link_google_meet' => null // Kosongkan link jika ditolak
+        ]);
+        $pesan = 'Konsultasi berhasil ditolak.';
+    }
+
+    return back()->with('success', $pesan);
+}
+
     // --- METHOD EXISTING (TETAP) ---
     public function laporanIndex(Request $request)
     {
