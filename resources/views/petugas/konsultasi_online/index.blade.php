@@ -4,14 +4,28 @@
 
 @section('content')
 <div class="max-w-7xl mx-auto animate__animated animate__fadeIn">
-    <!-- Header Section -->
-    <div class="bg-white dark:bg-emerald-900 rounded-[2.5rem] p-8 shadow-sm border border-emerald-100 dark:border-emerald-800 mb-8">
-        <h1 class="text-3xl md:text-4xl font-black text-emerald-950 dark:text-white uppercase italic tracking-tighter">
-            Manajemen <span class="text-[#008f5d] dark:text-emerald-400">Konsultasi</span>
-        </h1>
-        <p class="text-emerald-600 dark:text-emerald-300 mt-2 font-bold text-xs uppercase tracking-widest">
-            Kelola dan konfirmasi janji temu daring tamu.
-        </p>
+    <!-- Header Section (Disempurnakan dengan Toggle Status) -->
+    <div class="bg-white dark:bg-emerald-900 rounded-[2.5rem] p-8 shadow-sm border border-emerald-100 dark:border-emerald-800 mb-8 flex flex-col md:flex-row justify-between items-center gap-6">
+        <div>
+            <h1 class="text-3xl md:text-4xl font-black text-emerald-950 dark:text-white uppercase italic tracking-tighter">
+                Manajemen <span class="text-[#008f5d] dark:text-emerald-400">Konsultasi</span>
+            </h1>
+            <p class="text-emerald-600 dark:text-emerald-300 mt-2 font-bold text-xs uppercase tracking-widest">
+                Kelola dan konfirmasi janji temu daring tamu.
+            </p>
+        </div>
+
+        <!-- Toggle Status Online/Offline -->
+        <div class="flex items-center gap-3 bg-slate-50 dark:bg-slate-700 py-3 px-5 rounded-full border border-slate-200 dark:border-slate-600 shadow-inner">
+            <span class="text-[9px] font-black uppercase text-slate-400 dark:text-slate-300 tracking-wider">STATUS ANDA:</span>
+            <span id="status-label" class="text-[10px] font-black uppercase {{ auth()->user()->status_konsultasi == 'online' ? 'text-[#008f5d]' : 'text-red-500' }}">
+                {{ auth()->user()->status_konsultasi ?? 'OFFLINE' }}
+            </span>
+            <button onclick="toggleStatusPemateri()" id="toggle-btn" 
+                class="w-11 h-6 rounded-full transition-all duration-300 relative {{ auth()->user()->status_konsultasi == 'online' ? 'bg-[#008f5d]' : 'bg-slate-300' }}">
+                <div id="toggle-circle" class="absolute top-1 w-4 h-4 bg-white rounded-full transition-all duration-300 {{ auth()->user()->status_konsultasi == 'online' ? 'left-6' : 'left-1' }}"></div>
+            </button>
+        </div>
     </div>
 
     <!-- Table Section -->
@@ -47,7 +61,6 @@
                                 {{ ucfirst($item->status) }}
                             </span>
                         </td>
-                        <!-- Kolom Keterangan -->
                         <td class="p-6 text-center text-[11px] text-slate-500 italic">
                             {{ $item->keterangan ?? '-' }}
                         </td>
@@ -58,7 +71,7 @@
                                     <button onclick="bukaModal({{ $item->id_konsultasi }}, 'tolak')" class="bg-red-500 text-white py-2 px-4 rounded-xl font-black text-[10px] uppercase hover:bg-red-600 transition-all shadow-md">Tolak</button>
                                 </div>
                             @elseif($item->status == 'dikonfirmasi' && $item->link_google_meet)
-                                <a href="{{ $item->link_google_meet }}" target="_blank" class="inline-block bg-blue-600 text-white py-2 px-6 rounded-xl font-black text-[10px] uppercase hover:bg-blue-700 transition-all shadow-md">
+                                <a href="{{ $item->link_google_meet }}" target="_blank" class="inline-block bg-emerald-600 text-white py-2 px-6 rounded-xl font-black text-[10px] uppercase hover:bg-emerald-700 transition-all shadow-md">
                                     <i class="fas fa-video mr-1"></i> Gabung
                                 </a>
                             @else
@@ -85,17 +98,14 @@
         <form id="form-aksi" method="POST">
             @csrf
             <input type="hidden" name="aksi" id="input-aksi">
-            
             <div id="div-link" class="hidden mb-6">
                 <label class="block text-[10px] font-black uppercase mb-2">Link Google Meet</label>
                 <input type="url" name="link_google_meet" class="w-full p-4 rounded-2xl bg-slate-50 border-2 border-slate-100 font-bold text-sm" placeholder="https://meet.google.com/...">
             </div>
-
             <div id="div-alasan" class="hidden mb-6">
                 <label class="block text-[10px] font-black uppercase mb-2">Keterangan / Alasan</label>
                 <textarea name="keterangan" class="w-full p-4 rounded-2xl bg-slate-50 border-2 border-slate-100 font-bold text-sm" placeholder="Mohon maaf, saya sedang ada agenda mendesak..."></textarea>
             </div>
-
             <div class="flex gap-4">
                 <button type="button" onclick="tutupModal()" class="w-1/2 py-4 bg-slate-100 text-slate-600 rounded-2xl font-black text-xs uppercase">Batal</button>
                 <button type="submit" class="w-1/2 py-4 bg-[#008f5d] text-white rounded-2xl font-black text-xs uppercase">Simpan</button>
@@ -105,11 +115,32 @@
 </div>
 
 <script>
+    function toggleStatusPemateri() {
+        fetch('{{ route("user.toggle-status") }}', {
+            method: 'POST',
+            headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Content-Type': 'application/json' }
+        })
+        .then(response => response.json())
+        .then(data => {
+            const btn = document.getElementById('toggle-btn');
+            const circle = document.getElementById('toggle-circle');
+            const label = document.getElementById('status-label');
+            if(data.new_status === 'online') {
+                btn.className = 'w-11 h-6 rounded-full transition-all duration-300 relative bg-[#008f5d]';
+                circle.className = 'absolute top-1 w-4 h-4 bg-white rounded-full transition-all duration-300 left-6';
+                label.innerText = 'ONLINE'; label.className = 'text-[10px] font-black uppercase text-[#008f5d]';
+            } else {
+                btn.className = 'w-11 h-6 rounded-full transition-all duration-300 relative bg-slate-300';
+                circle.className = 'absolute top-1 w-4 h-4 bg-white rounded-full transition-all duration-300 left-1';
+                label.innerText = 'OFFLINE'; label.className = 'text-[10px] font-black uppercase text-red-500';
+            }
+        });
+    }
+
     function bukaModal(id, aksi) {
         const form = document.getElementById('form-aksi');
         form.action = `/petugas/konsultasi/${id}/proses`;
         document.getElementById('input-aksi').value = aksi;
-        
         document.getElementById('div-link').classList.toggle('hidden', aksi !== 'konfirmasi');
         document.getElementById('div-alasan').classList.toggle('hidden', aksi !== 'tolak');
         document.getElementById('modal-title').innerText = aksi === 'konfirmasi' ? 'Konfirmasi Janji' : 'Tolak Janji';

@@ -53,9 +53,7 @@
                             </span>
                         </td>
                         <td class="p-6 text-center">
-                            <div class="text-[11px] text-slate-500 italic max-w-[200px] mx-auto">
-                                {{ $item->keterangan ?? '-' }}
-                            </div>
+                            <div class="text-[11px] text-slate-500 italic max-w-[200px] mx-auto">{{ $item->keterangan ?? '-' }}</div>
                         </td>
                         <td class="p-6 text-center">
                             <div class="flex justify-center gap-2">
@@ -65,16 +63,14 @@
                                     </a>
                                 @endif
                                 <button onclick="editKonsultasi({{ $item->id_konsultasi }}, '{{ $item->topik_konsultasi }}', {{ $item->id_layanan }}, {{ $item->id_user }}, '{{ $item->waktu_mulai }}', {{ $item->durasi_menit }})" 
-                                        class="bg-amber-500 text-white py-2 px-3 rounded-xl font-black text-[10px] uppercase hover:bg-amber-600 transition-all shadow-md">
+                                    class="bg-amber-500 text-white py-2 px-3 rounded-xl font-black text-[10px] uppercase hover:bg-amber-600 transition-all shadow-md">
                                     <i class="fas fa-edit"></i>
                                 </button>
                                 <button onclick="konfirmasiHapus({{ $item->id_konsultasi }})" class="bg-red-500 text-white py-2 px-3 rounded-xl font-black text-[10px] uppercase hover:bg-red-600 transition-all shadow-md">
                                     <i class="fas fa-trash"></i>
                                 </button>
-                                <!-- Form ini wajib ada dan menggunakan route yang sesuai -->
                                 <form id="delete-form-{{ $item->id_konsultasi }}" action="{{ route('tamu.konsultasi_online.hapus', $item->id_konsultasi) }}" method="POST" class="hidden">
-                                    @csrf 
-                                    @method('DELETE')
+                                    @csrf @method('DELETE')
                                 </form>
                             </div>
                         </td>
@@ -101,7 +97,6 @@
             @csrf
             <div id="method-field"></div>
             <div class="space-y-5">
-                <!-- Input fields -->
                 <div>
                     <label class="block text-[10px] font-black text-emerald-800 dark:text-emerald-400 uppercase tracking-widest mb-2 ml-2">Topik Konsultasi</label>
                     <input type="text" name="topik_konsultasi" class="w-full p-4 rounded-2xl bg-slate-50 dark:bg-slate-900 border-2 border-slate-100 dark:border-slate-700 focus:border-emerald-500 font-bold text-sm text-slate-700 dark:text-slate-200 outline-none transition-all" required>
@@ -117,7 +112,11 @@
                     <label class="block text-[10px] font-black text-emerald-800 dark:text-emerald-400 uppercase tracking-widest mb-2 ml-2">Petugas Pemateri</label>
                     <select name="id_petugas" class="w-full p-4 rounded-2xl bg-slate-50 dark:bg-slate-900 border-2 border-slate-100 dark:border-slate-700 focus:border-emerald-500 font-bold text-sm text-slate-700 dark:text-slate-200 outline-none transition-all" required>
                         <option value="" disabled selected>Pilih Pemateri</option>
-                        @foreach($petugas as $p) <option value="{{ $p->id_user }}">{{ $p->nama_lengkap }} ({{ ucfirst($p->role) }})</option> @endforeach
+                        @foreach($petugas as $p) 
+                            <option value="{{ $p->id_user }}">
+                                {{ $p->nama_lengkap }} ({{ ucfirst($p->status_konsultasi ?? 'Offline') }})
+                            </option> 
+                        @endforeach
                     </select>
                 </div>
                 <div class="grid grid-cols-2 gap-4">
@@ -145,13 +144,9 @@
     function editKonsultasi(id, topik, id_layanan, id_petugas, waktu, durasi) {
         const modal = document.getElementById('modal-konsultasi');
         const form = document.getElementById('form-konsultasi');
-        
-        // Gunakan route() helper agar URL sesuai dengan definisi di web.php
         form.action = "{{ route('tamu.konsultasi_online.update', ':id') }}".replace(':id', id);
-        
         document.getElementById('method-field').innerHTML = '@method("PUT")';
         document.getElementById('modal-title').innerHTML = 'Edit Janji <span class="text-[#008f5d]">Konsultasi</span>';
-        
         modal.querySelector('[name="topik_konsultasi"]').value = topik;
         modal.querySelector('[name="id_layanan"]').value = id_layanan;
         modal.querySelector('[name="id_petugas"]').value = id_petugas;
@@ -170,10 +165,7 @@
             cancelButtonColor: '#656F77',
             confirmButtonText: 'Ya, Hapus!'
         }).then((result) => {
-            if (result.isConfirmed) {
-                // Melakukan submit form tersembunyi yang memiliki @method('DELETE')
-                document.getElementById('delete-form-' + id).submit();
-            }
+            if (result.isConfirmed) { document.getElementById('delete-form-' + id).submit(); }
         });
     }
 
