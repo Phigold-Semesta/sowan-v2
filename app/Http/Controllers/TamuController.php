@@ -31,6 +31,25 @@ class TamuController extends Controller
         return view('tamu.dashboard', compact('tamu', 'riwayatKunjungan'));
     }
 
+/**
+     * Tampilan Halaman Riwayat Kunjungan Tamu
+     */
+    public function riwayat()
+    {
+        $tamu = Auth::guard('tamu')->user();
+
+        if (!$tamu) {
+            return redirect()->route('tamu.login.view')->with('error', 'Sesi Anda telah berakhir.');
+        }
+
+        // Mengambil seluruh riwayat kunjungan khusus untuk tamu yang sedang login
+        $riwayatKunjungan = Kunjungan::where('gmail', $tamu->gmail)
+                                     ->orderBy('waktu_masuk', 'desc')
+                                     ->get();
+
+        return view('tamu.riwayat.index', compact('tamu', 'riwayatKunjungan'));
+    }
+
     /**
      * Tampilan Halaman Konsultasi Online (List + Form Dropdown)
      */

@@ -101,9 +101,9 @@
                     <i class="fas fa-video w-6 text-center text-sm"></i><span class="nav-text ml-3 text-sm font-bold tracking-wide">Konsultasi Online</span>
                 </a>
 
-                <a href="#" class="nav-item flex items-center py-4 px-5 rounded-2xl transition-all hover:bg-white/10">
-                    <i class="fas fa-history w-6 text-center text-sm"></i><span class="nav-text ml-3 text-sm font-bold tracking-wide">Riwayat Kunjungan</span>
-                </a>
+                <a href="{{ route('tamu.riwayat') }}" class="nav-item flex items-center py-4 px-5 rounded-2xl transition-all hover:bg-white/10">
+    <i class="fas fa-history w-6 text-center text-sm"></i><span class="nav-text ml-3 text-sm font-bold tracking-wide">Riwayat Kunjungan</span>
+</a>
 
                 <!-- Tambahkan menu Rating, Kritik, dan Saran -->
 <a href="{{ route('tamu.rating.index') }}" class="nav-item flex items-center py-4 px-5 rounded-2xl transition-all hover:bg-white/10">
