@@ -43,13 +43,19 @@
         #main-sidebar { width: 88px; transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1); }
         
         @media (min-width: 1024px) {
-            #main-sidebar:hover { width: 288px; }
+            /* Menambahkan kelas .desktop-expanded agar bisa di-toggle dengan tombol hamburger */
+            #main-sidebar:hover, #main-sidebar.desktop-expanded { width: 288px; }
             #main-sidebar .nav-text, #main-sidebar .logo-full, #main-sidebar .menu-header { opacity: 0; display: none; transition: opacity 0.3s ease; }
-            #main-sidebar:hover .nav-text, #main-sidebar:hover .logo-full, #main-sidebar:hover .menu-header { opacity: 1; display: flex; }
+            
+            #main-sidebar:hover .nav-text, #main-sidebar.desktop-expanded .nav-text,
+            #main-sidebar:hover .logo-full, #main-sidebar.desktop-expanded .logo-full,
+            #main-sidebar:hover .menu-header, #main-sidebar.desktop-expanded .menu-header { opacity: 1; display: flex; }
+            
             #main-sidebar .icon-buku-collapsed { display: flex; }
-            #main-sidebar:hover .icon-buku-collapsed { display: none; }
+            #main-sidebar:hover .icon-buku-collapsed, #main-sidebar.desktop-expanded .icon-buku-collapsed { display: none; }
+            
             #main-sidebar .nav-item { justify-content: center; }
-            #main-sidebar:hover .nav-item { justify-content: flex-start; }
+            #main-sidebar:hover .nav-item, #main-sidebar.desktop-expanded .nav-item { justify-content: flex-start; }
         }
         @media (max-width: 1024px) {
             #main-sidebar { position: fixed; left: -100%; width: 280px; }
@@ -60,7 +66,7 @@
 </head>
 <body class="antialiased text-slate-800 bg-[#f0f9f4] dark:bg-emerald-950 dark:text-emerald-50 transition-colors duration-300">
 
-    <div id="sidebar-overlay" onclick="toggleMobileSidebar()" class="fixed inset-0 bg-slate-900/40 z-30 hidden backdrop-blur-sm"></div>
+    <div id="sidebar-overlay" onclick="toggleMobileSidebar()" class="fixed inset-0 bg-slate-900/40 z-30 hidden backdrop-blur-sm transition-opacity"></div>
 
     <div class="flex min-h-screen relative overflow-hidden">
         <aside id="main-sidebar" class="bg-[#008f5d] dark:bg-emerald-900 h-screen text-white flex flex-col z-40 shadow-2xl shrink-0 overflow-hidden group">
@@ -102,13 +108,13 @@
                 </a>
 
                 <a href="{{ route('tamu.riwayat') }}" class="nav-item flex items-center py-4 px-5 rounded-2xl transition-all hover:bg-white/10">
-    <i class="fas fa-history w-6 text-center text-sm"></i><span class="nav-text ml-3 text-sm font-bold tracking-wide">Riwayat Kunjungan</span>
-</a>
+                    <i class="fas fa-history w-6 text-center text-sm"></i><span class="nav-text ml-3 text-sm font-bold tracking-wide">Riwayat Kunjungan</span>
+                </a>
 
                 <!-- Tambahkan menu Rating, Kritik, dan Saran -->
-<a href="{{ route('tamu.rating.index') }}" class="nav-item flex items-center py-4 px-5 rounded-2xl transition-all hover:bg-white/10">
-    <i class="fas fa-star w-6 text-center text-sm"></i><span class="nav-text ml-3 text-sm font-bold tracking-wide">Rating & Saran</span>
-</a>
+                <a href="{{ route('tamu.rating.index') }}" class="nav-item flex items-center py-4 px-5 rounded-2xl transition-all hover:bg-white/10">
+                    <i class="fas fa-star w-6 text-center text-sm"></i><span class="nav-text ml-3 text-sm font-bold tracking-wide">Rating & Saran</span>
+                </a>
             </nav>
 
             <div class="p-4 mb-4">
@@ -124,19 +130,65 @@
         </aside>
 
         <main class="flex-1 flex flex-col min-w-0 h-screen overflow-hidden">
-            <header class="h-20 bg-white dark:bg-emerald-900 border-b border-emerald-50 dark:border-emerald-800 shadow-sm flex justify-between items-center px-8">
-                <button onclick="toggleMobileSidebar()" class="lg:hidden p-2 bg-emerald-50 rounded-xl"><i class="fas fa-bars text-emerald-600"></i></button>
-                <h2 class="text-slate-800 dark:text-white font-black text-xl uppercase italic">@yield('title')</h2>
-                <button @click="toggleTheme()" class="w-10 h-10 rounded-xl bg-slate-50 dark:bg-emerald-800 text-yellow-500"><i x-show="darkMode" class="fa-solid fa-sun"></i><i x-show="!darkMode" class="fa-solid fa-moon"></i></button>
+            <header class="h-20 bg-white dark:bg-emerald-900 border-b border-emerald-50 dark:border-emerald-800 shadow-sm flex justify-between items-center px-4 md:px-8 shrink-0">
+                <!-- Kiri: Tombol Mobile/Desktop & Title -->
+                <div class="flex items-center gap-3 md:gap-4">
+                    <!-- Tombol Hamburger Mobile -->
+                    <button onclick="toggleMobileSidebar()" class="lg:hidden p-2 bg-emerald-50 dark:bg-emerald-800 rounded-xl active:scale-95 transition-transform"><i class="fas fa-bars text-emerald-600 dark:text-emerald-400"></i></button>
+                    <!-- Tombol Hamburger Desktop (Baru) -->
+                    <button onclick="toggleDesktopSidebar()" class="hidden lg:block p-2.5 bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-800 dark:hover:bg-emerald-700 rounded-xl active:scale-95 transition-all cursor-pointer"><i class="fas fa-bars text-emerald-600 dark:text-emerald-400 text-lg"></i></button>
+                    
+                    <!-- Judul -->
+                    <h2 class="text-slate-800 dark:text-white font-black text-sm sm:text-lg md:text-xl uppercase italic truncate max-w-[120px] sm:max-w-[200px] md:max-w-none">@yield('title')</h2>
+                </div>
+                
+                <!-- Kanan: Dark Mode & User Profile -->
+                <div class="flex items-center gap-2 sm:gap-4">
+                    <!-- Tombol Dark/Light Mode -->
+                    <button @click="toggleTheme()" class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-slate-50 dark:bg-emerald-800 text-yellow-500 flex items-center justify-center hover:bg-slate-100 dark:hover:bg-emerald-700 transition-all shadow-sm active:scale-95">
+                        <i x-show="darkMode" class="fa-solid fa-sun text-sm sm:text-base" x-cloak></i>
+                        <i x-show="!darkMode" class="fa-solid fa-moon text-sm sm:text-base" x-cloak></i>
+                    </button>
+
+                    <!-- Profil User Capsule (Tamu) - Responsive Mobile & Desktop -->
+                    @auth('tamu')
+                    <div class="flex items-center bg-white dark:bg-emerald-800 border border-slate-100 dark:border-emerald-700 p-1 sm:p-1.5 sm:pl-4 rounded-full shadow-sm gap-2 sm:gap-3 transition-colors">
+                        <div class="hidden sm:flex flex-col text-right">
+                            <span class="text-[10px] font-black text-slate-700 dark:text-emerald-50 uppercase tracking-widest leading-none truncate max-w-[100px] md:max-w-[150px]">
+                                {{ Auth::guard('tamu')->user()->nama_tamu }}
+                            </span>
+                            <span class="text-[8px] font-bold text-emerald-500 dark:text-emerald-400 uppercase tracking-widest mt-1 flex items-center justify-end gap-1">
+                                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span> TAMU LPSE
+                            </span>
+                        </div>
+                        <div class="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-[#008f5d] flex items-center justify-center text-white font-black text-[10px] sm:text-xs shadow-inner tracking-widest">
+                            {{ strtoupper(substr(Auth::guard('tamu')->user()->nama_tamu, 0, 2)) }}
+                        </div>
+                    </div>
+                    @endauth
+                </div>
             </header>
-            <div class="flex-1 overflow-y-auto p-8 custom-scrollbar">
-                <div class="max-w-7xl mx-auto">@yield('content')</div>
+            
+            <div class="flex-1 overflow-y-auto p-4 md:p-8 custom-scrollbar">
+                <div class="max-w-7xl mx-auto w-full overflow-x-hidden">
+                    @yield('content')
+                </div>
             </div>
         </main>
     </div>
 
     <script>
-        function toggleMobileSidebar() { const sidebar = document.getElementById('main-sidebar'); sidebar.classList.toggle('show-sidebar'); document.getElementById('sidebar-overlay').classList.toggle('hidden'); }
+        function toggleMobileSidebar() { 
+            const sidebar = document.getElementById('main-sidebar'); 
+            sidebar.classList.toggle('show-sidebar'); 
+            document.getElementById('sidebar-overlay').classList.toggle('hidden'); 
+        }
+
+        // Fungsi baru untuk mengunci sidebar saat tombol hamburger desktop diklik
+        function toggleDesktopSidebar() {
+            const sidebar = document.getElementById('main-sidebar');
+            sidebar.classList.toggle('desktop-expanded');
+        }
         
         function confirmLogout() { 
             Swal.fire({ 
