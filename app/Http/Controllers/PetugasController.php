@@ -378,4 +378,30 @@ class PetugasController extends Controller
 
         return redirect()->back()->with('success', 'Konsultasi berhasil dikonfirmasi dan link dikirim ke tamu.');
     }
+
+    public function prosesKeputusan(Request $request, $id)
+{
+    $konsultasi = \App\Models\Konsultasi::findOrFail($id);
+    $request->validate([
+        'aksi' => 'required|in:konfirmasi,tolak',
+        'link_google_meet' => 'required_if:aksi,konfirmasi|url|nullable',
+        'alasan_penolakan' => 'required_if:aksi,tolak|string|nullable',
+    ]);
+
+    if ($request->aksi === 'konfirmasi') {
+        $konsultasi->update([
+            'status' => 'dikonfirmasi',
+            'link_google_meet' => $request->link_google_meet,
+            'alasan_penolakan' => null
+        ]);
+    } else {
+        $konsultasi->update([
+            'status' => 'ditolak',
+            'alasan_penolakan' => $request->alasan_penolakan,
+            'link_google_meet' => null
+        ]);
+    }
+
+    return redirect()->back()->with('success', 'Keputusan berhasil dikirim ke tamu.');
+}
 }

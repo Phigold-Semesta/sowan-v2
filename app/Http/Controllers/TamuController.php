@@ -50,32 +50,31 @@ class TamuController extends Controller
         return view('tamu.riwayat.index', compact('tamu', 'riwayatKunjungan'));
     }
 
-   /**
-     * Tampilan Halaman Konsultasi Online (List + Form Dropdown)
-     */
-    public function konsultasiOnline()
-    {
-        $tamu = Auth::guard('tamu')->user();
-        
-        if (!$tamu) {
-            return redirect()->route('tamu.login.view')->with('error', 'Sesi Anda telah berakhir.');
-        }
-        
-        // Perbaikan: Menggunakan Model dengan Relasi agar bisa menampilkan nama pemateri dan layanan
-        $jadwal_konsultasi = \App\Models\Konsultasi::with(['user', 'layanan'])
+  /**
+ * Tampilan Halaman Konsultasi Online (List + Form Dropdown)
+ */
+public function konsultasiOnline()
+{
+    $tamu = Auth::guard('tamu')->user();
+    
+    if (!$tamu) {
+        return redirect()->route('tamu.login.view')->with('error', 'Sesi Anda telah berakhir.');
+    }
+    
+    // Perbaikan: Mengambil semua data konsultasi agar tamu bisa melihat status (pending, dikonfirmasi, ditolak)
+    $jadwal_konsultasi = \App\Models\Konsultasi::with(['user', 'layanan'])
                                             ->where('gmail', $tamu->gmail)
-                                            ->orderBy('waktu_mulai', 'asc')
+                                            ->orderBy('created_at', 'desc') // Urutkan dari yang terbaru
                                             ->get();
 
-        $layanan = Layanan::orderBy('nama_layanan', 'asc')->get();
-        
-        // Perbaikan: Pastikan role sesuai dengan yang ada di database Anda
-        $petugas = \App\Models\User::whereIn('role', ['administrator', 'petugas', 'pimpinan'])
-                                    ->orderBy('nama_lengkap', 'asc')
-                                    ->get();
+    $layanan = Layanan::orderBy('nama_layanan', 'asc')->get();
+    
+    $petugas = \App\Models\User::whereIn('role', ['administrator', 'petugas', 'pimpinan'])
+                                ->orderBy('nama_lengkap', 'asc')
+                                ->get();
 
-        return view('tamu.konsultasi_online.index', compact('tamu', 'jadwal_konsultasi', 'layanan', 'petugas'));
-    }
+    return view('tamu.konsultasi_online.index', compact('tamu', 'jadwal_konsultasi', 'layanan', 'petugas'));
+}
 
     /**
      * Menyimpan pengajuan janji konsultasi baru oleh tamu

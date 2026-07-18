@@ -1,4 +1,4 @@
-@extends('layouts.app') {{-- Sesuaikan dengan layout petugas Anda --}}
+@extends('layouts.app') 
 
 @section('title', 'Manajemen Konsultasi')
 
@@ -31,40 +31,40 @@
                     @forelse($konsultasi as $item)
                     <tr class="border-b border-slate-100 dark:border-slate-700 hover:bg-emerald-50/30 transition-colors">
                         <td class="p-6">
-                            {{-- Perbaikan: Kita cek langsung dari email jika relasi kunjungan/tamu mungkin null --}}
-                          <span class="block text-emerald-950 dark:text-white">
-    {{-- Kita ambil langsung dari relasi kunjungan yang sudah terhubung dengan tabel tamu --}}
-    {{ $item->kunjungan && $item->kunjungan->tamuRelasi ? $item->kunjungan->tamuRelasi->nama_tamu : 'Tamu SOWAN' }}
-</span>
-                            <span class="text-[10px] text-emerald-600 uppercase">
-                                {{ $item->gmail ?? 'Email tidak ditemukan' }}
+                            <span class="block text-emerald-950 dark:text-white">
+                                {{ \App\Models\Tamu::whereRaw('LOWER(gmail) = ?', [strtolower(trim($item->gmail))])->value('nama_tamu') ?? 'Tamu SOWAN' }}
                             </span>
+                            <span class="text-[10px] text-emerald-600 uppercase">{{ $item->gmail }}</span>
                         </td>
                         <td class="p-6 text-slate-600 dark:text-slate-300">{{ $item->topik_konsultasi }}</td>
-                        <td class="p-6">
-                            <span class="block text-emerald-900 dark:text-white">{{ \Carbon\Carbon::parse($item->waktu_mulai)->format('d M Y, H:i') }}</span>
+                        <td class="p-6 text-emerald-900 dark:text-white">
+                            {{ \Carbon\Carbon::parse($item->waktu_mulai)->format('d M Y, H:i') }}
                         </td>
                         <td class="p-6 text-center">
                             <span class="px-4 py-2 rounded-full text-[10px] uppercase font-black shadow-sm 
-                                {{ $item->status == 'dikonfirmasi' ? 'bg-emerald-100 text-[#008f5d]' : 'bg-slate-100 text-slate-600' }}">
+                                {{ $item->status == 'dikonfirmasi' ? 'bg-emerald-100 text-[#008f5d]' : ($item->status == 'ditolak' ? 'bg-red-100 text-red-600' : 'bg-slate-100 text-slate-600') }}">
                                 {{ ucfirst($item->status) }}
                             </span>
                         </td>
                         <td class="p-6 text-center">
                             @if($item->status == 'pending')
-                                <button onclick="bukaModalKonfirmasi({{ $item->id_konsultasi }})" class="bg-[#008f5d] text-white py-2 px-6 rounded-xl font-black text-[10px] uppercase hover:bg-emerald-700 transition-all shadow-md">
-                                    Konfirmasi
-                                </button>
+                                <div class="flex justify-center gap-2">
+                                    <button onclick="bukaModal({{ $item->id_konsultasi }}, 'konfirmasi')" class="bg-[#008f5d] text-white py-2 px-4 rounded-xl font-black text-[10px] uppercase hover:bg-emerald-700 transition-all shadow-md">Konfirmasi</button>
+                                    <button onclick="bukaModal({{ $item->id_konsultasi }}, 'tolak')" class="bg-red-500 text-white py-2 px-4 rounded-xl font-black text-[10px] uppercase hover:bg-red-600 transition-all shadow-md">Tolak</button>
+                                </div>
+                            @elseif($item->status == 'dikonfirmasi' && $item->link_google_meet)
+                                {{-- Tombol Gabung untuk Petugas --}}
+                                <a href="{{ $item->link_google_meet }}" target="_blank" class="inline-block bg-blue-600 text-white py-2 px-6 rounded-xl font-black text-[10px] uppercase hover:bg-blue-700 transition-all shadow-md">
+                                    <i class="fas fa-video mr-1"></i> Gabung
+                                </a>
                             @else
-                                <span class="text-[10px] text-slate-400 italic">Terkonfirmasi</span>
+                                <span class="text-[10px] text-slate-400 italic">{{ ucfirst($item->status) }}</span>
                             @endif
                         </td>
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="5" class="p-12 text-center text-slate-400 font-bold uppercase tracking-widest text-xs">
-                            Tidak ada jadwal konsultasi.
-                        </td>
+                        <td colspan="5" class="p-12 text-center text-slate-400 font-bold uppercase tracking-widest text-xs">Tidak ada jadwal konsultasi.</td>
                     </tr>
                     @endforelse
                 </tbody>
@@ -74,13 +74,24 @@
     </div>
 </div>
 
-<!-- Modal Konfirmasi -->
-<div id="modal-konfirmasi" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center z-50">
+<!-- Modal Aksi Dinamis -->
+<div id="modal-aksi" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center z-50">
     <div class="bg-white p-8 rounded-[2.5rem] w-full max-w-sm mx-4 shadow-xl">
-        <h2 class="text-xl font-black text-emerald-950 mb-6 uppercase tracking-tighter">Masukkan Link Meet</h2>
-        <form id="form-konfirmasi" method="POST">
+        <h2 id="modal-title" class="text-xl font-black text-emerald-950 mb-6 uppercase tracking-tighter">Proses Konsultasi</h2>
+        <form id="form-aksi" method="POST">
             @csrf
-            <input type="url" name="link_google_meet" class="w-full p-4 rounded-2xl bg-slate-50 border-2 border-slate-100 mb-6 outline-none focus:border-emerald-500 font-bold text-sm" placeholder="https://meet.google.com/..." required>
+            <input type="hidden" name="aksi" id="input-aksi">
+            
+            <div id="div-link" class="hidden mb-6">
+                <label class="block text-[10px] font-black uppercase mb-2">Link Google Meet</label>
+                <input type="url" name="link_google_meet" class="w-full p-4 rounded-2xl bg-slate-50 border-2 border-slate-100 font-bold text-sm" placeholder="https://meet.google.com/...">
+            </div>
+
+            <div id="div-alasan" class="hidden mb-6">
+                <label class="block text-[10px] font-black uppercase mb-2">Alasan Penolakan</label>
+                <textarea name="alasan_penolakan" class="w-full p-4 rounded-2xl bg-slate-50 border-2 border-slate-100 font-bold text-sm" placeholder="Mohon maaf, saya sedang ada agenda mendesak..."></textarea>
+            </div>
+
             <div class="flex gap-4">
                 <button type="button" onclick="tutupModal()" class="w-1/2 py-4 bg-slate-100 text-slate-600 rounded-2xl font-black text-xs uppercase">Batal</button>
                 <button type="submit" class="w-1/2 py-4 bg-[#008f5d] text-white rounded-2xl font-black text-xs uppercase">Simpan</button>
@@ -90,13 +101,16 @@
 </div>
 
 <script>
-    function bukaModalKonfirmasi(id) {
-        const form = document.getElementById('form-konfirmasi');
-        form.action = `/petugas/konsultasi/${id}/konfirmasi`;
-        document.getElementById('modal-konfirmasi').classList.remove('hidden');
+    function bukaModal(id, aksi) {
+        const form = document.getElementById('form-aksi');
+        form.action = `/petugas/konsultasi/${id}/proses`;
+        document.getElementById('input-aksi').value = aksi;
+        
+        document.getElementById('div-link').classList.toggle('hidden', aksi !== 'konfirmasi');
+        document.getElementById('div-alasan').classList.toggle('hidden', aksi !== 'tolak');
+        document.getElementById('modal-title').innerText = aksi === 'konfirmasi' ? 'Konfirmasi Janji' : 'Tolak Janji';
+        document.getElementById('modal-aksi').classList.remove('hidden');
     }
-    function tutupModal() {
-        document.getElementById('modal-konfirmasi').classList.add('hidden');
-    }
+    function tutupModal() { document.getElementById('modal-aksi').classList.add('hidden'); }
 </script>
 @endsection

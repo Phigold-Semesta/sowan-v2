@@ -159,6 +159,9 @@ Route::prefix('konsultasi')->name('konsultasi.')->group(function() {
     Route::get('/', [PetugasController::class, 'konsultasiIndex'])->name('index');
     Route::post('/toggle-status', [PetugasController::class, 'toggleStatusLayanan'])->name('toggle');
     Route::post('/{id}/konfirmasi', [PetugasController::class, 'konfirmasiKonsultasi'])->name('konfirmasi');
+
+    // Pastikan letaknya di dalam group 'petugas/konsultasi'
+Route::post('/{id}/proses', [PetugasController::class, 'prosesKeputusan'])->name('proses');
 });
     });
 
