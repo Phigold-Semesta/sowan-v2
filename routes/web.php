@@ -155,11 +155,11 @@ Route::middleware('auth')->group(function () {
         });
 
         // --- TAMBAHAN: FITUR KONSULTASI ONLINE PETUGAS ---
-        Route::prefix('konsultasi')->name('konsultasi.')->group(function() {
-            Route::get('/', [PetugasController::class, 'konsultasiIndex'])->name('index');
-            Route::post('/toggle-status', [PetugasController::class, 'toggleStatusLayanan'])->name('toggle');
-            Route::post('/{id}/konfirmasi', [PetugasController::class, 'konfirmasiKonsultasi'])->name('konfirmasi');
-        });
+Route::prefix('konsultasi')->name('konsultasi.')->group(function() {
+    Route::get('/', [PetugasController::class, 'konsultasiIndex'])->name('index');
+    Route::post('/toggle-status', [PetugasController::class, 'toggleStatusLayanan'])->name('toggle');
+    Route::post('/{id}/konfirmasi', [PetugasController::class, 'konfirmasiKonsultasi'])->name('konfirmasi');
+});
     });
 
    

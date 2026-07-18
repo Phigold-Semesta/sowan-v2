@@ -19,7 +19,7 @@
         </button>
     </div>
 
-    <!-- Table Section: Bayangan diperbaiki agar tidak tebal -->
+    <!-- Table Section -->
     <div class="bg-white dark:bg-slate-800 rounded-[2.5rem] overflow-hidden border border-slate-200 dark:border-slate-700 shadow-sm">
         <div class="overflow-x-auto custom-scrollbar">
             <table class="w-full text-left border-collapse min-w-[800px]">
@@ -36,12 +36,8 @@
                 <tbody class="text-sm font-bold text-slate-700 dark:text-slate-200">
                     @forelse($jadwal_konsultasi as $item)
                     <tr class="border-b border-slate-100 dark:border-slate-700 hover:bg-emerald-50/30 dark:hover:bg-slate-700/30 transition-colors">
-                        <td class="p-6">
-                            <span class="block text-emerald-900 dark:text-white text-base">{{ $item->topik_konsultasi ?? 'Layanan LPSE' }}</span>
-                        </td>
-                        <td class="p-6">
-                            <span class="block text-emerald-700 dark:text-emerald-300">{{ $item->nama_petugas ?? 'Petugas LPSE' }}</span>
-                        </td>
+                        <td class="p-6 text-emerald-900 dark:text-white text-base">{{ $item->topik_konsultasi }}</td>
+                        <td class="p-6 text-emerald-700 dark:text-emerald-300">{{ $item->nama_lengkap ?? 'Petugas LPSE' }}</td>
                         <td class="p-6">
                             <span class="block text-emerald-900 dark:text-white">{{ \Carbon\Carbon::parse($item->waktu_mulai)->format('d M Y') }}</span>
                             <span class="text-[10px] text-emerald-500 uppercase tracking-widest">{{ \Carbon\Carbon::parse($item->waktu_mulai)->format('H:i') }} WIB</span>
@@ -52,21 +48,17 @@
                             </span>
                         </td>
                         <td class="p-6 text-center">
-                            @if(strtolower($item->status) == 'selesai')
-                                <span class="bg-emerald-100 text-[#008f5d] border border-emerald-200 px-4 py-2 rounded-full text-[10px] uppercase tracking-widest font-black shadow-sm">Selesai</span>
-                            @elseif(strtolower($item->status) == 'dikonfirmasi' || strtolower($item->status) == 'berlangsung')
-                                <span class="bg-amber-100 text-amber-700 border border-amber-200 px-4 py-2 rounded-full text-[10px] uppercase tracking-widest font-black shadow-sm">Dikonfirmasi</span>
-                            @else
-                                <span class="bg-slate-100 text-slate-600 border border-slate-200 px-4 py-2 rounded-full text-[10px] uppercase tracking-widest font-black shadow-sm">{{ $item->status ?? 'Pending' }}</span>
-                            @endif
+                            <span class="bg-{{ $item->status == 'dikonfirmasi' ? 'amber' : ($item->status == 'selesai' ? 'emerald' : 'slate') }}-100 text-{{ $item->status == 'dikonfirmasi' ? 'amber-700' : ($item->status == 'selesai' ? '#008f5d' : 'slate-600') }} border px-4 py-2 rounded-full text-[10px] uppercase tracking-widest font-black shadow-sm">
+                                {{ ucfirst($item->status) }}
+                            </span>
                         </td>
                         <td class="p-6 text-center">
-                            @if($item->link_google_meet)
-                                <a href="{{ $item->link_google_meet }}" target="_blank" class="inline-block bg-emerald-600 text-white py-2 px-6 rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-emerald-700 active:scale-95 transition-all shadow-md">
+                            @if($item->status == 'dikonfirmasi' && $item->link_google_meet)
+                                <a href="{{ $item->link_google_meet }}" target="_blank" class="inline-block bg-emerald-600 text-white py-2 px-6 rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-emerald-700 transition-all shadow-md">
                                     <i class="fas fa-video mr-1"></i> Gabung
                                 </a>
                             @else
-                                <span class="inline-flex items-center text-[9px] font-black uppercase tracking-widest px-3 py-1.5 rounded-xl bg-slate-50 text-slate-400 border border-slate-200">
+                                <span class="text-[9px] font-black uppercase tracking-widest px-3 py-1.5 rounded-xl bg-slate-50 text-slate-400 border border-slate-200">
                                     <i class="fas fa-clock mr-1"></i> Menunggu
                                 </span>
                             @endif
@@ -74,11 +66,9 @@
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="6" class="p-12 text-center">
-                            <div class="flex flex-col items-center justify-center text-slate-400">
-                                <i class="fas fa-video-slash text-4xl mb-4 opacity-50"></i>
-                                <p class="text-xs font-black uppercase tracking-widest">Belum ada jadwal konsultasi</p>
-                            </div>
+                        <td colspan="6" class="p-12 text-center text-slate-400">
+                            <i class="fas fa-video-slash text-4xl mb-4 opacity-50"></i>
+                            <p class="text-xs font-black uppercase tracking-widest">Belum ada jadwal konsultasi</p>
                         </td>
                     </tr>
                     @endforelse
@@ -96,32 +86,40 @@
         <form action="{{ route('tamu.konsultasi.simpan') }}" method="POST">
             @csrf
             <div class="space-y-5">
+                <!-- Input Topik Konsultasi Baru -->
+                <div>
+                    <label class="block text-[10px] font-black text-emerald-800 dark:text-emerald-400 uppercase tracking-widest mb-2 ml-2">Topik Konsultasi</label>
+                    <input type="text" name="topik_konsultasi" class="w-full p-4 rounded-2xl bg-slate-50 dark:bg-slate-900 border-2 border-slate-100 dark:border-slate-700 focus:border-emerald-500 font-bold text-sm text-slate-700 dark:text-slate-200 outline-none transition-all" placeholder="Contoh: Masalah E-Katalog" required>
+                </div>
+                
                 <div>
                     <label class="block text-[10px] font-black text-emerald-800 dark:text-emerald-400 uppercase tracking-widest mb-2 ml-2">Layanan</label>
-                    <select name="id_layanan" class="w-full p-4 rounded-2xl bg-slate-50 dark:bg-slate-900 border-2 border-slate-100 dark:border-slate-700 focus:border-emerald-500 focus:ring-0 font-bold text-sm text-slate-700 dark:text-slate-200 transition-all outline-none" required>
+                    <select name="id_layanan" class="w-full p-4 rounded-2xl bg-slate-50 dark:bg-slate-900 border-2 border-slate-100 dark:border-slate-700 focus:border-emerald-500 font-bold text-sm text-slate-700 dark:text-slate-200 outline-none transition-all" required>
                         <option value="" disabled selected>Pilih Layanan LPSE</option>
                         @foreach($layanan as $l) 
                             <option value="{{ $l->id_layanan }}">{{ $l->nama_layanan }}</option> 
                         @endforeach
                     </select>
                 </div>
+                
                 <div>
                     <label class="block text-[10px] font-black text-emerald-800 dark:text-emerald-400 uppercase tracking-widest mb-2 ml-2">Petugas Pemateri</label>
-                    <select name="id_petugas" class="w-full p-4 rounded-2xl bg-slate-50 dark:bg-slate-900 border-2 border-slate-100 dark:border-slate-700 focus:border-emerald-500 focus:ring-0 font-bold text-sm text-slate-700 dark:text-slate-200 transition-all outline-none" required>
-                        <option value="" disabled selected>Pilih Pemateri Konsultasi</option>
+                    <select name="id_petugas" class="w-full p-4 rounded-2xl bg-slate-50 dark:bg-slate-900 border-2 border-slate-100 dark:border-slate-700 focus:border-emerald-500 font-bold text-sm text-slate-700 dark:text-slate-200 outline-none transition-all" required>
+                        <option value="" disabled selected>Pilih Pemateri</option>
                         @foreach($petugas as $p)
                             <option value="{{ $p->id_user }}">{{ $p->nama_lengkap }} ({{ ucfirst($p->role) }})</option>
                         @endforeach
                     </select>
                 </div>
+
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                         <label class="block text-[10px] font-black text-emerald-800 dark:text-emerald-400 uppercase tracking-widest mb-2 ml-2">Waktu Mulai</label>
-                        <input type="datetime-local" name="waktu_mulai" class="w-full p-4 rounded-2xl bg-slate-50 dark:bg-slate-900 border-2 border-slate-100 dark:border-slate-700 focus:border-emerald-500 focus:ring-0 font-bold text-sm text-slate-700 dark:text-slate-200 transition-all outline-none" required>
+                        <input type="datetime-local" name="waktu_mulai" class="w-full p-4 rounded-2xl bg-slate-50 dark:bg-slate-900 border-2 border-slate-100 dark:border-slate-700 focus:border-emerald-500 font-bold text-sm text-slate-700 dark:text-slate-200 outline-none transition-all" required>
                     </div>
                     <div>
                         <label class="block text-[10px] font-black text-emerald-800 dark:text-emerald-400 uppercase tracking-widest mb-2 ml-2">Durasi (Menit)</label>
-                        <input type="number" name="durasi_menit" value="30" min="15" max="90" step="15" class="w-full p-4 rounded-2xl bg-slate-50 dark:bg-slate-900 border-2 border-slate-100 dark:border-slate-700 focus:border-emerald-500 focus:ring-0 font-bold text-sm text-slate-700 dark:text-slate-200 transition-all outline-none" required>
+                        <input type="number" name="durasi_menit" value="30" min="15" max="90" step="15" class="w-full p-4 rounded-2xl bg-slate-50 dark:bg-slate-900 border-2 border-slate-100 dark:border-slate-700 focus:border-emerald-500 font-bold text-sm text-slate-700 dark:text-slate-200 outline-none transition-all" required>
                     </div>
                 </div>
             </div>

@@ -50,7 +50,7 @@ class TamuController extends Controller
         return view('tamu.riwayat.index', compact('tamu', 'riwayatKunjungan'));
     }
 
-    /**
+   /**
      * Tampilan Halaman Konsultasi Online (List + Form Dropdown)
      */
     public function konsultasiOnline()
@@ -61,13 +61,16 @@ class TamuController extends Controller
             return redirect()->route('tamu.login.view')->with('error', 'Sesi Anda telah berakhir.');
         }
         
-        $jadwal_konsultasi = DB::table('konsultasi')
-                                ->where('gmail', $tamu->gmail)
-                                ->orderBy('waktu_mulai', 'asc')
-                                ->get();
+        // Perbaikan: Menggunakan Model dengan Relasi agar bisa menampilkan nama pemateri dan layanan
+        $jadwal_konsultasi = \App\Models\Konsultasi::with(['user', 'layanan'])
+                                            ->where('gmail', $tamu->gmail)
+                                            ->orderBy('waktu_mulai', 'asc')
+                                            ->get();
 
         $layanan = Layanan::orderBy('nama_layanan', 'asc')->get();
-        $petugas = \App\Models\User::whereIn('role', ['admin', 'petugas', 'pimpinan'])
+        
+        // Perbaikan: Pastikan role sesuai dengan yang ada di database Anda
+        $petugas = \App\Models\User::whereIn('role', ['administrator', 'petugas', 'pimpinan'])
                                     ->orderBy('nama_lengkap', 'asc')
                                     ->get();
 
@@ -82,19 +85,22 @@ class TamuController extends Controller
         $tamu = Auth::guard('tamu')->user();
 
         $validated = $request->validate([
-            'id_layanan'  => 'required|exists:layanan,id_layanan',
-            'id_petugas'  => 'required|exists:petugas_tujuan,id_petugas',
-            'waktu_mulai' => 'required|date|after:now',
+            'id_layanan'       => 'required|exists:layanan,id_layanan',
+            'id_petugas'       => 'required|exists:user,id_user', // Pastikan ID ini merujuk ke tabel users
+            'waktu_mulai'      => 'required|date|after:now',
+            'topik_konsultasi' => 'required|string|max:255',
+            'durasi_menit'     => 'required|integer|min:15|max:90',
         ]);
 
-        DB::table('konsultasi')->insert([
-            'gmail'         => $tamu->gmail,
-            'id_layanan'    => $validated['id_layanan'],
-            'id_user'       => $request->id_petugas,
-            'waktu_mulai'   => $validated['waktu_mulai'],
-            'durasi_menit'  => $request->durasi_menit, 
-            'status'        => 'pending',
-            'created_at'    => now(),
+        // Perbaikan: Menggunakan Model Konsultasi::create() untuk sinkronisasi mass assignment
+        \App\Models\Konsultasi::create([
+            'gmail'            => $tamu->gmail,
+            'id_layanan'       => $validated['id_layanan'],
+            'id_user'          => $validated['id_petugas'],
+            'topik_konsultasi' => $validated['topik_konsultasi'],
+            'waktu_mulai'      => $validated['waktu_mulai'],
+            'durasi_menit'     => $validated['durasi_menit'],
+            'status'           => 'pending',
         ]);
 
         return redirect()->route('tamu.konsultasi_online.index')

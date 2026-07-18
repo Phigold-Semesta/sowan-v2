@@ -316,39 +316,36 @@ class PetugasController extends Controller
             ->with('success', 'Data kunjungan telah berhasil dihapus.');
     }
 
-    // --- FITUR KONSULTASI ONLINE (TAMBAHKAN INI) ---
+   // --- FITUR KONSULTASI ONLINE (DISESUAIKAN & DISEMPURNAKAN) ---
 
     public function konsultasiIndex()
     {
-        // Petugas melihat daftar konsultasi yang ditujukan ke layanannya atau global
-        $konsultasi = \App\Models\Konsultasi::with(['user', 'layanan', 'kunjungan.tamu'])
-            ->latest('waktu_konsultasi')
-            ->paginate(15);
-            
-        return view('petugas.konsultasi.index', compact('konsultasi'));
-    }
-
-  public function toggleStatusLayanan(Request $request)
-    {
-        // 1. Ambil ID yang sedang login
         $userId = \Illuminate\Support\Facades\Auth::id();
-        
-        if (!$userId) {
-            return response()->json(['message' => 'Unauthorized'], 401);
+        $user = \App\Models\User::find($userId);
+
+        // Logika: Admin melihat semua, Petugas/Pimpinan hanya melihat jadwal miliknya
+        $query = \App\Models\Konsultasi::with(['user', 'layanan', 'kunjungan.tamu']);
+            
+        if ($user->role !== 'administrator') {
+            $query->where('id_user', $userId);
         }
 
-        // 2. Ambil data User secara "Fresh" dari database
-        // Menggunakan find() memastikan model dimuat dengan Primary Key yang benar (id_user)
+        $konsultasi = $query->latest('waktu_mulai')->paginate(15);
+            
+        return view('petugas.konsultasi_online.index', compact('konsultasi'));
+    }
+
+    public function toggleStatusLayanan(Request $request)
+    {
+        $userId = \Illuminate\Support\Facades\Auth::id();
         $user = \App\Models\User::find($userId);
         
         if (!$user) {
             return response()->json(['message' => 'User tidak ditemukan'], 404);
         }
 
-        // 3. Tentukan status baru
         $statusBaru = ($user->status_konsultasi === 'online') ? 'offline' : 'online';
         
-        // 4. Gunakan update() yang lebih stabil untuk mengubah data ke database
         $user->update(['status_konsultasi' => $statusBaru]);
 
         return response()->json([
@@ -359,12 +356,14 @@ class PetugasController extends Controller
 
     public function konfirmasiKonsultasi(Request $request, $id)
     {
-        // Validasi input link Google Meet
+        // Validasi link harus URL yang valid
         $request->validate(['link_google_meet' => 'required|url']);
 
         $konsultasi = \App\Models\Konsultasi::findOrFail($id);
+        
+        // Perbaikan: Status disesuaikan dengan Enum database ('dikonfirmasi')
         $konsultasi->update([
-            'status'           => 'confirmed',
+            'status'           => 'dikonfirmasi',
             'link_google_meet' => $request->link_google_meet
         ]);
 

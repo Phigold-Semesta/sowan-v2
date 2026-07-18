@@ -10,21 +10,28 @@ class Konsultasi extends Model
     // Nama tabel secara eksplisit
     protected $table = 'konsultasi';
 
-    // Primary key jika bukan 'id'
+    // Primary key yang baru disesuaikan (id_konsultasi)
     protected $primaryKey = 'id_konsultasi';
 
-    // Field yang boleh diisi (mass assignable)
+    // Pastikan ini true agar Laravel mengenali auto-increment
+    public $incrementing = true;
+    protected $keyType = 'int';
+
+    // Field yang boleh diisi (mass assignable) sesuai kolom database baru
     protected $fillable = [
-        'id_kunjungan',
-        'id_user',
+        'gmail',
         'id_layanan',
-        'waktu_konsultasi',
+        'id_kunjungan', // Ditambahkan agar bisa berelasi dengan tabel kunjungan
+        'id_user',
+        'topik_konsultasi',
+        'waktu_mulai',
+        'durasi_menit',
         'link_google_meet',
         'status',
     ];
 
     /**
-     * Relasi ke User (Aktor internal yang melayani)
+     * Relasi ke User (Aktor internal: Admin/Petugas/Pimpinan sebagai pemateri)
      */
     public function user(): BelongsTo
     {
@@ -40,7 +47,8 @@ class Konsultasi extends Model
     }
 
     /**
-     * Relasi ke Kunjungan (Opsional)
+     * PERBAIKAN: Relasi ke Kunjungan
+     * Menambahkan method ini agar PetugasController tidak error saat melakukan with(['kunjungan.tamu'])
      */
     public function kunjungan(): BelongsTo
     {

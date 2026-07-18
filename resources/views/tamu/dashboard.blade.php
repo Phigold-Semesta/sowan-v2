@@ -3,7 +3,7 @@
 @section('title', 'Dashboard Tamu')
 
 @section('content')
-<div class="space-y-8">
+<div class="space-y-8 animate__animated animate__fadeIn">
     {{-- Header Section --}}
     <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
@@ -11,27 +11,26 @@
                 Selamat Datang
             </h1>
             <p class="text-slate-500 dark:text-slate-400 font-bold mt-1 tracking-wide">
-                {{-- PERBAIKAN: Menggunakan guard('tamu') agar tidak null --}}
                 {{ auth()->guard('tamu')->user()->nama_tamu }}, portal SOWAN Anda siap digunakan.
             </p>
         </div>
-        <div class="bg-white dark:bg-emerald-900/30 px-6 py-3 rounded-2xl border border-emerald-100 dark:border-emerald-800 shadow-sm">
+        <div class="bg-white dark:bg-emerald-900/30 px-6 py-3 rounded-2xl border border-slate-200 dark:border-emerald-800 shadow-sm">
             <p class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Waktu Akses</p>
             <p class="text-sm font-bold text-emerald-800 dark:text-emerald-300">{{ now()->format('d M Y | H:i') }} WIB</p>
         </div>
     </div>
 
-    {{-- Statistik Ringkas Tamu --}}
+    {{-- Statistik Ringkas Tamu: Shadow disesuaikan agar lebih halus --}}
     <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div class="bg-gradient-to-br from-emerald-600 to-emerald-800 p-6 rounded-[2rem] text-white shadow-xl">
+        <div class="bg-gradient-to-br from-emerald-600 to-emerald-800 p-6 rounded-[2rem] text-white shadow-sm">
             <p class="text-emerald-200 text-[10px] uppercase font-black tracking-[0.2em] mb-1">Total Kunjungan</p>
             <h3 class="text-4xl font-black tracking-tighter">12 <span class="text-lg font-bold opacity-70">Kali</span></h3>
         </div>
-        <div class="bg-white dark:bg-slate-900 p-6 rounded-[2rem] border border-slate-100 dark:border-slate-800 shadow-lg">
+        <div class="bg-white dark:bg-slate-900 p-6 rounded-[2rem] border border-slate-200 dark:border-slate-800 shadow-sm">
             <p class="text-slate-400 text-[10px] uppercase font-black tracking-[0.2em] mb-1">Kunjungan Terakhir</p>
             <h3 class="text-xl font-black text-slate-800 dark:text-slate-200 mt-1">15 Juni 2026</h3>
         </div>
-        <div class="bg-white dark:bg-slate-900 p-6 rounded-[2rem] border border-slate-100 dark:border-slate-800 shadow-lg">
+        <div class="bg-white dark:bg-slate-900 p-6 rounded-[2rem] border border-slate-200 dark:border-slate-800 shadow-sm">
             <p class="text-slate-400 text-[10px] uppercase font-black tracking-[0.2em] mb-1">Status Akun</p>
             <div class="flex items-center gap-2 mt-2">
                 <span class="w-3 h-3 rounded-full bg-emerald-500 animate-pulse"></span>
@@ -40,9 +39,10 @@
         </div>
     </div>
 
-    {{-- Quick Actions --}}
+    {{-- Quick Actions & Bantuan --}}
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        <div class="bg-white dark:bg-slate-900 p-8 rounded-[2.5rem] shadow-xl border border-slate-100 dark:border-slate-800">
+        {{-- Card Aksi Cepat --}}
+        <div class="bg-white dark:bg-slate-900 p-8 rounded-[2.5rem] shadow-sm border border-slate-200 dark:border-slate-800">
             <h3 class="text-emerald-900 dark:text-emerald-400 font-black uppercase text-sm tracking-widest mb-6">Aksi Cepat</h3>
             <div class="grid grid-cols-2 gap-4">
                 <a href="{{ route('tamu.kunjungan.baru') }}" class="flex flex-col items-center justify-center p-6 bg-emerald-50 dark:bg-emerald-900/20 rounded-2xl hover:bg-emerald-100 dark:hover:bg-emerald-900/40 transition-all border border-emerald-100 dark:border-emerald-800">
@@ -56,11 +56,12 @@
             </div>
         </div>
 
-        <div class="bg-slate-900 dark:bg-emerald-950 p-8 rounded-[2.5rem] text-white shadow-2xl relative overflow-hidden">
+        {{-- Card Perlu Bantuan --}}
+        <div class="bg-slate-900 dark:bg-emerald-950 p-8 rounded-[2.5rem] text-white shadow-sm relative overflow-hidden border border-slate-800">
             <div class="relative z-10">
                 <h3 class="font-black text-xl mb-2 italic uppercase">Perlu Bantuan?</h3>
                 <p class="text-emerald-200 text-sm mb-6">Silakan hubungi operator LPSE Karawang melalui WhatsApp jika ada kendala sistem.</p>
-                <a href="#" class="inline-block px-6 py-3 bg-emerald-500 text-white font-black text-xs uppercase rounded-xl hover:bg-emerald-400 transition-all shadow-lg">
+                <a href="#" class="inline-block px-6 py-3 bg-emerald-500 text-white font-black text-xs uppercase rounded-xl hover:bg-emerald-400 transition-all shadow-sm">
                     Hubungi Admin →
                 </a>
             </div>
