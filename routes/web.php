@@ -170,6 +170,9 @@ Route::prefix('konsultasi')->name('konsultasi.')->group(function() {
     // Pastikan letaknya di dalam group 'petugas/konsultasi'
 Route::post('/{id}/proses', [PetugasController::class, 'prosesKeputusan'])->name('proses');
 });
+
+// Tambahkan ini di dalam group route petugas Anda
+Route::post('/petugas/konsultasi/{id}/selesaikan', [PetugasController::class, 'selesaikanKonsultasi'])->name('konsultasi.selesaikan');
     });
 
    

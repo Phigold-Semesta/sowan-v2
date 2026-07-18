@@ -47,8 +47,9 @@
                         </td>
                         <td class="p-6 text-center">
                             <span class="px-4 py-2 rounded-full text-[10px] uppercase tracking-widest font-black shadow-sm border
-                                {{ $item->status == 'dikonfirmasi' ? 'bg-emerald-100 text-[#008f5d] border-emerald-200' : 
-                                   ($item->status == 'ditolak' ? 'bg-red-100 text-red-600 border-red-200' : 'bg-slate-100 text-slate-600 border-slate-200') }}">
+                                {{ $item->status == 'selesai' ? 'bg-emerald-100 text-[#008f5d] border-emerald-200' : 
+                                   ($item->status == 'pending' ? 'bg-yellow-100 text-yellow-600 border-yellow-200' : 
+                                   ($item->status == 'ditolak' ? 'bg-red-100 text-red-600 border-red-200' : 'bg-slate-100 text-slate-600 border-slate-200')) }}">
                                 {{ ucfirst($item->status) }}
                             </span>
                         </td>
@@ -62,10 +63,12 @@
                                         <i class="fas fa-video"></i>
                                     </a>
                                 @endif
-                                <button onclick="editKonsultasi({{ $item->id_konsultasi }}, '{{ $item->topik_konsultasi }}', {{ $item->id_layanan }}, {{ $item->id_user }}, '{{ $item->waktu_mulai }}', {{ $item->durasi_menit }})" 
-                                    class="bg-amber-500 text-white py-2 px-3 rounded-xl font-black text-[10px] uppercase hover:bg-amber-600 transition-all shadow-md">
-                                    <i class="fas fa-edit"></i>
-                                </button>
+                                @if($item->status !== 'selesai' && $item->status !== 'ditolak')
+                                    <button onclick="editKonsultasi({{ $item->id_konsultasi }}, '{{ $item->topik_konsultasi }}', {{ $item->id_layanan }}, {{ $item->id_user }}, '{{ $item->waktu_mulai }}', {{ $item->durasi_menit }})" 
+                                        class="bg-amber-500 text-white py-2 px-3 rounded-xl font-black text-[10px] uppercase hover:bg-amber-600 transition-all shadow-md">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                @endif
                                 <button onclick="konfirmasiHapus({{ $item->id_konsultasi }})" class="bg-red-500 text-white py-2 px-3 rounded-xl font-black text-[10px] uppercase hover:bg-red-600 transition-all shadow-md">
                                     <i class="fas fa-trash"></i>
                                 </button>

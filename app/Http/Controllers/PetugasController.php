@@ -8,6 +8,7 @@ use App\Models\Layanan;
 use App\Models\PetugasTujuan;
 use App\Models\AuditLog;
 use App\Models\RatingLayanan;
+use App\Models\Konsultasi;
 use App\Exports\KunjunganExport; // Import class export
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -403,5 +404,21 @@ class PetugasController extends Controller
     }
 
     return redirect()->back()->with('success', 'Keputusan berhasil dikirim ke tamu.');
+}
+
+public function selesaikanKonsultasi($id)
+{
+    $konsultasi = Konsultasi::findOrFail($id);
+    
+    /** @var \App\Models\User $user */
+    $user = auth()->user();
+
+    // Sekarang IDE tahu $user adalah model User, garis merah akan hilang!
+    if (!$user || $konsultasi->id_user !== $user->id_user) {
+        return back()->with('error', 'Anda tidak memiliki akses.');
+    }
+
+    $konsultasi->markAsFinished();
+    return back()->with('success', 'Konsultasi telah selesai dan sesi ditutup.');
 }
 }

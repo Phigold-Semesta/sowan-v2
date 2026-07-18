@@ -38,6 +38,15 @@ class Konsultasi extends Model
     ];
 
     /**
+     * Method untuk menandai konsultasi sebagai selesai
+     */
+    public function markAsFinished()
+    {
+        $this->status = self::STATUS_SELESAI;
+        $this->save();
+    }
+
+    /**
      * Relasi ke User (Aktor internal: Admin/Petugas/Pimpinan sebagai pemateri)
      */
     public function user(): BelongsTo
