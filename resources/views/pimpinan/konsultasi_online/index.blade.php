@@ -60,28 +60,26 @@
                         <td class="p-6 text-center">
                             <span class="px-4 py-2 rounded-full text-[10px] uppercase font-black shadow-sm border 
                                 {{ $item->status == 'selesai' ? 'bg-emerald-100 text-[#008f5d] border-emerald-200' : ($item->status == 'dikonfirmasi' ? 'bg-blue-100 text-blue-600 border-blue-200' : ($item->status == 'pending' ? 'bg-yellow-100 text-yellow-600 border-yellow-200' : 'bg-red-100 text-red-600 border-red-200')) }}">
-                                {{ ucfirst($item->status) }}
+                                {{ strtoupper($item->status) }}
                             </span>
                         </td>
                         <td class="p-6 text-center text-[11px] text-slate-500 italic">
                             {{ $item->keterangan ?? '-' }}
                         </td>
                         <td class="p-6 text-center">
-                            @if($item->status == 'pending')
-                                <div class="flex justify-center gap-2">
-                                    <button onclick="bukaModal({{ $item->id_konsultasi }}, 'konfirmasi')" class="bg-[#008f5d] text-white py-2 px-4 rounded-xl font-black text-[10px] uppercase hover:bg-emerald-700 transition-all shadow-md">Konfirmasi</button>
-                                    <button onclick="bukaModal({{ $item->id_konsultasi }}, 'tolak')" class="bg-red-500 text-white py-2 px-4 rounded-xl font-black text-[10px] uppercase hover:bg-red-600 transition-all shadow-md">Tolak</button>
-                                </div>
-                            @elseif($item->status == 'dikonfirmasi')
-                                <div class="flex justify-center gap-2">
-                                    <a href="{{ $item->link_google_meet }}" target="_blank" class="bg-blue-600 text-white py-2 px-4 rounded-xl font-black text-[10px] uppercase hover:bg-blue-700 transition-all shadow-md"><i class="fas fa-video mr-1"></i> Gabung</a>
+                            <div class="flex justify-center gap-1">
+                                @if($item->status == 'pending')
+                                    <button onclick="bukaModal({{ $item->id_konsultasi }}, 'konfirmasi')" class="bg-emerald-600 text-white w-8 h-8 rounded-lg font-black text-[10px] shadow-md hover:bg-emerald-700 transition-all"><i class="fas fa-check"></i></button>
+                                    <button onclick="bukaModal({{ $item->id_konsultasi }}, 'tolak')" class="bg-red-500 text-white w-8 h-8 rounded-lg font-black text-[10px] shadow-md hover:bg-red-600 transition-all"><i class="fas fa-times"></i></button>
+                                @elseif($item->status == 'dikonfirmasi')
+                                    <a href="{{ $item->link_google_meet }}" target="_blank" class="bg-blue-600 text-white w-8 h-8 rounded-lg font-black text-[10px] shadow-md hover:bg-blue-700 transition-all flex items-center justify-center"><i class="fas fa-video"></i></a>
                                     <form action="{{ route('pimpinan.konsultasi.selesaikan', $item->id_konsultasi) }}" method="POST">
-                                        @csrf <button type="submit" class="bg-emerald-600 text-white py-2 px-4 rounded-xl font-black text-[10px] uppercase hover:bg-emerald-700 transition-all shadow-md">Selesai</button>
+                                        @csrf <button type="submit" class="bg-[#008f5d] text-white w-8 h-8 rounded-lg font-black text-[10px] shadow-md hover:bg-emerald-700 transition-all"><i class="fas fa-check"></i></button>
                                     </form>
-                                </div>
-                            @else
-                                <span class="text-[10px] text-slate-400 italic">{{ ucfirst($item->status) }}</span>
-                            @endif
+                                @else
+                                    <span class="text-[10px] text-slate-400 italic">{{ ucfirst($item->status) }}</span>
+                                @endif
+                            </div>
                         </td>
                     </tr>
                     @empty

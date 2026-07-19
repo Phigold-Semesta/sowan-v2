@@ -633,6 +633,62 @@ class AdminController extends Controller
         }
     }
 
+    public function selesaikanKonsultasi($id)
+{
+    try {
+        $konsultasi = \App\Models\Konsultasi::findOrFail($id);
+
+        // Update status menjadi 'selesai'
+        $konsultasi->update([
+            'status' => 'selesai'
+        ]);
+
+        // Catat log aktivitas
+        $this->logActivity("Admin menyelesaikan sesi konsultasi ID: #{$id}");
+
+        return redirect()->route('admin.konsultasi.index')
+                         ->with('success', 'Sesi konsultasi telah diselesaikan.');
+                         
+    } catch (\Exception $e) {
+        return back()->with('error', 'Gagal menyelesaikan sesi: ' . $e->getMessage());
+    }
+}
+
+public function prosesKonsultasi(Request $request, $id)
+{
+    $request->validate([
+        'aksi' => 'required|in:konfirmasi,tolak',
+        'link_google_meet' => 'required_if:aksi,konfirmasi|nullable|url',
+        'keterangan' => 'required_if:aksi,tolak|nullable|string',
+    ]);
+
+    try {
+        $konsultasi = \App\Models\Konsultasi::findOrFail($id);
+
+        if ($request->aksi === 'konfirmasi') {
+            $konsultasi->update([
+                'status' => 'dikonfirmasi',
+                'link_google_meet' => $request->link_google_meet,
+                'keterangan' => 'Telah dikonfirmasi Admin'
+            ]);
+            $msg = "Sesi konsultasi dikonfirmasi.";
+        } else {
+            $konsultasi->update([
+                'status' => 'ditolak',
+                'keterangan' => $request->keterangan
+            ]);
+            $msg = "Sesi konsultasi ditolak.";
+        }
+
+        $this->logActivity("Admin memproses konsultasi ID: #{$id} dengan status: {$request->aksi}");
+
+        return redirect()->route('admin.konsultasi.index')->with('success', $msg);
+
+    } catch (\Exception $e) {
+        return back()->with('error', 'Gagal memproses: ' . $e->getMessage());
+    }
+}
+
     private function logActivity($aktivitas)
     {
         AuditLog::create([

@@ -76,20 +76,29 @@
                         </td>
                         <td class="p-6 text-center">
                             <span class="px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-wider
-                                {{ $item->status == 'dikonfirmasi' ? 'bg-[#e6f4ef] text-[#008f5d]' : ($item->status == 'ditolak' ? 'bg-red-50 text-red-500' : 'bg-slate-100 text-slate-500') }}">
-                                {{ $item->status }}
+                                {{ $item->status == 'selesai' ? 'bg-emerald-100 text-[#008f5d]' : ($item->status == 'dikonfirmasi' ? 'bg-blue-100 text-blue-600' : ($item->status == 'pending' ? 'bg-yellow-100 text-yellow-600' : 'bg-red-100 text-red-600')) }}">
+                                {{ strtoupper($item->status) }}
                             </span>
                         </td>
                         <td class="p-6 text-center text-xs italic text-slate-400">
                             {{ $item->keterangan ?? '-' }}
                         </td>
                         <td class="p-6 text-center">
-                            <button onclick="konfirmasiHapus({{ $item->id_konsultasi }})" class="bg-red-50 text-red-600 border border-red-100 py-2 px-4 rounded-xl font-black text-[10px] uppercase hover:bg-red-500 hover:text-white transition-all shadow-sm">
-                                Hapus
-                            </button>
-                            <form id="delete-form-{{ $item->id_konsultasi }}" action="{{ route('admin.konsultasi.destroy', $item->id_konsultasi) }}" method="POST" class="hidden">
-                                @csrf @method('DELETE')
-                            </form>
+                            <div class="flex justify-center gap-1">
+                                @if($item->status == 'pending')
+                                    <button onclick="bukaModalProses({{ $item->id_konsultasi }}, 'konfirmasi')" class="bg-emerald-600 text-white w-8 h-8 rounded-lg font-black text-[10px] shadow-sm hover:bg-emerald-700 transition-all"><i class="fas fa-check"></i></button>
+                                    <button onclick="bukaModalProses({{ $item->id_konsultasi }}, 'tolak')" class="bg-red-500 text-white w-8 h-8 rounded-lg font-black text-[10px] shadow-sm hover:bg-red-600 transition-all"><i class="fas fa-times"></i></button>
+                                @elseif($item->status == 'dikonfirmasi')
+                                    <a href="{{ $item->link_google_meet }}" target="_blank" class="bg-blue-600 text-white w-8 h-8 rounded-lg font-black text-[10px] shadow-sm hover:bg-blue-700 transition-all flex items-center justify-center"><i class="fas fa-video"></i></a>
+                                    <form action="{{ route('admin.konsultasi.selesaikan', $item->id_konsultasi) }}" method="POST">
+                                        @csrf <button type="submit" class="bg-[#008f5d] text-white w-8 h-8 rounded-lg font-black text-[10px] shadow-sm hover:bg-emerald-700 transition-all"><i class="fas fa-check"></i></button>
+                                    </form>
+                                @endif
+                                <button onclick="konfirmasiHapus({{ $item->id_konsultasi }})" class="bg-red-500 text-white w-8 h-8 rounded-lg font-black text-[10px] shadow-sm hover:bg-red-600 transition-all"><i class="fas fa-trash-alt"></i></button>
+                                <form id="delete-form-{{ $item->id_konsultasi }}" action="{{ route('admin.konsultasi.destroy', $item->id_konsultasi) }}" method="POST" class="hidden">
+                                    @csrf @method('DELETE')
+                                </form>
+                            </div>
                         </td>
                     </tr>
                     @empty
@@ -119,7 +128,6 @@
         <h2 class="text-xl font-black text-emerald-950 uppercase italic tracking-tighter mb-6">
             KELOLA MASTER <span class="text-[#008f5d]">LAYANAN</span>
         </h2>
-        
         <div class="overflow-y-auto custom-scrollbar bg-slate-50 rounded-2xl border border-slate-100 p-2">
             <table class="w-full text-left">
                 <thead>
@@ -146,7 +154,6 @@
                 </tbody>
             </table>
         </div>
-
         <div class="mt-8 flex gap-3">
             <button onclick="tutupModal('layanan')" class="w-1/2 py-4 bg-slate-100 text-slate-600 hover:bg-slate-200 rounded-2xl font-black text-xs uppercase tracking-widest transition-all">Tutup</button>
             <a href="{{ route('admin.master.layanan.index') }}" class="w-1/2 flex items-center justify-center py-4 bg-[#008f5d] text-white hover:bg-emerald-700 rounded-2xl font-black text-xs uppercase tracking-widest transition-all">Kelola Penuh</a>
@@ -160,7 +167,6 @@
         <h2 class="text-xl font-black text-emerald-950 uppercase italic tracking-tighter mb-6">
             KELOLA MASTER <span class="text-[#008f5d]">PEMATERI</span>
         </h2>
-        
         <div class="overflow-y-auto custom-scrollbar bg-slate-50 rounded-2xl border border-slate-100 p-2">
             <table class="w-full text-left">
                 <thead>
@@ -194,7 +200,6 @@
                 </tbody>
             </table>
         </div>
-
         <div class="mt-8 flex gap-3">
             <button onclick="tutupModal('pemateri')" class="w-1/2 py-4 bg-slate-100 text-slate-600 hover:bg-slate-200 rounded-2xl font-black text-xs uppercase tracking-widest transition-all">Tutup</button>
             <a href="{{ route('admin.users.index') }}" class="w-1/2 flex items-center justify-center py-4 bg-[#008f5d] text-white hover:bg-emerald-700 rounded-2xl font-black text-xs uppercase tracking-widest transition-all">Kelola Penuh</a>
@@ -202,56 +207,69 @@
     </div>
 </div>
 
+<!-- Modal Aksi Dinamis -->
+<div id="modal-aksi" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center z-50">
+    <div class="bg-white p-8 rounded-[2.5rem] w-full max-w-sm mx-4 shadow-xl">
+        <h2 id="modal-title" class="text-xl font-black text-emerald-950 mb-6 uppercase tracking-tighter">Proses Konsultasi</h2>
+        <form id="form-aksi" method="POST">
+            @csrf
+            <input type="hidden" name="aksi" id="input-aksi">
+            <div id="div-link" class="hidden mb-6">
+                <label class="block text-[10px] font-black uppercase mb-2">Link Google Meet</label>
+                <input type="url" name="link_google_meet" class="w-full p-4 rounded-2xl bg-slate-50 border-2 border-slate-100 font-bold text-sm" placeholder="https://meet.google.com/...">
+            </div>
+            <div id="div-alasan" class="hidden mb-6">
+                <label class="block text-[10px] font-black uppercase mb-2">Keterangan / Alasan</label>
+                <textarea name="keterangan" class="w-full p-4 rounded-2xl bg-slate-50 border-2 border-slate-100 font-bold text-sm" placeholder="Mohon maaf..."></textarea>
+            </div>
+            <div class="flex gap-4">
+                <button type="button" onclick="tutupModal('aksi')" class="w-1/2 py-4 bg-slate-100 text-slate-600 rounded-2xl font-black text-xs uppercase">Batal</button>
+                <button type="submit" class="w-1/2 py-4 bg-[#008f5d] text-white rounded-2xl font-black text-xs uppercase">Simpan</button>
+            </div>
+        </form>
+    </div>
+</div>
+
 <script>
     function toggleStatusPemateri() {
         fetch('{{ route("user.toggle-status") }}', {
             method: 'POST',
-            headers: { 
-                'X-CSRF-TOKEN': '{{ csrf_token() }}', 
-                'Content-Type': 'application/json' 
-            }
+            headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Content-Type': 'application/json' }
         })
         .then(response => response.json())
         .then(data => {
             const btn = document.getElementById('toggle-btn');
             const circle = document.getElementById('toggle-circle');
             const label = document.getElementById('status-label');
-            
             if(data.new_status === 'online') {
-                btn.classList.replace('bg-slate-300', 'bg-[#008f5d]');
-                circle.classList.replace('left-1', 'left-6');
-                label.innerText = 'ONLINE';
-                label.classList.replace('text-red-500', 'text-[#008f5d]');
+                btn.className = 'w-11 h-6 rounded-full transition-all duration-300 relative bg-[#008f5d]';
+                circle.className = 'absolute top-1 w-4 h-4 bg-white rounded-full transition-all duration-300 left-6';
+                label.innerText = 'ONLINE'; label.className = 'text-[10px] font-black uppercase text-[#008f5d]';
             } else {
-                btn.classList.replace('bg-[#008f5d]', 'bg-slate-300');
-                circle.classList.replace('left-6', 'left-1');
-                label.innerText = 'OFFLINE';
-                label.classList.replace('text-[#008f5d]', 'text-red-500');
+                btn.className = 'w-11 h-6 rounded-full transition-all duration-300 relative bg-slate-300';
+                circle.className = 'absolute top-1 w-4 h-4 bg-white rounded-full transition-all duration-300 left-1';
+                label.innerText = 'OFFLINE'; label.className = 'text-[10px] font-black uppercase text-red-500';
             }
-        })
-        .catch(error => console.error('Error:', error));
+        });
     }
 
-    function bukaModal(id) {
-        document.getElementById('modal-' + id).classList.remove('hidden');
+    function bukaModalProses(id, aksi) {
+        const form = document.getElementById('form-aksi');
+        form.action = `/admin/konsultasi/${id}/proses`;
+        document.getElementById('input-aksi').value = aksi;
+        document.getElementById('div-link').classList.toggle('hidden', aksi !== 'konfirmasi');
+        document.getElementById('div-alasan').classList.toggle('hidden', aksi !== 'tolak');
+        document.getElementById('modal-title').innerText = aksi === 'konfirmasi' ? 'Konfirmasi Janji' : 'Tolak Janji';
+        document.getElementById('modal-aksi').classList.remove('hidden');
     }
-    
-    function tutupModal(id) { 
-        document.getElementById('modal-' + id).classList.add('hidden'); 
-    }
+    function bukaModal(id) { document.getElementById('modal-' + id).classList.remove('hidden'); }
+    function tutupModal(id) { document.getElementById('modal-' + id).classList.add('hidden'); }
     
     function konfirmasiHapus(id) {
         Swal.fire({ 
-            title: 'Hapus Sesi Konsultasi?', 
-            text: "Data ini akan dihapus permanen dari sistem!",
-            icon: 'warning', 
-            showCancelButton: true, 
-            confirmButtonColor: '#ef4444',
-            cancelButtonColor: '#94a3b8',
-            confirmButtonText: 'Ya, Hapus!' 
-        }).then((res) => { 
-            if(res.isConfirmed) document.getElementById('delete-form-'+id).submit(); 
-        });
+            title: 'Hapus Sesi Konsultasi?', text: "Data ini akan dihapus permanen dari sistem!", icon: 'warning', 
+            showCancelButton: true, confirmButtonColor: '#ef4444', cancelButtonColor: '#94a3b8', confirmButtonText: 'Ya, Hapus!' 
+        }).then((res) => { if(res.isConfirmed) document.getElementById('delete-form-'+id).submit(); });
     }
 
     @if(session('success'))

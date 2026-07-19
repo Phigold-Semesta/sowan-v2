@@ -241,6 +241,10 @@ Route::post('/petugas/konsultasi/{id}/selesaikan', [PetugasController::class, 's
         Route::prefix('konsultasi')->name('konsultasi.')->group(function() {
             Route::get('/', [AdminController::class, 'konsultasi_index'])->name('index');
             Route::delete('/{id}', [AdminController::class, 'konsultasi_destroy'])->name('destroy');
+
+            // TAMBAHKAN DUA RUTE INI
+    Route::post('/{id}/proses', [AdminController::class, 'prosesKonsultasi'])->name('proses');
+    Route::post('/{id}/selesaikan', [AdminController::class, 'selesaikanKonsultasi'])->name('selesaikan');
         });
 
         // Monitoring Aktivitas Global (Audit Log)
